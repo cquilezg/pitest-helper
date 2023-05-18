@@ -1,9 +1,9 @@
-package com.github.carmeloquilez.pitestmavenhelper.services
+package com.cquilez.pitesthelper.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
-import com.github.carmeloquilez.pitestmavenhelper.MyBundle
+import com.cquilez.pitesthelper.MyBundle
 
 @Service(Service.Level.PROJECT)
 class MyProjectService(project: Project) {

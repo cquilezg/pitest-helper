@@ -1,18 +1,33 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.carmeloquilez.pitestmavenhelper</id>
-    <name>pitest_maven_helper Template</name>
-    <vendor>carmeloquilez</vendor>
+    <id>com.cquilez.pitesthelper</id>
+    <name>PITest Helper</name>
+    <vendor>Carmelo Quílez</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.idea.maven</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.carmeloquilez.pitestmavenhelper.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-    </extensions>
-
     <applicationListeners>
-        <listener class="com.github.carmeloquilez.pitestmavenhelper.listeners.MyFrameStateListener" topic="com.intellij.ide.FrameStateListener"/>
+        <listener class="com.cquilez.pitesthelper.listeners.MyFrameStateListener" topic="com.intellij.ide.FrameStateListener"/>
     </applicationListeners>
+
+    <actions>
+        <action
+                id="org.intellij.sdk.action.pitest.create.command"
+                project="true"
+                class="com.cquilez.pitesthelper.actions.RunMutationCoverageAction"
+                text="PITest - Test Class"
+                description="Create PITest Command"
+                icon="pitest_icon.png">
+            <override-text place="EditorPopup" text="Run Mutation Coverage..."/>
+            <override-text place="ProjectViewPopup" text="Run Mutation Coverage..."/>
+
+            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenuModifyGroup" relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+        </action>
+    </actions>
 </idea-plugin>

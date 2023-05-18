@@ -1,4 +1,4 @@
-package com.github.carmeloquilez.pitestmavenhelper
+package com.cquilez.pitesthelper
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
