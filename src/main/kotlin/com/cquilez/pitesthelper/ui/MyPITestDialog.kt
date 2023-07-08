@@ -30,14 +30,12 @@ class MyPITestDialog(private val project: Project, private val module: Module) :
     init {
         title = "Mutation Coverage"
         init()
-        // Configura el tamaño del diálogo
         setSize(
             Toolkit.getDefaultToolkit().screenSize.width / 2,
             size.height
 //            Toolkit.getDefaultToolkit().screenSize.height / 2
         )
         pack()
-        // Configura la posición del diálogo para que esté centrado en la pantalla
         centerRelativeToParent()
     }
 
@@ -105,7 +103,7 @@ class MyPITestDialog(private val project: Project, private val module: Module) :
     }
 
     override fun doOKAction() {
-        MavenService.runMavenCommand(project, module, listOf("test-compile", "pitest:mutationCoverage"), MavenService.buildPitestArgs(targetClasses!!, targetTests!!))
+        MavenService.runMavenCommand(project, module, listOf("test-compile", "pitest:mutationCoverage"), MavenService.buildPitestArgs(tfTargetClasses.text, tfTargetTests.text))
         super.doOKAction()
     }
 
