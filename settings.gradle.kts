@@ -1,1 +1,1 @@
-rootProject.name = "pitest_maven_helper"
+rootProject.name = "pitest-helper"
