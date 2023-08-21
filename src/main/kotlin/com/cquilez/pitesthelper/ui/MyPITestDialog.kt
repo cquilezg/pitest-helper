@@ -33,7 +33,6 @@ class MyPITestDialog(private val project: Project, private val module: Module) :
         setSize(
             Toolkit.getDefaultToolkit().screenSize.width / 2,
             size.height
-//            Toolkit.getDefaultToolkit().screenSize.height / 2
         )
         pack()
         centerRelativeToParent()

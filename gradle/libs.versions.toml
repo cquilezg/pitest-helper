@@ -1,6 +1,7 @@
 [versions]
 # libraries
 annotations = "24.0.1"
+junitJupiter = "5.10.0"
 
 # plugins
 kotlin = "1.9.0"
@@ -11,6 +12,8 @@ kover = "0.7.3"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+junitJupiterApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }
+junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }

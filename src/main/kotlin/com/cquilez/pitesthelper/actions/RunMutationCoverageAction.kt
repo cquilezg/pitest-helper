@@ -10,8 +10,10 @@ import com.cquilez.pitesthelper.ui.MutationCoverageData
 import com.cquilez.pitesthelper.ui.MyPITestDialog
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
@@ -25,12 +27,18 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.TestOnly
 
 class RunMutationCoverageAction : DumbAwareAction() {
 
     private val stringBuilder = StringBuilder()
     private var project: Project? = null
     private val helpMessage = "Please select only Java/Kotlin classes or packages."
+
+    @TestOnly
+    companion object {
+        var mutationCoverageData : MutationCoverageData? = null
+    }
 
     /**
      * Update action in menu.
@@ -78,6 +86,10 @@ class RunMutationCoverageAction : DumbAwareAction() {
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 
     private fun processMultipleNodes(
@@ -297,10 +309,14 @@ class RunMutationCoverageAction : DumbAwareAction() {
     }
 
     private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {
-        val dialog = MyPITestDialog(project, mutationCoverageData.module)
-        dialog.targetClasses = mutationCoverageData.targetClasses
-        dialog.targetTests = mutationCoverageData.targetTests
-        dialog.show()
+        if (!ApplicationManager.getApplication().isUnitTestMode) {
+            val dialog = MyPITestDialog(project, mutationCoverageData.module)
+            dialog.targetClasses = mutationCoverageData.targetClasses
+            dialog.targetTests = mutationCoverageData.targetTests
+            dialog.show()
+        } else {
+            RunMutationCoverageAction.mutationCoverageData = mutationCoverageData
+        }
     }
 
     private fun getModuleForNavigatable(project: Project, navigatable: Navigatable): Module {
