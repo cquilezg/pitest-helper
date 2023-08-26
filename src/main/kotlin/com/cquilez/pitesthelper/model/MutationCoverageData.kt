@@ -1,4 +1,4 @@
-package com.cquilez.pitesthelper.ui
+package com.cquilez.pitesthelper.model
 
 import com.intellij.openapi.module.Module
 

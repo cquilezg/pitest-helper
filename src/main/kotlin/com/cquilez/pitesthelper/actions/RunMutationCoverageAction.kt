@@ -5,9 +5,10 @@ import com.cquilez.pitesthelper.model.CodeItem
 import com.cquilez.pitesthelper.model.CodeItemType
 import com.cquilez.pitesthelper.model.MutationCoverage
 import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.MavenService
 import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.ui.MutationCoverageData
-import com.cquilez.pitesthelper.ui.MyPITestDialog
+import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -310,10 +311,16 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {
         if (!ApplicationManager.getApplication().isUnitTestMode) {
-            val dialog = MyPITestDialog(project, mutationCoverageData.module)
-            dialog.targetClasses = mutationCoverageData.targetClasses
-            dialog.targetTests = mutationCoverageData.targetTests
+            val dialog = MutationCoverageDialog(mutationCoverageData)
             dialog.show()
+            if (dialog.isOK) {
+                MavenService.runMavenCommand(
+                    project,
+                    mutationCoverageData.module,
+                    listOf("test-compile", "pitest:mutationCoverage"),
+                    MavenService.buildPitestArgs(dialog.data.targetClasses, dialog.data.targetTests)
+                )
+            }
         } else {
             RunMutationCoverageAction.mutationCoverageData = mutationCoverageData
         }
