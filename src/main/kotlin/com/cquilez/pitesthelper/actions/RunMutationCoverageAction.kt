@@ -219,7 +219,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         } else {
             buildFullClassName(getPackageNameFromQualifiedName(it.qualifiedName), targetClassName)
         }
-        if (!isInPackage(sourceList, targetClassName)) {
+        if (!isInPackage(sourceList, targetClassQualifiedName)) {
             sourceList.add(
                 CodeItem(
                     targetClassName,
