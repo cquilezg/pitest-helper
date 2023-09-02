@@ -22,7 +22,7 @@ Plugin to run PITest in your classes/packages.
 
 ## Installation
 
-- Using IDE built-in plugin system:
+- Using the IDE built-in plugin system:
   
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "pitest-helper"</kbd> >
   <kbd>Install Plugin</kbd>
