@@ -4,10 +4,10 @@ import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.CodeItem
 import com.cquilez.pitesthelper.model.CodeItemType
 import com.cquilez.pitesthelper.model.MutationCoverage
+import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.MavenService
 import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
@@ -275,14 +275,14 @@ class RunMutationCoverageAction : DumbAwareAction() {
     ): MutationCoverageData {
         return MutationCoverageData(
             module,
-            buildCommand(mutationCoverage.normalSource),
-            buildCommand(mutationCoverage.testSource)
+            collectTargetCode(mutationCoverage.normalSource),
+            collectTargetCode(mutationCoverage.testSource)
         )
     }
 
-    private fun buildCommand(
+    private fun collectTargetCode(
         codeItemList: List<CodeItem>
-    ): String {
+    ): List<String> {
         val targetClassesList = mutableListOf<String>()
         codeItemList.forEach {
             if (it.codeItemType == CodeItemType.PACKAGE) {
@@ -291,7 +291,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                 targetClassesList.add(it.qualifiedName)
             }
         }
-        return targetClassesList.sorted().joinToString(",")
+        return targetClassesList.sorted()
     }
 
     private fun getPackageNameFromQualifiedName(qualifiedName: String): String {
@@ -306,7 +306,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val targetClasses = getQualifiedClassName(psiClass)
         val targetTests = extractTargetTestsByPsiClass(psiClass)
         val module = getModuleFromElement(psiFile)
-        return MutationCoverageData(module, targetClasses, targetTests)
+        return MutationCoverageData(module, listOf(targetClasses), listOf(targetTests))
     }
 
     private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {
