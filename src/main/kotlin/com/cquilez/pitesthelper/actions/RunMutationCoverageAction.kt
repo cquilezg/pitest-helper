@@ -275,14 +275,14 @@ class RunMutationCoverageAction : DumbAwareAction() {
     ): MutationCoverageData {
         return MutationCoverageData(
             module,
-            buildCommand(mutationCoverage.normalSource),
-            buildCommand(mutationCoverage.testSource)
+            collectTargetCode(mutationCoverage.normalSource),
+            collectTargetCode(mutationCoverage.testSource)
         )
     }
 
-    private fun buildCommand(
+    private fun collectTargetCode(
         codeItemList: List<CodeItem>
-    ): String {
+    ): List<String> {
         val targetClassesList = mutableListOf<String>()
         codeItemList.forEach {
             if (it.codeItemType == CodeItemType.PACKAGE) {
@@ -291,7 +291,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                 targetClassesList.add(it.qualifiedName)
             }
         }
-        return targetClassesList.sorted().joinToString(",")
+        return targetClassesList
     }
 
     private fun getPackageNameFromQualifiedName(qualifiedName: String): String {
@@ -306,7 +306,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val targetClasses = getQualifiedClassName(psiClass)
         val targetTests = extractTargetTestsByPsiClass(psiClass)
         val module = getModuleFromElement(psiFile)
-        return MutationCoverageData(module, targetClasses, targetTests)
+        return MutationCoverageData(module, listOf(targetClasses), listOf(targetTests))
     }
 
     private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {

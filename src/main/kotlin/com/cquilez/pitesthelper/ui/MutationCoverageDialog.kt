@@ -42,8 +42,8 @@ class MutationCoverageDialog(private val mutationCoverageData: MutationCoverageD
     }
 
     private fun setupUiComponents() {
-        tfTargetClasses.text = mutationCoverageData.targetClasses
-        tfTargetTests.text = mutationCoverageData.targetTests
+        tfTargetClasses.text = mutationCoverageData.targetClasses.sorted().joinToString(",")
+        tfTargetTests.text = mutationCoverageData.targetTests.sorted().joinToString(",")
         buildMavenCommand()
     }
 

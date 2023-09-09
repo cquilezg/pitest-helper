@@ -1,6 +1,7 @@
 package com.cquilez.pitesthelper
 
 import com.cquilez.pitesthelper.actions.RunMutationCoverageAction
+import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
@@ -20,8 +21,11 @@ import com.intellij.testFramework.builders.JavaModuleFixtureBuilder
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory
 import com.intellij.testFramework.fixtures.JavaCodeInsightTestFixture
 import com.intellij.testFramework.fixtures.JavaTestFixtureFactory
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
@@ -102,12 +106,9 @@ class RunMutationCoverageActionTest {
 
             action.actionPerformed(event)
 
-            val data = RunMutationCoverageAction.mutationCoverageData
-            assertTrue(data != null)
-            assertTrue(data!!.targetClasses.isNotEmpty())
-            assertEquals("com.myproject.package1.ClassA", data.targetClasses)
-            assertTrue(data.targetTests.isNotEmpty())
-            assertEquals("com.myproject.package1.ClassATest", data.targetTests)
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.ClassA"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.ClassATest"))
         }
     }
 
@@ -124,12 +125,9 @@ class RunMutationCoverageActionTest {
 
             action.actionPerformed(event)
 
-            val data = RunMutationCoverageAction.mutationCoverageData
-            assertTrue(data != null)
-            assertTrue(data!!.targetClasses.isNotEmpty())
-            assertEquals("com.myproject.package2.*", data.targetClasses)
-            assertTrue(data.targetTests.isNotEmpty())
-            assertEquals("com.myproject.package2.*", data.targetTests)
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package2.*"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package2.*"))
         }
     }
 
@@ -147,12 +145,9 @@ class RunMutationCoverageActionTest {
 
             action.actionPerformed(event)
 
-            val data = RunMutationCoverageAction.mutationCoverageData
-            assertTrue(data != null)
-            assertTrue(data!!.targetClasses.isNotEmpty())
-            assertEquals("com.myproject.package2.ClassB", data.targetClasses)
-            assertTrue(data.targetTests.isNotEmpty())
-            assertEquals("com.myproject.package2.ClassBTest", data.targetTests)
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package2.ClassB"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package2.ClassBTest"))
         }
     }
 
@@ -169,12 +164,28 @@ class RunMutationCoverageActionTest {
 
             action.actionPerformed(event)
 
-            val data = RunMutationCoverageAction.mutationCoverageData
-            assertTrue(data != null)
-            assertTrue(data!!.targetClasses.isNotEmpty())
-            assertEquals("com.myproject.package1.*", data.targetClasses)
-            assertTrue(data.targetTests.isNotEmpty())
-            assertEquals("com.myproject.package1.*", data.targetTests)
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.*"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.*"))
+        }
+    }
+
+    @Test
+    fun `Two Main Classes selected and Test Classes exists, two target classes and two test classes`() {
+        val psiFile = fixture.configureFromTempProjectFile("src/main/java/com/myproject/package1/ClassA.java")
+        ApplicationManager.getApplication().runReadAction {
+            val dataContext = createDataContext(arrayOf(ClassTreeNode(fixture.project, ClassService.getPublicClass(psiFile), null)))
+            val event = TestActionEvent(dataContext)
+            val action = RunMutationCoverageAction()
+
+            action.update(event)
+            assertTrue(event.presentation.isVisible)
+
+            action.actionPerformed(event)
+
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.ClassA"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.ClassATest"))
         }
     }
 

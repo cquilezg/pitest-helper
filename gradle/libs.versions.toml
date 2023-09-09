@@ -2,6 +2,7 @@
 # libraries
 annotations = "24.0.1"
 junitJupiter = "5.10.0"
+hamcrest = "2.2"
 
 # plugins
 kotlin = "1.9.0"
@@ -14,6 +15,7 @@ kover = "0.7.3"
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 junitJupiterApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }
 junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
+hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
