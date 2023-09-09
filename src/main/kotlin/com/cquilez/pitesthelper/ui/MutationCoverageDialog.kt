@@ -13,7 +13,9 @@ import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Toolkit
-import javax.swing.*
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.ScrollPaneConstants
 
 class MutationCoverageDialog(private val mutationCoverageData: MutationCoverageData) : DialogWrapper(true) {
     private val tfTargetClasses = JBTextField()
@@ -42,8 +44,8 @@ class MutationCoverageDialog(private val mutationCoverageData: MutationCoverageD
     }
 
     private fun setupUiComponents() {
-        tfTargetClasses.text = mutationCoverageData.targetClasses.sorted().joinToString(",")
-        tfTargetTests.text = mutationCoverageData.targetTests.sorted().joinToString(",")
+        tfTargetClasses.text = mutationCoverageData.targetClasses.joinToString(",")
+        tfTargetTests.text = mutationCoverageData.targetTests.joinToString(",")
         buildMavenCommand()
     }
 
