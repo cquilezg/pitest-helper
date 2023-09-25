@@ -41,7 +41,7 @@ class MutationCoverageSpecialCasesTest {
     }
 
     @Test
-    fun `Main Class selected and multiple test class candidates, select test class in same package`() {
+    fun `Main Class selected, multiple test class candidates and one in same package, select test class in same package`() {
         val classA = fixture.configureFromTempProjectFile("src/main/java/com/myproject/package1/ClassA.java")
         ApplicationManager.getApplication().runReadAction {
             val dataContext = createDataContext(fixture, arrayOf(newClassTreeNode(fixture.project, classA)))
@@ -56,6 +56,25 @@ class MutationCoverageSpecialCasesTest {
             val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
             assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.ClassA"))
             assertThat(data.targetTests, Matchers.contains("com.myproject.package1.ClassATest"))
+        }
+    }
+
+    @Test
+    fun `Main Class selected, multiple test class candidates and one in a superior package, select test class in superior package`() {
+        val classA = fixture.configureFromTempProjectFile("src/main/java/com/myproject/package3/impl/ClassC.java")
+        ApplicationManager.getApplication().runReadAction {
+            val dataContext = createDataContext(fixture, arrayOf(newClassTreeNode(fixture.project, classA)))
+            val event = TestActionEvent(dataContext)
+            val action = RunMutationCoverageAction()
+
+            action.update(event)
+            assertTrue(event.presentation.isVisible)
+
+            action.actionPerformed(event)
+
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package3.impl.ClassC"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package3.ClassCTest"))
         }
     }
 }
