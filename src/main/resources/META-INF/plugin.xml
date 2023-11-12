@@ -18,7 +18,6 @@
     <actions>
         <action
                 id="org.intellij.sdk.action.pitest.create.command"
-                project="true"
                 class="com.cquilez.pitesthelper.actions.RunMutationCoverageAction"
                 text="PITest - Test Class"
                 description="Create PITest Command"
