@@ -9,8 +9,10 @@ import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.MavenService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.ui.MutationCoverageDialog
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
+import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -29,6 +31,7 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.kotlin.idea.KotlinFileType
 
 class RunMutationCoverageAction : DumbAwareAction() {
 
@@ -328,6 +331,16 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     private fun getModuleForNavigatable(project: Project, navigatable: Navigatable): Module {
         val module = when (navigatable) {
+            is PsiFileNode -> {
+                val fileType = navigatable.virtualFile!!.fileType
+                if (fileType is JavaFileType || fileType is KotlinFileType) {
+                    ModuleUtilCore.findModuleForFile((navigatable).virtualFile!!, project)
+                } else {
+                    throw PitestHelperException("There is/are elements not supported. Please select only Java/Kotlin classes or packages.")
+                }
+            }
+
+            // Java classes
             is ClassTreeNode -> {
                 ModuleUtilCore.findModuleForFile((navigatable).virtualFile!!, project)
             }

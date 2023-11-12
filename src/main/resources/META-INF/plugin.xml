@@ -6,6 +6,7 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
     <depends>org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
@@ -18,7 +19,6 @@
     <actions>
         <action
                 id="org.intellij.sdk.action.pitest.create.command"
-                project="true"
                 class="com.cquilez.pitesthelper.actions.RunMutationCoverageAction"
                 text="PITest - Test Class"
                 description="Create PITest Command"
