@@ -1,6 +1,6 @@
 [versions]
 # libraries
-annotations = "24.0.1"
+annotations = "24.1.0"
 junitJupiter = "5.10.0"
 hamcrest = "2.2"
 
