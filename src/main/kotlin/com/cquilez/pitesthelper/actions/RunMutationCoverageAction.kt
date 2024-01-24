@@ -22,13 +22,16 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.SourceFolder
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.TestOnly
+
 
 class RunMutationCoverageAction : DumbAwareAction() {
 
@@ -38,7 +41,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     @TestOnly
     companion object {
-        var mutationCoverageData : MutationCoverageData? = null
+        var mutationCoverageData: MutationCoverageData? = null
     }
 
     /**
@@ -90,7 +93,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.EDT
+        return ActionUpdateThread.BGT
     }
 
     private fun processMultipleNodes(
@@ -393,20 +396,33 @@ class RunMutationCoverageAction : DumbAwareAction() {
             navigatableArray.forEach {
                 val sourceRoot: VirtualFile?
                 if (it is PsiDirectoryNode) {
-                    sourceRoot = projectService.getSourceRoot(project, it.virtualFile!!)
+                    val packageName: String
+                    var qualifiedName: String
                     val javaPackage = javaDirectoryService.getPackage(it.value)
-                        ?: throw PitestHelperException("The element is not a package: ${it.name}. $helpMessage")
-                    addIfNotPresent(
-                        projectService, module, sourceRoot, mutationCoverage,
-                        CodeItem(javaPackage.name!!, javaPackage.qualifiedName, CodeItemType.PACKAGE, it)
-                    )
+                    if (javaPackage != null) {
+                        val srcMainJavaFolder = locateSrcMainJava(module) ?: throw PitestHelperException("The folder src/main/java was not found. There is no source folder to find mutations.")
+                        packageName = javaPackage.name ?: getBasePackage(srcMainJavaFolder)
+                        qualifiedName = javaPackage.qualifiedName
+                        if (qualifiedName == "") {
+                            qualifiedName = packageName
+                        }
+                        sourceRoot = projectService.getSourceRoot(project, it.virtualFile!!)
+                        addIfNotPresent(
+                            projectService, module, sourceRoot!!, mutationCoverage,
+                            CodeItem(packageName, qualifiedName, CodeItemType.PACKAGE, it)
+                        )
+                    } else {
+                        val sourceFolder = locateSrcMainJava(module) ?: throw PitestHelperException("The element is not inside a module: ${it.name}. Select nodes inside a module.")
+                        packageName = getBasePackage(sourceFolder)
+                        diffElements(mutationCoverage.normalSource, CodeItem(packageName, packageName, CodeItemType.PACKAGE, it))
+                    }
                 } else if (it is ClassTreeNode) {
                     sourceRoot = projectService.getSourceRoot(project, it.virtualFile!!)
                     val psiFile = getPsiFile(project, it)
                     if (psiFile is PsiJavaFile) {
                         val psiClass = ClassService.getPublicClass(psiFile)
                         addIfNotPresent(
-                            projectService, module, sourceRoot, mutationCoverage,
+                            projectService, module, sourceRoot!!, mutationCoverage,
                             CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, it)
                         )
                     }
@@ -416,19 +432,67 @@ class RunMutationCoverageAction : DumbAwareAction() {
         return mutationCoverage
     }
 
+    private fun locateSrcMainJava(module: Module): VirtualFile? {
+        val moduleRootManager = ModuleRootManager.getInstance(module)
+        val sourceRoots = moduleRootManager.sourceRoots
+        for (sourceRoot in sourceRoots) {
+            if (sourceRoot.path.endsWith("src/main/java", true)) {
+                return sourceRoot
+            }
+        }
+        return null
+    }
+
+    fun getBasePackage(rootFile: VirtualFile): String {
+        var lastNode = rootFile
+        while (lastNode.children.size == 1) {
+            lastNode = lastNode.children[0]
+        }
+        val relativePath = VfsUtil.getRelativePath(lastNode, rootFile)
+        return relativePath?.replace("/", ".") ?: ""
+    }
+
+//    fun getBasePackage(project: Project, module: Module, file: VirtualFile): String? {
+//        // Obtén el directorio fuente principal (src/main/java)
+//        val sourceRoot = ProjectRootManager.getInstance(project).fileIndex.getSourceRootForFile(file)
+//            ?: return null // No se encontró el directorio fuente principal
+//
+//        // Obtén el paquete base del proyecto
+//        val relativePath = file.path.substring(sourceRoot.path.length)
+//        return getPackageName(project, module, relativePath)
+//    }
+//
+//    private fun getPackageName(project: Project, module: Module, relativePath: String): String? {
+//        val directoryFile = project.baseDir.findFileByRelativePath(relativePath)
+//        if (directoryFile != null && directoryFile.isDirectory) {
+//            val psiDirectory: PsiDirectory? = JavaDirectoryService.getInstance().getPackage(directoryFile)
+//            if (psiDirectory != null) {
+//                return psiDirectory.getPackage().getQualifiedName()
+//            }
+//        }
+//        return null
+//    }
+
     private fun addIfNotPresent(
         projectService: MyProjectService,
         module: Module,
-        sourceRoot: VirtualFile?,
+        sourceRoot: VirtualFile,
         mutationCoverage: MutationCoverage,
         codeItem: CodeItem
     ) {
         val codeItemList =
-            if (projectService.isTestSourceRoot(module, sourceRoot!!.canonicalFile!!)) {
+            if (projectService.isTestSourceRoot(module, sourceRoot.canonicalFile!!)) {
                 mutationCoverage.testSource
             } else {
                 mutationCoverage.normalSource
             }
+        diffElements(codeItemList, codeItem)
+    }
+
+    private fun diffElements(
+        codeItemList: MutableList<CodeItem>,
+        codeItem: CodeItem
+    ) {
         if (!isInPackage(codeItemList, codeItem.qualifiedName)) {
             val descendantCodeList = getChildCode(codeItemList, codeItem.qualifiedName)
             codeItemList.removeAll(descendantCodeList)

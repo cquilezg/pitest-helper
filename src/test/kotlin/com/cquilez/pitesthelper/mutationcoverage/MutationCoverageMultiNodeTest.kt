@@ -121,7 +121,7 @@ class MutationCoverageMultiNodeTest {
     }
 
     @Test
-    fun `Main Class and its package selected, test package exists, only main package and test package are selected`() {
+    fun `Main Class and its package selected, test package exists, only packages are selected`() {
         val classA = fixture.configureFromTempProjectFile("src/main/java/com/myproject/package1/ClassA.java")
         ApplicationManager.getApplication().runReadAction {
             val package1 = findAndCreateDirectoryTreeNode(fixture, "src/main/java/com/myproject/package1")
@@ -137,6 +137,66 @@ class MutationCoverageMultiNodeTest {
             val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
             assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.*"))
             assertThat(data.targetTests, Matchers.contains("com.myproject.package1.*"))
+        }
+    }
+
+    @Test
+    fun `Test Class and its package selected, main package exists, only packages are selected`() {
+        val classA = fixture.configureFromTempProjectFile("src/test/java/com/myproject/package1/ClassATest.java")
+        ApplicationManager.getApplication().runReadAction {
+            val package1 = findAndCreateDirectoryTreeNode(fixture, "src/test/java/com/myproject/package1")
+            val dataContext = createDataContext(fixture, arrayOf(newClassTreeNode(fixture.project, classA), package1))
+            val event = TestActionEvent(dataContext)
+            val action = RunMutationCoverageAction()
+
+            action.update(event)
+            assertTrue(event.presentation.isVisible)
+
+            action.actionPerformed(event)
+
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.*"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.*"))
+        }
+    }
+
+    @Test
+    fun `Main Class and different package selected, test class and package exists, main and test code selected`() {
+        val classA = fixture.configureFromTempProjectFile("src/main/java/com/myproject/package1/ClassA.java")
+        ApplicationManager.getApplication().runReadAction {
+            val package1 = findAndCreateDirectoryTreeNode(fixture, "src/main/java/com/myproject/package2")
+            val dataContext = createDataContext(fixture, arrayOf(newClassTreeNode(fixture.project, classA), package1))
+            val event = TestActionEvent(dataContext)
+            val action = RunMutationCoverageAction()
+
+            action.update(event)
+            assertTrue(event.presentation.isVisible)
+
+            action.actionPerformed(event)
+
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.ClassA", "com.myproject.package2.*"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.ClassATest", "com.myproject.package2.*"))
+        }
+    }
+
+    @Test
+    fun `Test Class and different package selected, main class and package exists, main and test code selected`() {
+        val classATest = fixture.configureFromTempProjectFile("src/test/java/com/myproject/package1/ClassATest.java")
+        ApplicationManager.getApplication().runReadAction {
+            val package1 = findAndCreateDirectoryTreeNode(fixture, "src/test/java/com/myproject/package2")
+            val dataContext = createDataContext(fixture, arrayOf(newClassTreeNode(fixture.project, classATest), package1))
+            val event = TestActionEvent(dataContext)
+            val action = RunMutationCoverageAction()
+
+            action.update(event)
+            assertTrue(event.presentation.isVisible)
+
+            action.actionPerformed(event)
+
+            val data = RunMutationCoverageAction.mutationCoverageData as MutationCoverageData
+            assertThat(data.targetClasses, Matchers.contains("com.myproject.package1.ClassA", "com.myproject.package2.*"))
+            assertThat(data.targetTests, Matchers.contains("com.myproject.package1.ClassATest", "com.myproject.package2.*"))
         }
     }
 }
