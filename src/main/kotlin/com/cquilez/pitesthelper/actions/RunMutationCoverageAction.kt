@@ -425,27 +425,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
         return relativePath?.replace("/", ".") ?: ""
     }
 
-//    fun getBasePackage(project: Project, module: Module, file: VirtualFile): String? {
-//        // Obtén el directorio fuente principal (src/main/java)
-//        val sourceRoot = ProjectRootManager.getInstance(project).fileIndex.getSourceRootForFile(file)
-//            ?: return null // No se encontró el directorio fuente principal
-//
-//        // Obtén el paquete base del proyecto
-//        val relativePath = file.path.substring(sourceRoot.path.length)
-//        return getPackageName(project, module, relativePath)
-//    }
-//
-//    private fun getPackageName(project: Project, module: Module, relativePath: String): String? {
-//        val directoryFile = project.baseDir.findFileByRelativePath(relativePath)
-//        if (directoryFile != null && directoryFile.isDirectory) {
-//            val psiDirectory: PsiDirectory? = JavaDirectoryService.getInstance().getPackage(directoryFile)
-//            if (psiDirectory != null) {
-//                return psiDirectory.getPackage().getQualifiedName()
-//            }
-//        }
-//        return null
-//    }
-
     private fun addIfNotPresent(
         projectService: MyProjectService,
         module: Module,
