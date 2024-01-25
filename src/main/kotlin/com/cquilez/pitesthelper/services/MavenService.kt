@@ -16,18 +16,15 @@ object MavenService {
         "-DtargetClasses=$targetClasses -DtargetTests=$targetTests"
 
     fun runMavenCommand(project: Project, module: Module, goals: List<String>, vmOptions: String) {
-        // Obtener la Tool Window de Maven
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow: ToolWindow? = toolWindowManager.getToolWindow("Maven")
 
-        // Mostrar la Tool Window si está oculta
-        if (toolWindow != null) {// Mostrar la Tool Window si está oculta
+        if (toolWindow != null) {
             if (!toolWindow.isVisible) {
                 toolWindow.setAvailable(true, null)
                 toolWindow.setType(toolWindow.type, null)
                 toolWindow.activate(null)
             }
-            // Obtener la vista de la Tool Window
             if (toolWindow.contentManager.contents.isNotEmpty()) {
                 // TODO: comprobar que tiene un SDK asociado antes de ejecutar el goal
                 if (module.rootManager.contentRoots.isNotEmpty()) {
