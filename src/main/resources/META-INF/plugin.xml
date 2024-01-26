@@ -11,10 +11,6 @@
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
-    <applicationListeners>
-        <listener class="com.cquilez.pitesthelper.listeners.MyFrameStateListener" topic="com.intellij.ide.FrameStateListener"/>
-    </applicationListeners>
-
     <actions>
         <action
                 id="org.intellij.sdk.action.pitest.create.command"
