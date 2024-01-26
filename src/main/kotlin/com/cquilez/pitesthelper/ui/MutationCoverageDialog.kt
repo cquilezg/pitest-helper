@@ -13,6 +13,7 @@ import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Toolkit
+import javax.swing.Action
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants
@@ -103,6 +104,19 @@ class MutationCoverageDialog(private val mutationCoverageData: MutationCoverageD
         panel.add(jbComponent, gbConstraints)
 
         rowNum++
+    }
+
+    /**
+     * Changed OK text button by Run
+     */
+    override fun createActions(): Array<Action> {
+        val actions: Array<Action> = super.createActions()
+        for (action in actions) {
+            if ("OK" == action.getValue(Action.NAME).toString()) {
+                action.putValue(Action.NAME, "Run")
+            }
+        }
+        return actions
     }
 
     private fun buildMavenCommand() {
