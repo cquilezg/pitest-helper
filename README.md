@@ -17,7 +17,18 @@
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-Plugin to run PITest in your classes/packages.
+Plugin to run PITest in your Java classes/packages using the [pitest-maven](https://pitest.org/quickstart/maven/) plugin for Maven.
+The plugin builds and runs PITest mutation coverage commands for you.
+
+Requisites:  
+- A Maven project.
+- pitest-maven plugin configured on your project.
+
+Usage:  
+- Right-click on your classes and packages you want to run mutation coverage and click _Run Mutation Coverage..._
+
+Note: this plugin does not configure the pitest-maven plugin. You need to set up it beforehand.
+
 <!-- Plugin description end -->
 
 ## Installation

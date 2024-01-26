@@ -5,9 +5,7 @@ import com.cquilez.pitesthelper.model.CodeItem
 import com.cquilez.pitesthelper.model.CodeItemType
 import com.cquilez.pitesthelper.model.MutationCoverage
 import com.cquilez.pitesthelper.model.MutationCoverageData
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MavenService
-import com.cquilez.pitesthelper.services.MyProjectService
+import com.cquilez.pitesthelper.services.*
 import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
@@ -22,7 +20,6 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.SourceFolder
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.VfsUtil
@@ -31,14 +28,17 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.TestOnly
-
+import org.jetbrains.jps.model.java.JavaSourceRootType
 
 class RunMutationCoverageAction : DumbAwareAction() {
 
     private val stringBuilder = StringBuilder()
     private var project: Project? = null
-    private val helpMessage = "Please select only Java/Kotlin classes or packages."
+    private val helpMessage = "Please select only Java classes, packages or a module folder containing Java source code."
 
+    /**
+     * Object only needed for unit tests
+     */
     @TestOnly
     companion object {
         var mutationCoverageData: MutationCoverageData? = null
@@ -68,6 +68,9 @@ class RunMutationCoverageAction : DumbAwareAction() {
         event.presentation.isEnabledAndVisible = visible
     }
 
+    /**
+     * Read nodes, build mutation coverage command and show dialog
+     */
     override fun actionPerformed(@NotNull event: AnActionEvent) {
         val psiFile = event.getData(CommonDataKeys.PSI_FILE)
 
@@ -79,7 +82,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
         try {
             val mutationCoverageData: MutationCoverageData =
-                if (!navigatableArray.isNullOrEmpty()) {
+                if (navigatableArray != null) {
                     processMultipleNodes(project, navigatableArray, projectService)
                 } else if (psiFile != null && ClassService.isCodeFile(psiFile)) {
                     processSingleNode(psiFile)
@@ -92,21 +95,19 @@ class RunMutationCoverageAction : DumbAwareAction() {
         }
     }
 
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.BGT
-    }
-
     private fun processMultipleNodes(
         project: Project,
         navigatableArray: Array<Navigatable>,
         projectService: MyProjectService
     ): MutationCoverageData {
         if (navigatableArray.isNotEmpty()) {
-            checkAllElementsAreInSameModule(project, navigatableArray)
+            if (navigatableArray.size > 1) {
+                checkAllElementsAreInSameModule(project, navigatableArray)
+            }
             val module = getModuleForNavigatable(project, navigatableArray[0])
             val mutationCoverage = processNavigatables(projectService, project, module, navigatableArray)
             syncClassesAndPackages(project, module, projectService, mutationCoverage)
-            return buildMutationCoverageCommands(module, mutationCoverage)
+            return PITestService.buildMutationCoverageCommand(module, mutationCoverage)
         }
         throw PitestHelperException("There are no elements to process")
     }
@@ -127,14 +128,14 @@ class RunMutationCoverageAction : DumbAwareAction() {
                     project,
                     module,
                     mutationCoverage.normalSource,
-                    getClassUnderTestName(it.name)
+                    TestService.getClassUnderTestName(it.name)
                 )
             } else if (it.codeItemType == CodeItemType.PACKAGE) {
                 processPackageCodeItem(
                     project,
                     it,
                     mutationCoverage.normalSource,
-                    projectService.getProductionSourceFolders(module)
+                    projectService.getMainSourceFolders(module)
                 )
             }
         }
@@ -208,7 +209,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                                 "Candidates are: ${
                                     psiClasses.joinToString(", ",
                                         transform = {
-                                            buildFullClassName(
+                                            PITestService.buildFullClassName(
                                                 ClassService.getPackageName(it),
                                                 it.name!!
                                             )
@@ -220,7 +221,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
             }
             psiClass.qualifiedName!!
         } else {
-            buildFullClassName(getPackageNameFromQualifiedName(it.qualifiedName), targetClassName)
+            PITestService.buildFullClassName(getPackageNameFromQualifiedName(it.qualifiedName), targetClassName)
         }
         if (!isInPackage(sourceList, targetClassQualifiedName)) {
             sourceList.add(
@@ -272,31 +273,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
         return false
     }
 
-    private fun buildMutationCoverageCommands(
-        module: Module,
-        mutationCoverage: MutationCoverage
-    ): MutationCoverageData {
-        return MutationCoverageData(
-            module,
-            collectTargetCode(mutationCoverage.normalSource),
-            collectTargetCode(mutationCoverage.testSource)
-        )
-    }
-
-    private fun collectTargetCode(
-        codeItemList: List<CodeItem>
-    ): List<String> {
-        val targetClassesList = mutableListOf<String>()
-        codeItemList.forEach {
-            if (it.codeItemType == CodeItemType.PACKAGE) {
-                targetClassesList.add("${it.qualifiedName}.*")
-            } else if (it.codeItemType == CodeItemType.CLASS) {
-                targetClassesList.add(it.qualifiedName)
-            }
-        }
-        return targetClassesList.sorted()
-    }
-
     private fun getPackageNameFromQualifiedName(qualifiedName: String): String {
         val lastDotIndex = qualifiedName.lastIndexOf('.')
         return if (lastDotIndex != -1) {
@@ -306,12 +282,16 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     private fun processSingleNode(psiFile: PsiFile): MutationCoverageData {
         val psiClass = ClassService.getPublicClass(psiFile)
-        val targetClasses = getQualifiedClassName(psiClass)
-        val targetTests = extractTargetTestsByPsiClass(psiClass)
+        val targetClasses = PITestService.getTestClassQualifiedName(psiClass)
+        val targetTests = PITestService.extractTargetTestsByPsiClass(psiClass)
         val module = getModuleFromElement(psiFile)
         return MutationCoverageData(module, listOf(targetClasses), listOf(targetTests))
     }
 
+    /**
+     * Shows Mutation Coverage dialog and runs Maven command when OK button is pressed.
+     * Does not show the dialog if you are running plugin tests.
+     */
     private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {
         if (!ApplicationManager.getApplication().isUnitTestMode) {
             val dialog = MutationCoverageDialog(mutationCoverageData)
@@ -343,7 +323,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                 null
             }
         }
-            ?: throw PitestHelperException("There is/are elements not supported. Please select only Java/Kotlin classes or packages.")
+            ?: throw PitestHelperException("There is/are elements not supported. $helpMessage")
         return module
     }
 
@@ -362,28 +342,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
         }
     }
 
-    private fun getQualifiedClassName(psiClass: PsiClass): String {
-        val packageName = getPackageName(psiClass)
-        if (psiClass.name != null) {
-            return buildFullClassName(packageName, getClassUnderTestName(psiClass.name as String))
-        } else {
-            throw PitestHelperException("The class name cannot be found")
-        }
-    }
-
-    private fun getClassUnderTestName(testClassName: String): String = testClassName.removeSuffix("Test")
-
-    private fun buildFullClassName(packageName: String, className: String) = "$packageName.${className}"
-
-    private fun extractTargetTestsByPsiClass(psiClass: PsiClass): String {
-        val packageName = getPackageName(psiClass)
-        if (psiClass.name != null) {
-            return "$packageName.${psiClass.name}"
-        } else {
-            throw PitestHelperException("The test class name cannot be found")
-        }
-    }
-
     private fun processNavigatables(
         projectService: MyProjectService,
         project: Project,
@@ -393,54 +351,89 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val javaDirectoryService = JavaDirectoryService.getInstance()
         val mutationCoverage = MutationCoverage(mutableListOf(), mutableListOf())
         if (navigatableArray.isNotEmpty()) {
-            navigatableArray.forEach {
-                val sourceRoot: VirtualFile?
-                if (it is PsiDirectoryNode) {
-                    val packageName: String
-                    var qualifiedName: String
-                    val javaPackage = javaDirectoryService.getPackage(it.value)
-                    if (javaPackage != null) {
-                        val srcMainJavaFolder = locateSrcMainJava(module) ?: throw PitestHelperException("The folder src/main/java was not found. There is no source folder to find mutations.")
-                        packageName = javaPackage.name ?: getBasePackage(srcMainJavaFolder)
-                        qualifiedName = javaPackage.qualifiedName
-                        if (qualifiedName == "") {
-                            qualifiedName = packageName
-                        }
-                        sourceRoot = projectService.getSourceRoot(project, it.virtualFile!!)
-                        addIfNotPresent(
-                            projectService, module, sourceRoot!!, mutationCoverage,
-                            CodeItem(packageName, qualifiedName, CodeItemType.PACKAGE, it)
-                        )
-                    } else {
-                        val sourceFolder = locateSrcMainJava(module) ?: throw PitestHelperException("The element is not inside a module: ${it.name}. Select nodes inside a module.")
-                        packageName = getBasePackage(sourceFolder)
-                        diffElements(mutationCoverage.normalSource, CodeItem(packageName, packageName, CodeItemType.PACKAGE, it))
-                    }
-                } else if (it is ClassTreeNode) {
-                    sourceRoot = projectService.getSourceRoot(project, it.virtualFile!!)
-                    val psiFile = getPsiFile(project, it)
-                    if (psiFile is PsiJavaFile) {
-                        val psiClass = ClassService.getPublicClass(psiFile)
-                        addIfNotPresent(
-                            projectService, module, sourceRoot!!, mutationCoverage,
-                            CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, it)
-                        )
-                    }
-                }
+            navigatableArray.forEach { navigatable ->
+                processNavigatable(navigatable, javaDirectoryService, module, projectService, project, mutationCoverage)
             }
         }
         return mutationCoverage
     }
 
-    private fun locateSrcMainJava(module: Module): VirtualFile? {
-        val moduleRootManager = ModuleRootManager.getInstance(module)
-        val sourceRoots = moduleRootManager.sourceRoots
-        for (sourceRoot in sourceRoots) {
-            if (sourceRoot.path.endsWith("src/main/java", true)) {
-                return sourceRoot
+    private fun processNavigatable(
+        navigatable: Navigatable,
+        javaDirectoryService: JavaDirectoryService,
+        module: Module,
+        projectService: MyProjectService,
+        project: Project,
+        mutationCoverage: MutationCoverage
+    ) {
+        if (navigatable is PsiDirectoryNode) {
+            processDirectory(javaDirectoryService, navigatable, module, projectService, project, mutationCoverage)
+        } else if (navigatable is ClassTreeNode) {
+            processClass(projectService, project, navigatable, module, mutationCoverage)
+        }
+    }
+
+    private fun processClass(
+        projectService: MyProjectService,
+        project: Project,
+        navigatable: ClassTreeNode,
+        module: Module,
+        mutationCoverage: MutationCoverage
+    ) {
+        val sourceRoot: VirtualFile? = projectService.getSourceRoot(project, navigatable.virtualFile!!)
+        val psiFile = getPsiFile(project, navigatable)
+        if (psiFile is PsiJavaFile) {
+            val psiClass = ClassService.getPublicClass(psiFile)
+            addIfNotPresent(
+                projectService, module, sourceRoot!!, mutationCoverage,
+                CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
+            )
+        }
+    }
+
+    private fun processDirectory(
+        javaDirectoryService: JavaDirectoryService,
+        navigatable: PsiDirectoryNode,
+        module: Module,
+        projectService: MyProjectService,
+        project: Project,
+        mutationCoverage: MutationCoverage
+    ) {
+        val sourceRoot: VirtualFile?
+        val packageName: String
+        var qualifiedName: String
+        val javaPackage = javaDirectoryService.getPackage(navigatable.value)
+        if (javaPackage != null && javaPackage.name != null && javaPackage.name!!.isNotBlank()) {
+            val srcMainJavaFolder = MavenService.locateSrcMainJava(module) ?: throw PitestHelperException("The folder src/main/java was not found. There is no source folder to find mutations.")
+            packageName = javaPackage.name ?: getBasePackage(srcMainJavaFolder)
+            qualifiedName = javaPackage.qualifiedName
+            if (qualifiedName == "") {
+                qualifiedName = packageName
+            }
+            sourceRoot = projectService.getSourceRoot(project, navigatable.virtualFile!!)
+            addIfNotPresent(
+                projectService, module, sourceRoot!!, mutationCoverage,
+                CodeItem(packageName, qualifiedName, CodeItemType.PACKAGE, navigatable)
+            )
+        } else {
+            val sourceFolders = projectService.getFilteredSourceFolders(module) {
+                it.rootType is JavaSourceRootType && !projectService.isAutogeneratedSourceFolder(it)
+            }
+            val directoryPath = navigatable.virtualFile?.toNioPath()
+            if (directoryPath != null) {
+                val sourceFolderFound = sourceFolders.stream().filter {
+                    it.file?.toNioPath()?.startsWith(directoryPath) ?: false
+                }.findFirst()
+                if (sourceFolderFound.isPresent && sourceFolderFound.get().file != null) {
+                    packageName = getBasePackage(sourceFolderFound.get().file!!)
+                    diffElements(mutationCoverage.normalSource, CodeItem(packageName, packageName, CodeItemType.PACKAGE, navigatable))
+                } else {
+                    throw PitestHelperException("The directory appears to contain no code. $helpMessage")
+                }
+            } else {
+                throw PitestHelperException("The directory appears to contain no code. $helpMessage")
             }
         }
-        return null
     }
 
     fun getBasePackage(rootFile: VirtualFile): String {
@@ -451,27 +444,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val relativePath = VfsUtil.getRelativePath(lastNode, rootFile)
         return relativePath?.replace("/", ".") ?: ""
     }
-
-//    fun getBasePackage(project: Project, module: Module, file: VirtualFile): String? {
-//        // Obtén el directorio fuente principal (src/main/java)
-//        val sourceRoot = ProjectRootManager.getInstance(project).fileIndex.getSourceRootForFile(file)
-//            ?: return null // No se encontró el directorio fuente principal
-//
-//        // Obtén el paquete base del proyecto
-//        val relativePath = file.path.substring(sourceRoot.path.length)
-//        return getPackageName(project, module, relativePath)
-//    }
-//
-//    private fun getPackageName(project: Project, module: Module, relativePath: String): String? {
-//        val directoryFile = project.baseDir.findFileByRelativePath(relativePath)
-//        if (directoryFile != null && directoryFile.isDirectory) {
-//            val psiDirectory: PsiDirectory? = JavaDirectoryService.getInstance().getPackage(directoryFile)
-//            if (psiDirectory != null) {
-//                return psiDirectory.getPackage().getQualifiedName()
-//            }
-//        }
-//        return null
-//    }
 
     private fun addIfNotPresent(
         projectService: MyProjectService,
@@ -542,14 +514,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
         }
     }
 
-    private fun getPackageName(psiClass: PsiClass): String {
-        val psiFile = psiClass.containingFile
-        if (psiFile is PsiJavaFile) {
-            return psiFile.packageName
-        }
-        throw PitestHelperException("The package name class cannot be found")
-    }
-
     private fun getModuleFromElement(psiElement: PsiElement): Module {
         val moduleNullable = ModuleUtil.findModuleForPsiElement(psiElement)
         checkModule(moduleNullable)
@@ -564,5 +528,9 @@ class RunMutationCoverageAction : DumbAwareAction() {
     private fun checkExistingClass(psiClasses: Array<PsiClass>, className: String, testClassName: String) {
         if (psiClasses.isEmpty())
             throw PitestHelperException("There is no test class found for: ${className}. Test not found: ${testClassName}. A test class need to have the suffix Test.")
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 }

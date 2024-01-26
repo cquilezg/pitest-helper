@@ -3,6 +3,8 @@ package com.cquilez.pitesthelper.services
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
+import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.idea.maven.execution.MavenRunner
@@ -14,18 +16,15 @@ object MavenService {
         "-DtargetClasses=$targetClasses -DtargetTests=$targetTests"
 
     fun runMavenCommand(project: Project, module: Module, goals: List<String>, vmOptions: String) {
-        // Obtener la Tool Window de Maven
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow: ToolWindow? = toolWindowManager.getToolWindow("Maven")
 
-        // Mostrar la Tool Window si está oculta
-        if (toolWindow != null) {// Mostrar la Tool Window si está oculta
+        if (toolWindow != null) {
             if (!toolWindow.isVisible) {
                 toolWindow.setAvailable(true, null)
                 toolWindow.setType(toolWindow.type, null)
                 toolWindow.activate(null)
             }
-            // Obtener la vista de la Tool Window
             if (toolWindow.contentManager.contents.isNotEmpty()) {
                 // TODO: comprobar que tiene un SDK asociado antes de ejecutar el goal
                 if (module.rootManager.contentRoots.isNotEmpty()) {
@@ -39,5 +38,16 @@ object MavenService {
                 }
             }
         }
+    }
+
+    fun locateSrcMainJava(module: Module): VirtualFile? {
+        val moduleRootManager = ModuleRootManager.getInstance(module)
+        val sourceRoots = moduleRootManager.sourceRoots
+        for (sourceRoot in sourceRoots) {
+            if (sourceRoot.path.endsWith("src/main/java", true)) {
+                return sourceRoot
+            }
+        }
+        return null
     }
 }
