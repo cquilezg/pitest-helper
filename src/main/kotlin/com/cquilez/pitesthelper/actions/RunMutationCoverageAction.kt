@@ -193,7 +193,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val targetClassQualifiedName: String = if (!dumb) {
             val psiClasses = projectService.findClassesInModule(targetClassName, project, module)
             // TODO: validate classes are from test source root
-            checkExistingClass(psiClasses, it.qualifiedName, it.qualifiedName)
+            checkExistingClass(psiClasses, it.qualifiedName, targetClassName)
             val psiClass = if (psiClasses.size == 1) {
                 psiClasses[0]
             } else {

@@ -29,6 +29,10 @@ Usage:
 
 Note: this plugin does not configure the pitest-maven plugin. You need to set up it beforehand.
 
+Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at [plugin Github site](https://github.com/carmeloquilez/pitest-helper/issues)
+
+PITest logo was created by Ling Yeung.
+
 <!-- Plugin description end -->
 
 ## Installation

@@ -4,9 +4,9 @@
 
 ## [Unreleased]
 
-## [1.0.0-beta] - 2023-04-27
+## [1.0.0-beta] - 2024-01-26
 
 ### Added
 
+- PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
-- PITest mutation coverage goal available from editor and project view in classes and packages
