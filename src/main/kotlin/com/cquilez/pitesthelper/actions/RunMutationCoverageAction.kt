@@ -527,7 +527,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     private fun checkExistingClass(psiClasses: Array<PsiClass>, className: String, testClassName: String) {
         if (psiClasses.isEmpty())
-            throw PitestHelperException("There is no test class found for: ${className}. Test not found: ${testClassName}. A test class need to have the suffix Test.")
+            throw PitestHelperException("There is no test class found for: ${className}. Searched class: ${testClassName}. A test class need to have the suffix Test.")
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {
