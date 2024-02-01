@@ -193,7 +193,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val targetClassQualifiedName: String = if (!dumb) {
             val psiClasses = projectService.findClassesInModule(targetClassName, project, module)
             // TODO: validate classes are from test source root
-            checkExistingClass(psiClasses, it.qualifiedName, it.qualifiedName)
+            checkExistingClass(psiClasses, it.qualifiedName, targetClassName)
             val psiClass = if (psiClasses.size == 1) {
                 psiClasses[0]
             } else {
@@ -527,7 +527,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
     private fun checkExistingClass(psiClasses: Array<PsiClass>, className: String, testClassName: String) {
         if (psiClasses.isEmpty())
-            throw PitestHelperException("There is no test class found for: ${className}. Test not found: ${testClassName}. A test class need to have the suffix Test.")
+            throw PitestHelperException("There is no test class found for: ${className}. Searched class: ${testClassName}. A test class need to have the suffix Test.")
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {

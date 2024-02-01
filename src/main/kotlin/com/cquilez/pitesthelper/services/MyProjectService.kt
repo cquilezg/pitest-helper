@@ -16,6 +16,7 @@ import com.intellij.util.containers.stream
 import org.jetbrains.jps.model.java.JavaSourceRootProperties
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import java.util.function.Predicate
+import kotlin.streams.toList
 
 
 @Service(Service.Level.PROJECT)
