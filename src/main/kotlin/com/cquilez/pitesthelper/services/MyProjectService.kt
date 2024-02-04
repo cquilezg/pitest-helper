@@ -1,11 +1,19 @@
 package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.MyBundle
+import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.model.BuildSystem
+import com.cquilez.pitesthelper.processors.GradleProcessor
+import com.cquilez.pitesthelper.processors.MavenProcessor
+import com.cquilez.pitesthelper.processors.Processor
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.SourceFolder
 import com.intellij.openapi.vfs.VirtualFile
@@ -15,6 +23,8 @@ import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.util.containers.stream
 import org.jetbrains.jps.model.java.JavaSourceRootProperties
 import org.jetbrains.jps.model.java.JavaSourceRootType
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.function.Predicate
 import kotlin.streams.toList
 
@@ -61,5 +71,49 @@ class MyProjectService(project: Project) {
     fun findClassesInModule(className: String, project: Project, module: Module): Array<PsiClass> {
         val scope = GlobalSearchScope.moduleScope(module)
         return PsiShortNamesCache.getInstance(project).getClassesByName(className, scope)
+    }
+
+    /**
+     * Checks if the project uses Gradle or Maven build systems
+     */
+    fun getBuildSystem(project: Project): BuildSystem {
+        return if (existsPathInProject(project, "settings.gradle") || existsPathInProject(project, "settings.gradle.kts")) {
+            BuildSystem.GRADLE
+        } else if (existsPathInProject(project, "pom.xml")) {
+            BuildSystem.MAVEN
+        } else
+            BuildSystem.OTHER
+    }
+
+    /**
+     * Checks a path exists in the project
+     */
+    private fun existsPathInProject(project: Project, filePath: String): Boolean {
+        return Files.exists(getProjectNioPath(project).resolve(filePath))
+    }
+
+    /**
+     * Gets the project root path
+     */
+    private fun getProjectNioPath(project: Project): Path {
+        return ModuleRootManager.getInstance(ModuleManager.getInstance(project).modules[0]).contentRoots[0].toNioPath()
+    }
+
+    /**
+     * Returns the build system processor for the project
+     */
+    fun getBuildSystemProcessor(project: Project): Processor {
+        val buildSystem = getBuildSystem(project)
+        return when (buildSystem) {
+            BuildSystem.GRADLE -> {
+                project.service<GradleProcessor>()
+            }
+
+            BuildSystem.MAVEN -> {
+                project.service<MavenProcessor>()
+            }
+
+            else -> throw PitestHelperException("Unsupported build system. PITest Helper supports only Gradle and Maven projects.")
+        }
     }
 }

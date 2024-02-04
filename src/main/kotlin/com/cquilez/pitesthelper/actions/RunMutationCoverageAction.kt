@@ -12,7 +12,6 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
@@ -76,6 +75,10 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
         val project = project as Project
         val projectService = project.service<MyProjectService>()
+        val uiService = project.service<UIService>()
+        val processor = projectService.getBuildSystemProcessor(project)
+        processor.processProjectNodes(project)
+        uiService.showDialog { Messages.showInfoMessage(project, "Gradle & Maven", "Build system: ${projectService.getBuildSystem(project).name}") }
 
         stringBuilder.clear()
         val navigatableArray = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
@@ -89,7 +92,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                 } else {
                     throw PitestHelperException("No elements found")
                 }
-            showMutationCoverageDialog(project, mutationCoverageData)
+            showMutationCoverageDialog(project, mutationCoverageData, uiService)
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
         }
@@ -292,8 +295,8 @@ class RunMutationCoverageAction : DumbAwareAction() {
      * Shows Mutation Coverage dialog and runs Maven command when OK button is pressed.
      * Does not show the dialog if you are running plugin tests.
      */
-    private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData) {
-        if (!ApplicationManager.getApplication().isUnitTestMode) {
+    private fun showMutationCoverageDialog(project: Project, mutationCoverageData: MutationCoverageData, uiService: UIService) {
+        uiService.showDialog({
             val dialog = MutationCoverageDialog(mutationCoverageData)
             dialog.show()
             if (dialog.isOK) {
@@ -304,9 +307,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                     MavenService.buildPitestArgs(dialog.data.targetClasses, dialog.data.targetTests)
                 )
             }
-        } else {
-            RunMutationCoverageAction.mutationCoverageData = mutationCoverageData
-        }
+        }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
     }
 
     private fun getModuleForNavigatable(project: Project, navigatable: Navigatable): Module {
