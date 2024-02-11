@@ -1,7 +1,6 @@
 package com.cquilez.pitesthelper.common
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.services.ClassService
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -71,12 +70,7 @@ class TestUtil {
             }
         }
 
-        fun findAndCreateClassTreeNode(fixture: JavaCodeInsightTestFixture, relativePath: String): ClassTreeNode {
-            val psiFile = fixture.configureFromTempProjectFile(relativePath)
-            return ClassTreeNode(fixture.project, getPublicClass(psiFile), null)
-        }
-
-        fun getPublicClass(psiFile: PsiFile): PsiClass {
+        private fun getPublicClass(psiFile: PsiFile): PsiClass {
             if (psiFile is PsiJavaFile) {
                 val psiClasses: Array<PsiClass> = psiFile.classes
                 return psiClasses.first { service -> service.isPhysical }
