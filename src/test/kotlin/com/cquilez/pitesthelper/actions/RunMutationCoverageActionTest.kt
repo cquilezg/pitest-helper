@@ -1,38 +1,50 @@
 package com.cquilez.pitesthelper.actions
 
+import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.services.ServiceProvider
+import com.cquilez.pitesthelper.services.UIService
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.packageDependencies.ui.DirectoryNode
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiFile
-import io.mockk.every
+import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.verify
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.util.*
+import kotlin.test.assertNotNull
 
 @ExtendWith(MockKExtension::class)
 class RunMutationCoverageActionTest {
 
     @MockK
-    lateinit var anActionEvent : AnActionEvent
+    lateinit var anActionEvent: AnActionEvent
 
     @MockK
-    lateinit var project : Project
+    lateinit var project: Project
 
     @MockK
     lateinit var serviceProvider: ServiceProvider
 
     @MockK
     lateinit var classService: ClassService
+
+    @MockK
+    lateinit var projectService: MyProjectService
+
+    @MockK
+    lateinit var uiService: UIService
 
     @MockK
     lateinit var psiFile: PsiFile
@@ -42,6 +54,12 @@ class RunMutationCoverageActionTest {
 
     @MockK
     lateinit var presentation: Presentation
+
+    @MockK
+    lateinit var module: com.intellij.openapi.module.Module
+
+    @MockK
+    lateinit var navigatable: Navigatable
 
     @InjectMockKs
     lateinit var action: RunMutationCoverageAction
@@ -96,5 +114,37 @@ class RunMutationCoverageActionTest {
         }
     }
 
+    @Nested
+    @DisplayName("Method: actionPerformed(...)")
+    inner class ActionPerformedTest {
 
+        @Test
+        fun `Invokes command processor and shows dialog with data`() {
+            every { anActionEvent.project } returns project
+            every { project.service<ServiceProvider>() } returns serviceProvider
+            every { serviceProvider.mockedServiceMap[MyProjectService::class] } returns projectService
+            every { serviceProvider.mockedServiceMap[UIService::class] } returns uiService
+            every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
+            val navigatableArray = arrayOf(navigatable)
+            every { anActionEvent.getData(CommonDataKeys.NAVIGATABLE_ARRAY) } returns navigatableArray
+            every { anActionEvent.getData(CommonDataKeys.PSI_FILE) } returns psiFile
+            val mainList = Collections.emptyList<String>()
+            val testList = Collections.emptyList<String>()
+            val mutationCoverageData = MutationCoverageData(module, mainList, testList)
+            mockkConstructor(MutationCoverageCommandProcessor::class)
+            every {
+                constructedWith<MutationCoverageCommandProcessor>(EqMatcher(project), EqMatcher(projectService), EqMatcher(classService), EqMatcher(uiService))
+                    .handleCommand(navigatableArray, psiFile)
+            } returns mutationCoverageData
+
+            val showDialogRun = slot<Runnable>()
+            val showDialogRun2 = slot<Runnable>()
+            every { uiService.showDialog(capture(showDialogRun), capture(showDialogRun2)) } answers { }
+
+            action.actionPerformed(anActionEvent)
+
+            assertNotNull(showDialogRun.captured)
+            assertNotNull(showDialogRun2.captured)
+        }
+    }
 }

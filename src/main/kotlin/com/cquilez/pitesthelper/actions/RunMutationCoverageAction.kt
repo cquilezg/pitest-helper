@@ -3,10 +3,8 @@ package com.cquilez.pitesthelper.actions
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.services.ServiceProvider
-import com.cquilez.pitesthelper.services.UIService
+import com.cquilez.pitesthelper.services.*
+import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -65,19 +63,36 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val projectService = serviceProvider.getService<MyProjectService>(project)
         val uiService = serviceProvider.getService<UIService>(project)
         val classService = serviceProvider.getService<ClassService>(project)
-        val processor = projectService.getBuildSystemProcessor(project)
-        processor.processProjectNodes(project)
-        uiService.showDialog { Messages.showInfoMessage(project, "Gradle & Maven", "Build system: ${projectService.getBuildSystem(project).name}") }
 
         val navigatableArray = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
         val psiFile = event.getData(CommonDataKeys.PSI_FILE)
 
         try {
             val mutationCoverageCommandProcessor = MutationCoverageCommandProcessor(project, projectService, classService, uiService)
-            mutationCoverageCommandProcessor.handleCommand(navigatableArray, psiFile)
+            showMutationCoverageDialog(project, uiService,
+                mutationCoverageCommandProcessor.handleCommand(navigatableArray, psiFile))
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
         }
+    }
+
+    /**
+     * Shows Mutation Coverage dialog and runs Maven command when OK button is pressed.
+     * Does not show the dialog if you are running plugin tests.
+     */
+    private fun showMutationCoverageDialog(project: Project, uiService: UIService, mutationCoverageData: MutationCoverageData) {
+        uiService.showDialog({
+            val dialog = MutationCoverageDialog(mutationCoverageData)
+            dialog.show()
+            if (dialog.isOK) {
+                MavenService.runMavenCommand(
+                    project,
+                    mutationCoverageData.module,
+                    listOf("test-compile", "pitest:mutationCoverage"),
+                    MavenService.buildPitestArgs(dialog.data.targetClasses, dialog.data.targetTests)
+                )
+            }
+        }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
     }
 
     /**
