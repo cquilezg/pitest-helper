@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.plugins.gradle.util.GradleUtil
 
 /**
  * Run Mutation Coverage action
@@ -68,9 +69,8 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val psiFile = event.getData(CommonDataKeys.PSI_FILE)
 
         try {
-            val mutationCoverageCommandProcessor = MutationCoverageCommandProcessor(project, projectService, classService, uiService)
-            showMutationCoverageDialog(project, uiService,
-                mutationCoverageCommandProcessor.handleCommand(navigatableArray, psiFile))
+            val processor = projectService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
+            showMutationCoverageDialog(project, uiService, processor)
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
         }
@@ -80,9 +80,10 @@ class RunMutationCoverageAction : DumbAwareAction() {
      * Shows Mutation Coverage dialog and runs Maven command when OK button is pressed.
      * Does not show the dialog if you are running plugin tests.
      */
-    private fun showMutationCoverageDialog(project: Project, uiService: UIService, mutationCoverageData: MutationCoverageData) {
+    private fun showMutationCoverageDialog(project: Project, uiService: UIService, processor: MutationCoverageCommandProcessor) {
+        val mutationCoverageData = processor.handleCommand()
         uiService.showDialog({
-            val dialog = MutationCoverageDialog(mutationCoverageData)
+            val dialog = MutationCoverageDialog(mutationCoverageData, processor::buildCommand)
             dialog.show()
             if (dialog.isOK) {
                 MavenService.runMavenCommand(

@@ -6,6 +6,7 @@ import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.services.ServiceProvider
 import com.cquilez.pitesthelper.services.UIService
+import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.*
 import kotlin.test.assertNotNull
+import com.intellij.openapi.module.Module
 
 @ExtendWith(MockKExtension::class)
 class RunMutationCoverageActionTest {
@@ -56,10 +58,13 @@ class RunMutationCoverageActionTest {
     lateinit var presentation: Presentation
 
     @MockK
-    lateinit var module: com.intellij.openapi.module.Module
+    lateinit var module: Module
 
     @MockK
     lateinit var navigatable: Navigatable
+
+    @MockK
+    lateinit var commandProcessor: MutationCoverageCommandProcessor
 
     @InjectMockKs
     lateinit var action: RunMutationCoverageAction
@@ -133,9 +138,11 @@ class RunMutationCoverageActionTest {
             val mutationCoverageData = MutationCoverageData(module, mainList, testList)
             mockkConstructor(MutationCoverageCommandProcessor::class)
             every {
-                constructedWith<MutationCoverageCommandProcessor>(EqMatcher(project), EqMatcher(projectService), EqMatcher(classService), EqMatcher(uiService))
-                    .handleCommand(navigatableArray, psiFile)
-            } returns mutationCoverageData
+                projectService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
+            } returns commandProcessor
+            every {
+                commandProcessor.handleCommand()
+            } answers { mutationCoverageData }
 
             val showDialogRun = slot<Runnable>()
             val showDialogRun2 = slot<Runnable>()
@@ -145,6 +152,15 @@ class RunMutationCoverageActionTest {
 
             assertNotNull(showDialogRun.captured)
             assertNotNull(showDialogRun2.captured)
+            mockkConstructor(MutationCoverageDialog::class)
+            every {
+                constructedWith<MutationCoverageDialog>(EqMatcher(mutationCoverageData))
+                    .show()
+            } answers {}
+            every {
+                constructedWith<MutationCoverageDialog>(EqMatcher(mutationCoverageData))
+                    .isOK
+            } answers { true }
         }
     }
 }
