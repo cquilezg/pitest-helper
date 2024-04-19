@@ -3,6 +3,7 @@ package com.cquilez.pitesthelper.processors
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.GradleService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
 import com.intellij.openapi.module.Module
@@ -41,6 +42,15 @@ open class GradleMutationCoverageCommandProcessor(
             )
         }"
 
-    fun buildPitestArgs(targetClasses: String, targetTests: String) =
+    override fun runCommand(mutationCoverageData: MutationCoverageData) {
+        GradleService.runCommand(project, "pitest ${
+            buildPitestArgs(
+                mutationCoverageData.targetClasses.joinToString(","),
+                mutationCoverageData.targetTests.joinToString(",")
+            )
+        }")
+    }
+
+    private fun buildPitestArgs(targetClasses: String, targetTests: String) =
         "-Ppitest.targetClasses=$targetClasses -Ppitest.targetTests=$targetTests"
 }

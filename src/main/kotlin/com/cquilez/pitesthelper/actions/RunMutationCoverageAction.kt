@@ -77,8 +77,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
     }
 
     /**
-     * Shows Mutation Coverage dialog and runs Maven command when OK button is pressed.
-     * Does not show the dialog if you are running plugin tests.
+     * Shows Mutation Coverage dialog and runs PITest command when Run button is clicked.
      */
     private fun showMutationCoverageDialog(project: Project, uiService: UIService, processor: MutationCoverageCommandProcessor) {
         val mutationCoverageData = processor.handleCommand()
@@ -86,12 +85,8 @@ class RunMutationCoverageAction : DumbAwareAction() {
             val dialog = MutationCoverageDialog(mutationCoverageData, processor::buildCommand)
             dialog.show()
             if (dialog.isOK) {
-                MavenService.runMavenCommand(
-                    project,
-                    mutationCoverageData.module,
-                    listOf("test-compile", "pitest:mutationCoverage"),
-                    MavenService.buildPitestArgs(dialog.data.targetClasses, dialog.data.targetTests)
-                )
+                processor.runCommand(mutationCoverageData)
+                dialog.data
             }
         }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
     }

@@ -59,4 +59,16 @@ open class MavenMutationCoverageCommandProcessor(
                 mutationCoverageData.targetTests.joinToString(",")
             )
         }"
+
+    override fun runCommand(mutationCoverageData: MutationCoverageData) {
+        MavenService.runMavenCommand(
+            project,
+            mutationCoverageData.module,
+            listOf("test-compile", "pitest:mutationCoverage"),
+            MavenService.buildPitestArgs(
+                mutationCoverageData.targetClasses.joinToString(","),
+                mutationCoverageData.targetTests.joinToString(",")
+            )
+        )
+    }
 }

@@ -45,6 +45,7 @@ abstract class MutationCoverageCommandProcessor(
 
     protected abstract fun resolveModules()
     abstract fun buildCommand(mutationCoverageData: MutationCoverageData) : String
+    abstract fun runCommand(mutationCoverageData: MutationCoverageData)
 
     private fun readMultipleNodes(
         navigatableArray: Array<Navigatable>
