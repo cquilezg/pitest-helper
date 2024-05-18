@@ -6,11 +6,11 @@ import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.services.ServiceProvider
 import com.cquilez.pitesthelper.services.UIService
-import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.components.service
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.packageDependencies.ui.DirectoryNode
 import com.intellij.pom.Navigatable
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.*
 import kotlin.test.assertNotNull
-import com.intellij.openapi.module.Module
 
 @ExtendWith(MockKExtension::class)
 class RunMutationCoverageActionTest {
@@ -152,15 +151,6 @@ class RunMutationCoverageActionTest {
 
             assertNotNull(showDialogRun.captured)
             assertNotNull(showDialogRun2.captured)
-            mockkConstructor(MutationCoverageDialog::class)
-            every {
-                constructedWith<MutationCoverageDialog>(EqMatcher(mutationCoverageData))
-                    .show()
-            } answers {}
-            every {
-                constructedWith<MutationCoverageDialog>(EqMatcher(mutationCoverageData))
-                    .isOK
-            } answers { true }
         }
     }
 }

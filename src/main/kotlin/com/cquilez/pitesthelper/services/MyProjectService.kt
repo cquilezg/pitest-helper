@@ -187,8 +187,8 @@ class MyProjectService(project: Project) {
         navigatableArray: Array<Navigatable>?,
         psiFile: PsiFile?
     ): MutationCoverageCommandProcessor {
-        if (!ApplicationManager.getApplication().isUnitTestMode) {
-            return when (getBuildSystem(project, navigatableArray, psiFile)) {
+        return if (!ApplicationManager.getApplication().isUnitTestMode) {
+            when (getBuildSystem(project, navigatableArray, psiFile)) {
                 BuildSystem.GRADLE -> {
                     GradleMutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile)
                 }
@@ -200,7 +200,7 @@ class MyProjectService(project: Project) {
                 else -> throw PitestHelperException("Unsupported build system. PITest Helper supports only Gradle and Maven projects.")
             }
         } else {
-            return MavenMutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile)
+            MavenMutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile)
         }
     }
 }

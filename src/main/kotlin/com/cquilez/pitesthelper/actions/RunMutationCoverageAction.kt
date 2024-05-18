@@ -14,7 +14,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.plugins.gradle.util.GradleUtil
 
 /**
  * Run Mutation Coverage action
@@ -86,7 +85,6 @@ class RunMutationCoverageAction : DumbAwareAction() {
             dialog.show()
             if (dialog.isOK) {
                 processor.runCommand(mutationCoverageData)
-                dialog.data
             }
         }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
     }
