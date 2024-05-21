@@ -69,7 +69,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
 
         try {
             val processor = projectService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
-            showMutationCoverageDialog(project, uiService, processor)
+            showMutationCoverageDialog(uiService, processor)
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
         }
@@ -78,7 +78,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
     /**
      * Shows Mutation Coverage dialog and runs PITest command when Run button is clicked.
      */
-    private fun showMutationCoverageDialog(project: Project, uiService: UIService, processor: MutationCoverageCommandProcessor) {
+    private fun showMutationCoverageDialog(uiService: UIService, processor: MutationCoverageCommandProcessor) {
         val mutationCoverageData = processor.handleCommand()
         uiService.showDialog({
             val dialog = MutationCoverageDialog(mutationCoverageData, processor::buildCommand)

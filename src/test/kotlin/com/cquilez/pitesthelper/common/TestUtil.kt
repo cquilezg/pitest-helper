@@ -84,14 +84,14 @@ class TestUtil {
             val module = ModuleManager.getInstance(fixture.project).modules[0]
             val packageVirtualFile = ModuleRootManager.getInstance(module).contentRoots[0].findFileByRelativePath(relativePath)
             if (packageVirtualFile == null || !packageVirtualFile.isDirectory) {
-                fail("Fail preparing test: Package com/project was not found")
+                fail("Fail preparing test: Package $relativePath was not found")
             }
             val psiManager = PsiManager.getInstance(fixture.project)
             var psiDirectory: PsiDirectory? = null
             ApplicationManager.getApplication().runReadAction {
                 psiDirectory = psiManager.findDirectory(packageVirtualFile)
                 if (psiDirectory == null || !psiDirectory!!.isDirectory) {
-                    fail("Fail preparing test: PsiDirectory com/project was not found")
+                    fail("Fail preparing test: PsiDirectory $relativePath was not found")
                 }
             }
             return PsiDirectoryNode(fixture.project, psiDirectory!!, null)

@@ -106,7 +106,7 @@ class MyProjectService(project: Project) {
             BuildSystem.OTHER
     }
 
-    fun getBuildSystem(project: Project, navigatableArray: Array<Navigatable>?, psiFile: PsiFile?): BuildSystem {
+    private fun getBuildSystem(project: Project, navigatableArray: Array<Navigatable>?, psiFile: PsiFile?): BuildSystem {
         return if (!navigatableArray.isNullOrEmpty()) {
             getBuildSystemForNavigatables(project, navigatableArray)
         } else if (psiFile != null) {
