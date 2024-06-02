@@ -26,17 +26,17 @@ jobs:
               ./gradlew runIdeForUiTests > build/reports/idea.log &
             runTests: |
               export DISPLAY=:99.0
-              ./gradlew test
+              ./gradlew test -Ptags=ui
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-linux
           - os: macos-14
             runIde: ./gradlew runIdeForUiTests &
-            runTests: ./gradlew test
+            runTests: ./gradlew test -Ptags=ui
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-mac
           - os: windows-latest
             runIde: start gradlew.bat runIdeForUiTests
-            runTests: ./gradlew test
+            runTests: ./gradlew test -Ptags=ui
             url: http://localhost:8082
             reportName: ui-test-fails-report-windows
 
