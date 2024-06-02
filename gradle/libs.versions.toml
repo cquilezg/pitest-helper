@@ -5,6 +5,9 @@ junitJupiter = "5.10.0"
 hamcrest = "2.2"
 kotlinTest = "1.8.10"
 mockk = "1.13.10"
+remoteRobot = "0.11.22"
+loggingInterceptor = "4.12.0"
+videoRecorderJunit5 = "2.0"
 
 # plugins
 kotlin = "1.9.21"
@@ -20,6 +23,10 @@ junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine
 hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }
 kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+remoteRobot = { group = "com.intellij.remoterobot", name = "remote-robot", version.ref = "remoteRobot" }
+remoteFixtures = { group = "com.intellij.remoterobot", name = "remote-fixtures", version.ref = "remoteRobot" }
+loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
+videoRecorderJunit5 = { group = "com.automation-remarks", name = "video-recorder-junit5", version.ref = "videoRecorderJunit5" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }

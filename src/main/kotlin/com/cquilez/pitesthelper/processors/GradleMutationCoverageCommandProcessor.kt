@@ -11,7 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.gradle.model.data.GradleSourceSetData
-import org.jetbrains.plugins.gradle.util.GradleUtil
+import org.jetbrains.plugins.gradle.util.*
 
 open class GradleMutationCoverageCommandProcessor(
     project: Project,
@@ -43,12 +43,14 @@ open class GradleMutationCoverageCommandProcessor(
         }"
 
     override fun runCommand(mutationCoverageData: MutationCoverageData) {
-        GradleService.runCommand(project, "pitest ${
-            buildPitestArgs(
-                mutationCoverageData.targetClasses.joinToString(","),
-                mutationCoverageData.targetTests.joinToString(",")
-            )
-        }")
+        GradleService.runCommand(
+            project, "pitest ${
+                buildPitestArgs(
+                    mutationCoverageData.targetClasses.joinToString(","),
+                    mutationCoverageData.targetTests.joinToString(",")
+                )
+            }"
+        )
     }
 
     private fun buildPitestArgs(targetClasses: String, targetTests: String) =

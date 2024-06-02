@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import java.net.URI
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
@@ -19,6 +20,7 @@ version = properties("pluginVersion").get()
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    maven { url = URI("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies") }
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -28,6 +30,10 @@ dependencies {
     testRuntimeOnly(libs.junitJupiterEngine)
     testImplementation(libs.kotlinTest)
     testImplementation(libs.mockk)
+    testImplementation(libs.remoteRobot)
+    testImplementation(libs.remoteFixtures)
+    testImplementation(libs.loggingInterceptor)
+    testImplementation(libs.videoRecorderJunit5)
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
@@ -116,6 +122,9 @@ tasks {
         systemProperty("ide.mac.message.dialogs.as.sheets", "false")
         systemProperty("jb.privacy.policy.text", "<!--999.999-->")
         systemProperty("jb.consents.confirmation.enabled", "false")
+        systemProperty("idea.trust.all.projects", "true")
+        systemProperty("ide.show.tips.on.startup.default.value", "false")
+        systemProperty("ide.mac.file.chooser.native", "false")
     }
 
     signPlugin {
@@ -134,6 +143,11 @@ tasks {
     }
 
     test {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            val tags = project.findProperty("tags")
+            if (tags != null) {
+                includeTags(tags.toString() )
+            }
+        }
     }
 }

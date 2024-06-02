@@ -8,7 +8,6 @@ import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -53,7 +52,7 @@ class MyProjectService(project: Project) {
         }
 
 
-    fun getTestSourceFolders(module: Module) =
+    private fun getTestSourceFolders(module: Module) =
         getFilteredSourceFolders(module) {
             it.rootType is JavaSourceRootType && it.rootType.isForTests
         }
