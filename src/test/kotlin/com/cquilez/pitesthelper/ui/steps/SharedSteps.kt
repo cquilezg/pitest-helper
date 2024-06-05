@@ -27,6 +27,7 @@ object SharedSteps {
                 openProject()
 
                 dialog("Open File or Project") {
+                    waitFor(ofSeconds(10)) { button("OK").isEnabled() }
                     val currentPath = Paths.get("").toAbsolutePath().toString()
                     pathTextField.text = "$currentPath/src/test/testData/$projectName"
                     waitFor(ofSeconds(10)) { button("OK").isEnabled() }
