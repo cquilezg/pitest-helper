@@ -80,8 +80,10 @@ object SharedSteps {
             if (findAllText(className).isNotEmpty()) {
                 break
             }
+            //TODO: fix Linux. It is opening pom.xml when clicking nodes...
             waitFor { findAllText(node).isNotEmpty() }
-            findText(node).click()
+            projectViewTree.data[node].click()
+//            findText(node).click()
             keyboard {
                 key(VK_MULTIPLY)
             }
