@@ -23,4 +23,7 @@ class ProjectToolWindow(remoteRobot: RemoteRobot, remoteComponent: RemoteCompone
                 "//div[@class='ToolWindowHeader']//div[@class='JPanel']//div[@class='TabPanel']//div[@class='ContentComboLabel' and @text='Project']/../../../div[@class='JPanel']//div[@class='ActionToolbarImpl']//div[@class='ActionButton' and @myicon='collapseall.svg']"
             )
         )
+
+    val projectViewTree
+        get() = find<ContainerFixture>(byXpath("ProjectViewTree type", "//div[@class='ProjectViewTree']"))
 }

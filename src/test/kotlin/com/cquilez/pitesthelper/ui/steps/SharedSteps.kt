@@ -59,8 +59,7 @@ object SharedSteps {
                     waitFor(ofMinutes(5)) { modulesJs() > 1 }
                 }
                 collapseAllButton.click()
-                waitFor(ofSeconds(20)) {  findAllText(projectName).isNotEmpty() }
-                findText(projectName).doubleClick()
+                projectViewTree.data[projectName].doubleClick()
                 findClass(this, parentNodeList, className)
                 findText(className).rightClick()
             }
