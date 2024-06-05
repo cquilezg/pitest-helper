@@ -29,7 +29,7 @@ jobs:
               ./gradlew test -Ptags=ui
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-linux
-          - os: macos-14
+          - os: macos-13
             runIde: ./gradlew runIdeForUiTests &
             runTests: ./gradlew test -Ptags=ui
             url: http://127.0.0.1:8082
