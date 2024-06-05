@@ -80,6 +80,7 @@ object SharedSteps {
             if (findAllText(className).isNotEmpty()) {
                 break
             }
+            waitFor { findAllText(node).isNotEmpty() }
             findText(node).click()
             keyboard {
                 key(VK_MULTIPLY)
