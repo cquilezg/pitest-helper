@@ -85,7 +85,8 @@ object SharedSteps {
             projectViewTree.data[node].click()
 //            findText(node).click()
             keyboard {
-                key(VK_MULTIPLY)
+//                key(VK_MULTIPLY)
+                key(VK_RIGHT)
             }
         }
     }
