@@ -59,10 +59,12 @@ object SharedSteps {
                 if (checkProjectLoaded) {
                     waitFor(ofMinutes(5)) { modulesJs() > 1 }
                 }
-                collapseAllButton.click()
-                projectViewTree.data[projectName].doubleClick()
-                findClass(this, parentNodeList, className)
-                findText(className).rightClick()
+                retry(3) {
+                    collapseAllButton.click()
+                    projectViewTree.data[projectName].doubleClick()
+                    findClass(this, parentNodeList, className)
+                    projectViewTree.data[className].rightClick()
+                }
             }
             idea {
                 waitFor(ofMinutes(5)) { isDumbMode().not() }
@@ -75,18 +77,35 @@ object SharedSteps {
         }
     }
 
+    /**
+     * Try an operation several times
+     */
+    private fun <T> retry(times: Int, delay: Long = 0, block: () -> T): T {
+        var lastException: Exception? = null
+
+        for (attempt in 1..times) {
+            try {
+                return block()
+            } catch (e: Exception) {
+                lastException = e
+                if (attempt < times) {
+                    Thread.sleep(delay)
+                }
+            }
+        }
+
+        throw lastException ?: IllegalStateException("Operation failed after $times attempts")
+    }
+
     private fun findClass(projectToolWindow: ProjectToolWindow, parentNodeList: List<String>, className: String) = with(projectToolWindow) {
         for (node in parentNodeList) {
-            if (findAllText(className).isNotEmpty()) {
+            if (projectViewTree.data.hasText(className)) {
                 break
             }
-            //TODO: fix Linux. It is opening pom.xml when clicking nodes...
-            waitFor { findAllText(node).isNotEmpty() }
+            waitFor { projectViewTree.data.hasText(node) }
             projectViewTree.data[node].click()
-//            findText(node).click()
             keyboard {
-//                key(VK_MULTIPLY)
-                key(VK_RIGHT)
+                key(VK_MULTIPLY)
             }
         }
     }
