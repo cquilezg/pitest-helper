@@ -1,10 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.CodeItem
-import com.cquilez.pitesthelper.model.CodeItemType
-import com.cquilez.pitesthelper.model.MutationCoverage
-import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.model.*
 import com.cquilez.pitesthelper.services.*
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
@@ -44,8 +41,8 @@ abstract class MutationCoverageCommandProcessor(
     }
 
     protected abstract fun resolveModules()
-    abstract fun buildCommand(mutationCoverageData: MutationCoverageData) : String
-    abstract fun runCommand(mutationCoverageData: MutationCoverageData)
+    abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) : String
+    abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData)
 
     private fun readMultipleNodes(
         navigatableArray: Array<Navigatable>

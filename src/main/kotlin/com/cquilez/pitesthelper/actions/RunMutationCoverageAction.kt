@@ -3,7 +3,10 @@ package com.cquilez.pitesthelper.actions
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
-import com.cquilez.pitesthelper.services.*
+import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.MyProjectService
+import com.cquilez.pitesthelper.services.ServiceProvider
+import com.cquilez.pitesthelper.services.UIService
 import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -84,7 +87,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
             val dialog = MutationCoverageDialog(mutationCoverageData, processor::buildCommand)
             dialog.show()
             if (dialog.isOK) {
-                processor.runCommand(mutationCoverageData)
+                processor.runCommand(dialog.commandData)
             }
         }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
     }

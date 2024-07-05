@@ -1,6 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.MavenService
@@ -52,23 +53,15 @@ open class MavenMutationCoverageCommandProcessor(
         }
     }
 
-    override fun buildCommand(mutationCoverageData: MutationCoverageData) =
-        "mvn test-compile pitest:mutationCoverage ${
-            MavenService.buildPitestArgs(
-                mutationCoverageData.targetClasses.joinToString(","),
-                mutationCoverageData.targetTests.joinToString(",")
-            )
-        }"
+    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
+        "mvn test-compile pitest:mutationCoverage ${MavenService.buildPitestArgs(mutationCoverageCommandData)}"
 
-    override fun runCommand(mutationCoverageData: MutationCoverageData) {
+    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
         MavenService.runMavenCommand(
             project,
-            mutationCoverageData.module,
+            mutationCoverageCommandData.module,
             listOf("test-compile", "pitest:mutationCoverage"),
-            MavenService.buildPitestArgs(
-                mutationCoverageData.targetClasses.joinToString(","),
-                mutationCoverageData.targetTests.joinToString(",")
-            )
+            MavenService.buildPitestArgs(mutationCoverageCommandData)
         )
     }
 }

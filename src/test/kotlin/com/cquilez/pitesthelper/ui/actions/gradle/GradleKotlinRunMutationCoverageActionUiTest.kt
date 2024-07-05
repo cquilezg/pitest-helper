@@ -13,14 +13,14 @@ import java.time.Duration.ofMinutes
 @ExtendWith(RemoteRobotExtension::class)
 @Tag("ui")
 @Tag("gradle")
-class GradleRunMutationCoverageActionUiTest {
+class GradleKotlinRunMutationCoverageActionUiTest {
 
     init {
         StepsLogger.init()
     }
 
     companion object {
-        private const val TEST_PROJECT = "sample-gradle-pitest"
+        private const val TEST_PROJECT = "sample-gradle-kotlin"
 
         @JvmStatic
         @BeforeAll
@@ -42,9 +42,17 @@ class GradleRunMutationCoverageActionUiTest {
 
     @Test
     @Video
-    fun runMutationCoverage(remoteRobot: RemoteRobot) = with(remoteRobot) {
+    fun runMutationCoverageNormalClass(remoteRobot: RemoteRobot) = with(remoteRobot) {
         SharedSteps.runMutationCoverage(TEST_PROJECT, remoteRobot, listOf("src", "main", "java", "org.example.project1", "listener"), "ListenerA",
             "./gradlew pitest -Ppitest.targetClasses=org.example.project1.listener.ListenerA -Ppitest.targetTests=org.example.project1.listener.ListenerATest",
+            true)
+    }
+
+    @Test
+    @Video
+    fun runMutationCoverageTestClass(remoteRobot: RemoteRobot) = with(remoteRobot) {
+        SharedSteps.runMutationCoverage(TEST_PROJECT, remoteRobot, listOf("src", "test", "java", "org.example.project1", "listener"), "ListenerStringTest",
+            "./gradlew pitest -Ppitest.targetClasses=org.example.project1.listener.ListenerString -Ppitest.targetTests=org.example.project1.listener.ListenerStringTest",
             true)
     }
 }

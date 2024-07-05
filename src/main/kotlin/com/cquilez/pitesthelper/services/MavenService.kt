@@ -1,5 +1,6 @@
 package com.cquilez.pitesthelper.services
 
+import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
@@ -12,8 +13,8 @@ import org.jetbrains.idea.maven.execution.MavenRunnerParameters
 import org.jetbrains.idea.maven.execution.MavenRunnerSettings
 
 object MavenService {
-    fun buildPitestArgs(targetClasses: String, targetTests: String) =
-        "-DtargetClasses=$targetClasses -DtargetTests=$targetTests"
+    fun buildPitestArgs(mutationCoverageCommandData: MutationCoverageCommandData) =
+        "-DtargetClasses=${mutationCoverageCommandData.targetClasses} -DtargetTests=${mutationCoverageCommandData.targetTests}"
 
     fun runMavenCommand(project: Project, module: Module, goals: List<String>, vmOptions: String) {
         val toolWindowManager = ToolWindowManager.getInstance(project)

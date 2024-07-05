@@ -1,4 +1,4 @@
-package com.cquilez.pitesthelper.ui.actions.maven
+package com.cquilez.pitesthelper.ui.actions.gradle
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.steps.SharedSteps
@@ -12,15 +12,15 @@ import java.time.Duration.ofMinutes
 
 @ExtendWith(RemoteRobotExtension::class)
 @Tag("ui")
-@Tag("maven")
-class MavenRunMutationCoverageActionUiTest {
+@Tag("gradle")
+class GradleGroovyRunMutationCoverageActionUiTest {
 
     init {
         StepsLogger.init()
     }
 
     companion object {
-        private const val TEST_PROJECT = "sample-maven"
+        private const val TEST_PROJECT = "sample-gradle-groovy"
 
         @JvmStatic
         @BeforeAll
@@ -43,10 +43,8 @@ class MavenRunMutationCoverageActionUiTest {
     @Test
     @Video
     fun runMutationCoverage(remoteRobot: RemoteRobot) = with(remoteRobot) {
-        SharedSteps.runMutationCoverage(
-            TEST_PROJECT, remoteRobot, listOf("src", "main", "java", "com.myproject", "package1"), "ClassA",
-            "mvn test-compile pitest:mutationCoverage -DtargetClasses=com.myproject.package1.ClassA -DtargetTests=com.myproject.package1.ClassATest",
-            false
-        )
+        SharedSteps.runMutationCoverage(TEST_PROJECT, remoteRobot, listOf("src", "main", "java", "org.example.project1", "listener"), "ListenerA",
+            "./gradlew pitest -Ppitest.targetClasses=org.example.project1.listener.ListenerA -Ppitest.targetTests=org.example.project1.listener.ListenerATest",
+            true)
     }
 }

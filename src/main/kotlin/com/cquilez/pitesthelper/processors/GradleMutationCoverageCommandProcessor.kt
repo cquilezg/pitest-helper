@@ -1,7 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
 import com.cquilez.pitesthelper.services.MyProjectService
@@ -11,7 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.gradle.model.data.GradleSourceSetData
-import org.jetbrains.plugins.gradle.util.*
+import org.jetbrains.plugins.gradle.util.GradleUtil
 
 open class GradleMutationCoverageCommandProcessor(
     project: Project,
@@ -34,25 +34,13 @@ open class GradleMutationCoverageCommandProcessor(
             .map { projectService.findModuleByName(project, it.internalName) }
     }
 
-    override fun buildCommand(mutationCoverageData: MutationCoverageData) =
-        "./gradlew pitest ${
-            buildPitestArgs(
-                mutationCoverageData.targetClasses.joinToString(","),
-                mutationCoverageData.targetTests.joinToString(",")
-            )
-        }"
+    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
+        "./gradlew pitest ${buildPitestArgs(mutationCoverageCommandData)}"
 
-    override fun runCommand(mutationCoverageData: MutationCoverageData) {
-        GradleService.runCommand(
-            project, "pitest ${
-                buildPitestArgs(
-                    mutationCoverageData.targetClasses.joinToString(","),
-                    mutationCoverageData.targetTests.joinToString(",")
-                )
-            }"
-        )
+    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
+        GradleService.runCommand(project, "pitest ${buildPitestArgs(mutationCoverageCommandData)}")
     }
 
-    private fun buildPitestArgs(targetClasses: String, targetTests: String) =
-        "-Ppitest.targetClasses=$targetClasses -Ppitest.targetTests=$targetTests"
+    private fun buildPitestArgs(mutationCoverageCommandData: MutationCoverageCommandData) =
+        "-Ppitest.targetClasses=${mutationCoverageCommandData.targetClasses} -Ppitest.targetTests=${mutationCoverageCommandData.targetTests}"
 }
