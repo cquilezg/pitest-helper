@@ -3,7 +3,9 @@ package com.cquilez.pitesthelper.services
 import com.cquilez.pitesthelper.MyBundle
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.BuildSystem
-import com.cquilez.pitesthelper.processors.*
+import com.cquilez.pitesthelper.processors.GradleMutationCoverageCommandProcessor
+import com.cquilez.pitesthelper.processors.MavenMutationCoverageCommandProcessor
+import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.application.ApplicationManager
@@ -38,7 +40,8 @@ import java.util.function.Predicate
 @Service(Service.Level.PROJECT)
 class MyProjectService(project: Project) {
 
-    private val helpMessage = "Please select only Java classes, packages or a module folder containing Java source code."
+    private val helpMessage =
+        "Please select only Java classes, packages or a module folder containing Java source code."
 
     init {
         thisLogger().info(MyBundle.message("projectService", project.name))
@@ -88,7 +91,8 @@ class MyProjectService(project: Project) {
 
     fun findClassesInModules(className: String, project: Project, modules: List<Module>): Array<PsiClass> {
         return modules.flatMap {
-            PsiShortNamesCache.getInstance(project).getClassesByName(className, GlobalSearchScope.moduleScope(it)).toList()
+            PsiShortNamesCache.getInstance(project).getClassesByName(className, GlobalSearchScope.moduleScope(it))
+                .toList()
         }.toTypedArray()
     }
 
@@ -97,7 +101,11 @@ class MyProjectService(project: Project) {
      */
     //TODO: if the module is in a subfolder it doesn't work
     fun getBuildSystem(project: Project): BuildSystem {
-        return if (existsPathInProject(project, "settings.gradle") || existsPathInProject(project, "settings.gradle.kts")) {
+        return if (existsPathInProject(project, "settings.gradle") || existsPathInProject(
+                project,
+                "settings.gradle.kts"
+            )
+        ) {
             BuildSystem.GRADLE
         } else if (existsPathInProject(project, "pom.xml")) {
             BuildSystem.MAVEN
@@ -105,7 +113,11 @@ class MyProjectService(project: Project) {
             BuildSystem.OTHER
     }
 
-    private fun getBuildSystem(project: Project, navigatableArray: Array<Navigatable>?, psiFile: PsiFile?): BuildSystem {
+    private fun getBuildSystem(
+        project: Project,
+        navigatableArray: Array<Navigatable>?,
+        psiFile: PsiFile?
+    ): BuildSystem {
         return if (!navigatableArray.isNullOrEmpty()) {
             getBuildSystemForNavigatables(project, navigatableArray)
         } else if (psiFile != null) {
@@ -118,7 +130,14 @@ class MyProjectService(project: Project) {
     fun getBuildSystemForNavigatables(project: Project, navigatableArray: Array<Navigatable>): BuildSystem {
         return if (navigatableArray.all { MavenUtil.isMavenModule(getModuleForNavigatable(project, it)) }) {
             BuildSystem.MAVEN
-        } else if (navigatableArray.all { GradleUtil.findGradleModuleData(getModuleForNavigatable(project, it)) != null }) {
+        } else if (navigatableArray.all {
+                GradleUtil.findGradleModuleData(
+                    getModuleForNavigatable(
+                        project,
+                        it
+                    )
+                ) != null
+            }) {
             BuildSystem.GRADLE
         } else {
             BuildSystem.OTHER
@@ -189,11 +208,23 @@ class MyProjectService(project: Project) {
         return if (!ApplicationManager.getApplication().isUnitTestMode) {
             when (getBuildSystem(project, navigatableArray, psiFile)) {
                 BuildSystem.GRADLE -> {
-                    GradleMutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile)
+                    GradleMutationCoverageCommandProcessor(
+                        project,
+                        projectService,
+                        classService,
+                        navigatableArray,
+                        psiFile
+                    )
                 }
 
                 BuildSystem.MAVEN -> {
-                    MavenMutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile)
+                    MavenMutationCoverageCommandProcessor(
+                        project,
+                        projectService,
+                        classService,
+                        navigatableArray,
+                        psiFile
+                    )
                 }
 
                 else -> throw PitestHelperException("Unsupported build system. PITest Helper supports only Gradle and Maven projects.")

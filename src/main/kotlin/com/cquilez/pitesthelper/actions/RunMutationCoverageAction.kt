@@ -3,10 +3,7 @@ package com.cquilez.pitesthelper.actions
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.services.ServiceProvider
-import com.cquilez.pitesthelper.services.UIService
+import com.cquilez.pitesthelper.services.*
 import com.cquilez.pitesthelper.ui.MutationCoverageDialog
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -64,6 +61,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val project = event.project as Project
         val serviceProvider = project.service<ServiceProvider>()
         val projectService = serviceProvider.getService<MyProjectService>(project)
+        val buildSystemService = serviceProvider.getService<BuildSystemService>(project)
         val uiService = serviceProvider.getService<UIService>(project)
         val classService = serviceProvider.getService<ClassService>(project)
 
@@ -71,7 +69,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val psiFile = event.getData(CommonDataKeys.PSI_FILE)
 
         try {
-            val processor = projectService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
+            val processor = buildSystemService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
             showMutationCoverageDialog(uiService, processor)
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")

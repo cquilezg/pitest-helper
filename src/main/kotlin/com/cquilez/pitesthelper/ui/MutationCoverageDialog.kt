@@ -12,7 +12,10 @@ import java.awt.Toolkit
 import javax.swing.Action
 import javax.swing.JComponent
 
-class MutationCoverageDialog(mutationCoverageData: MutationCoverageData, private val commandBuilder: java.util.function.Function<MutationCoverageCommandData, String>) : DialogWrapper(true) {
+class MutationCoverageDialog(
+    mutationCoverageData: MutationCoverageData,
+    private val commandBuilder: java.util.function.Function<MutationCoverageCommandData, String>
+) : DialogWrapper(true) {
     private val commandTextArea = JBTextArea()
 
     var commandData = MutationCoverageCommandData(
@@ -73,7 +76,7 @@ class MutationCoverageDialog(mutationCoverageData: MutationCoverageData, private
                         resizableRow()
                     }
             }
-        }.apply() {
+        }.apply {
             minimumSize = Dimension(600, 200)
         }
     }

@@ -4,7 +4,10 @@ package com.cquilez.pitesthelper.ui.pages
 
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.data.RemoteComponent
-import com.intellij.remoterobot.fixtures.*
+import com.intellij.remoterobot.fixtures.CommonContainerFixture
+import com.intellij.remoterobot.fixtures.DefaultXpath
+import com.intellij.remoterobot.fixtures.FixtureName
+import com.intellij.remoterobot.fixtures.JMenuBarFixture
 import com.intellij.remoterobot.search.locators.byXpath
 import com.intellij.remoterobot.stepsProcessing.step
 import java.time.Duration
@@ -19,15 +22,32 @@ class IdeaFrame(remoteRobot: RemoteRobot, remoteComponent: RemoteComponent) :
     CommonContainerFixture(remoteRobot, remoteComponent) {
 
     val projectToolWindow
-        get() = button(byXpath("StripeButton type (vertical left bar)", "//div[@class='StripeButton' and @text='Project']"))
+        get() = button(
+            byXpath(
+                "StripeButton type (vertical left bar)",
+                "//div[@class='StripeButton' and @text='Project']"
+            )
+        )
 
     val projectVerticalBar
-        get() = jLabels(byXpath("ContentComboLabel type", "//div[@class='ToolWindowHeader']//div[@class='JPanel']//div[@class='TabPanel']//div[@class='ContentComboLabel' and @text='Project']"))
+        get() = jLabels(
+            byXpath(
+                "ContentComboLabel type",
+                "//div[@class='ToolWindowHeader']//div[@class='JPanel']//div[@class='TabPanel']//div[@class='ContentComboLabel' and @text='Project']"
+            )
+        )
 
     val menuBar: JMenuBarFixture
         get() = step("Menu...") {
             return@step remoteRobot.find(JMenuBarFixture::class.java, JMenuBarFixture.byType())
         }
+
+    fun isMutationCoverageOpen() =
+        findAll(
+            MutationCoverageDialog::class.java,
+            byXpath("//div[@class='MyDialog' and @title='Mutation Coverage']")
+        ).isNotEmpty()
+
 
     fun isDumbMode(): Boolean {
         return callJs(

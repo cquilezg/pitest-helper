@@ -2,7 +2,10 @@ package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.*
-import com.cquilez.pitesthelper.services.*
+import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.MyProjectService
+import com.cquilez.pitesthelper.services.PITestService
+import com.cquilez.pitesthelper.services.TestService
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.module.Module
@@ -22,7 +25,8 @@ abstract class MutationCoverageCommandProcessor(
     val navigatableArray: Array<Navigatable>?,
     val psiFile: PsiFile?
 ) {
-    private val helpMessage = "Please select only Java classes, packages or a module folder containing Java source code."
+    private val helpMessage =
+        "Please select only Java classes, packages or a module folder containing Java source code."
 
     protected val mainSourceModules = mutableListOf<Module>()
     protected val testSourceModules = mutableListOf<Module>()
@@ -41,7 +45,7 @@ abstract class MutationCoverageCommandProcessor(
     }
 
     protected abstract fun resolveModules()
-    abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) : String
+    abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData): String
     abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData)
 
     private fun readMultipleNodes(
@@ -262,7 +266,7 @@ abstract class MutationCoverageCommandProcessor(
         if (psiFile is PsiJavaFile) {
             val psiClass = classService.getPublicClass(psiFile)
             addIfNotPresent(
-                module, sourceRoot!!, mutationCoverage,
+                projectService.getModuleForNavigatable(project, navigatable), sourceRoot!!, mutationCoverage,
                 CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
             )
         }
@@ -300,7 +304,10 @@ abstract class MutationCoverageCommandProcessor(
                 }.findFirst()
                 if (sourceFolderFound.isPresent && sourceFolderFound.get().file != null) {
                     packageName = getBasePackage(sourceFolderFound.get().file!!)
-                    diffElements(mutationCoverage.normalSource, CodeItem(packageName, packageName, CodeItemType.PACKAGE, psiDirectoryNode))
+                    diffElements(
+                        mutationCoverage.normalSource,
+                        CodeItem(packageName, packageName, CodeItemType.PACKAGE, psiDirectoryNode)
+                    )
                 } else {
                     throw PitestHelperException("The directory appears to contain no code. $helpMessage")
                 }

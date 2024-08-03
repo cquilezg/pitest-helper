@@ -2,10 +2,7 @@ package com.cquilez.pitesthelper.actions
 
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.services.ServiceProvider
-import com.cquilez.pitesthelper.services.UIService
+import com.cquilez.pitesthelper.services.*
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
@@ -43,6 +40,9 @@ class RunMutationCoverageActionTest {
 
     @MockK
     lateinit var projectService: MyProjectService
+
+    @MockK
+    lateinit var buildSystemService: BuildSystemService
 
     @MockK
     lateinit var uiService: UIService
@@ -126,7 +126,7 @@ class RunMutationCoverageActionTest {
         fun `Invokes command processor and shows dialog with data`() {
             every { anActionEvent.project } returns project
             every { project.service<ServiceProvider>() } returns serviceProvider
-            every { serviceProvider.mockedServiceMap[MyProjectService::class] } returns projectService
+            every { serviceProvider.mockedServiceMap[BuildSystemService::class] } returns buildSystemService
             every { serviceProvider.mockedServiceMap[UIService::class] } returns uiService
             every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
             val navigatableArray = arrayOf(navigatable)
@@ -137,7 +137,7 @@ class RunMutationCoverageActionTest {
             val mutationCoverageData = MutationCoverageData(module, mainList, testList)
             mockkConstructor(MutationCoverageCommandProcessor::class)
             every {
-                projectService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
+                buildSystemService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
             } returns commandProcessor
             every {
                 commandProcessor.handleCommand()

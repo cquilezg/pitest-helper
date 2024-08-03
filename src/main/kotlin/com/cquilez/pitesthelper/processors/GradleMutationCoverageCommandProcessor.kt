@@ -1,6 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.model.BuildSystem
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
@@ -19,7 +20,13 @@ open class GradleMutationCoverageCommandProcessor(
     classService: ClassService,
     navigatableArray: Array<Navigatable>?,
     psiFile: PsiFile?
-) : MutationCoverageCommandProcessor(project, projectService, classService, navigatableArray, psiFile) {
+) : MutationCoverageCommandProcessor(
+    project,
+    projectService,
+    classService,
+    navigatableArray,
+    psiFile
+) {
 
     override fun resolveModules() {
         mainSourceModules.addAll(resolveModuleBySourceType(ExternalSystemSourceType.SOURCE))
@@ -29,7 +36,8 @@ open class GradleMutationCoverageCommandProcessor(
     private fun resolveModuleBySourceType(sourceType: ExternalSystemSourceType): List<Module> {
         val projectDataNode = GradleUtil.findGradleModuleData(project, project.basePath!!)
             ?: throw PitestHelperException("Cannot resolve ${sourceType.name} modules because Gradle project info is unavailable")
-        val sourceSets = projectDataNode.children.filter { it.data is GradleSourceSetData }.map { it.data as GradleSourceSetData }
+        val sourceSets =
+            projectDataNode.children.filter { it.data is GradleSourceSetData }.map { it.data as GradleSourceSetData }
         return sourceSets.filter { it.getCompileOutputPath(sourceType) != null }
             .map { projectService.findModuleByName(project, it.internalName) }
     }
