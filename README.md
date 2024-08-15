@@ -12,13 +12,14 @@ The plugin builds and runs PITest mutation coverage commands for you.
 
 Requisites:  
 - A Maven/Gradle project.
-- For Maven: [pitest-maven](https://pitest.org/quickstart/maven/) plugin configured on your project.
-- For Gradle: [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) plugin configured on your project.
+- For Maven: [pitest-maven](https://pitest.org/quickstart/maven/) configured on your project.
+- For Gradle: [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) configured on your project.
 
 Usage:  
 - Right-click on your classes and packages you want to run mutation coverage and click _Run Mutation Coverage..._
 
-Note: if you use Gradle you need to do extra steps to make PITest Helper work: [Setup Gradle project](#gradle-project).
+
+> **_NOTE:_** if you use Gradle you need to do extra steps to make PITest Helper work: [Setup Gradle project](#gradle-project).
 
 Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at the [Plugin Site](https://github.com/cquilezg/pitest-helper/issues)
 
@@ -33,7 +34,7 @@ PITest logo used in this plugin was created by Ling Yeung.
 
 ## How PITest Helper works?
 
-PITest Helper relies on pitest-maven (for Maven) and gradle-pitest-plugin (for Gradle) plugins to work. You need to configure the corresponding plugin in your project beforehand.
+PITest Helper relies on [pitest-maven](https://pitest.org/quickstart/maven/) (for Maven) and [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) (for Gradle) plugins to work. You need to configure the corresponding plugin in your project beforehand.
 
 ## Set up your project
 
@@ -59,7 +60,7 @@ Add the [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) pl
 ```groovy
 plugins {
     id 'info.solidsoft.pitest' version '1.15.0'  // Choose your version
-    id 'io.github.cquilezg.properties-manager' version '1.0'
+    // Other plugins...
 }
 ```
 
@@ -75,9 +76,20 @@ For more details on configuring the gradle-pitest-plugin for PITest in Gradle, v
 
 #### 2. Configure your pitest task to load the command-line project properties
 
+Unlike the Maven plugin, gradle-pitest-plugin does not support command-line arguments to configure the PITest execution.  
+To support this you need to do load properties manually and pass its values to the property providers the plugin uses.
+I have made a simple plugin that make the things easy for you: [properties-manager](https://github.com/cquilezg/properties-manager).
+Below you have the instructions to use it:
+
 #### `build.gradle`
+Add the plugin to your project and binds the properties to the property providers:
 
 ```groovy
+plugins {
+    id 'io.github.cquilezg.properties-manager' version '1.0'
+    // Other plugins
+}
+
 pitest {
   propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String)
   propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String)
@@ -88,12 +100,19 @@ pitest {
 #### `build.gradle.kts`
 
 ```kotlin
+plugins {
+    id("io.github.cquilezg.properties-manager' version '1.0")
+    // Other plugins
+}
+
 pitest {
   propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String::class.java)
   propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String::class.java)
   // More PITest config...
 }
 ```
+
+Now you can run commands with PITest Helper!
 
 Currently, PITest Helper supports only these properties to customize your PITest command:
 
