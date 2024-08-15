@@ -2,6 +2,8 @@
 
 # PITest Helper Changelog
 
+## [Unreleased]  <!-- Do not delete -->
+
 ## [2024.1.0] - 2024-08-15
 ### Added
 - Gradle support (beta)
