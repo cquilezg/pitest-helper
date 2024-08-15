@@ -58,7 +58,7 @@ object SharedSteps {
         }
     }
 
-    fun runMutationCoverage(
+    private fun runMutationCoverage(
         projectName: String,
         remoteRobot: RemoteRobot,
         expectedCommand: String,
@@ -180,7 +180,7 @@ object SharedSteps {
     }
 
 
-    fun findNodes(nodeTree: Node, nodeNames: List<String>): Node? {
+    private fun findNodes(nodeTree: Node, nodeNames: List<String>): Node? {
         val parentNode = findNodeInTree(nodeTree, nodeNames[0], 10)
         var currentNode: Node? = null
         if (parentNode != null) {
@@ -208,7 +208,7 @@ object SharedSteps {
         return null
     }
 
-    fun findNodeInTree(nodeTree: Node, nodeName: String, subLevels: Int): Node? {
+    private fun findNodeInTree(nodeTree: Node, nodeName: String, subLevels: Int): Node? {
         val remoteText = nodeTree.remoteTexts.firstOrNull { it.text == nodeName }
         if (remoteText != null) {
             return nodeTree
@@ -255,7 +255,7 @@ object SharedSteps {
         return projectTree
     }
 
-    fun findSiblingNode(lastNode: Node, point: Point): Node? {
+    private fun findSiblingNode(lastNode: Node, point: Point): Node? {
         var currentNode = lastNode
         while (currentNode.parent != null) {
             val parentNode = currentNode.parent!!

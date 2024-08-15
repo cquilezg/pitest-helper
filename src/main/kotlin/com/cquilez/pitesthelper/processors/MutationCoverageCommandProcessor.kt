@@ -367,7 +367,7 @@ abstract class MutationCoverageCommandProcessor(
         return false
     }
 
-    protected fun getPsiFile(classTreeNode: ClassTreeNode): PsiFile {
+    private fun getPsiFile(classTreeNode: ClassTreeNode): PsiFile {
         val psiManager = PsiManager.getInstance(project)
         val virtualFile = classTreeNode.virtualFile
         if (virtualFile != null) {

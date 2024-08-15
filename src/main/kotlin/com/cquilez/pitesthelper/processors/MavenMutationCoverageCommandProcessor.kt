@@ -1,7 +1,6 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.BuildSystem
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
