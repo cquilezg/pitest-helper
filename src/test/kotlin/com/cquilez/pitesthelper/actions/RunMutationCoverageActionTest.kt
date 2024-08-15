@@ -126,6 +126,7 @@ class RunMutationCoverageActionTest {
         fun `Invokes command processor and shows dialog with data`() {
             every { anActionEvent.project } returns project
             every { project.service<ServiceProvider>() } returns serviceProvider
+            every { serviceProvider.mockedServiceMap[MyProjectService::class] } returns projectService
             every { serviceProvider.mockedServiceMap[BuildSystemService::class] } returns buildSystemService
             every { serviceProvider.mockedServiceMap[UIService::class] } returns uiService
             every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService

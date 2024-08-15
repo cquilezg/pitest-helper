@@ -31,15 +31,16 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    testImplementation(libs.junitJupiterApi)
+    testImplementation(platform(libs.junitBom))
+    testImplementation(libs.junitJupiterSuite)
     testImplementation(libs.hamcrest)
-    testRuntimeOnly(libs.junitJupiterEngine)
     testImplementation(libs.kotlinTest)
     testImplementation(libs.mockk)
     testImplementation(libs.remoteRobot)
     testImplementation(libs.remoteFixtures)
     testImplementation(libs.loggingInterceptor)
     testImplementation(libs.videoRecorderJunit5)
+    testRuntimeOnly(libs.junitJupiterEngine)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -140,6 +141,14 @@ tasks {
             if (tags != null) {
                 includeTags(tags.toString() )
             }
+            val excludedtags = project.findProperty("excludeTags")
+            if (excludedtags != null) {
+                excludeTags = setOf(excludedtags.toString())
+            }
+//            includeEngines("junit-jupiter")
+//            testLogging {
+//                events("passed", "skipped", "failed")
+//            }
         }
     }
 
