@@ -2,11 +2,12 @@
 
 # PITest Helper Changelog
 
-## [Unreleased]  <!-- Do not delete -->
+## [Unreleased]
 
-## [2024.1.0] - 2024-08-15
+## [2024.1] - 2024-08-15
 
 ### Added
+
 - Gradle support (beta)
 - Added info link to GitHub page
 - Improved system to search classes
@@ -17,3 +18,4 @@
 
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
+- 
