@@ -132,6 +132,7 @@ object SharedSteps {
         expectedCommand: String,
         checkProjectLoaded: Boolean
     ) = with(remoteRobot) {
+        val multiSelectKey = getMultiSelectKey(remoteRobot)
         runMutationCoverage(projectName, remoteRobot, expectedCommand, checkProjectLoaded) {
             for (stringList in nodeSet) {
                 findLastNode(it, stringList)
@@ -152,7 +153,7 @@ object SharedSteps {
                     retry(3, preRetryAction = { keyboard { key(VK_PAGE_DOWN) } }) {
                         val node = findNodes(projectTree.nodes[0], stringList)
                         lastNode = node
-                        pressing(VK_CONTROL) {
+                        pressing(multiSelectKey) {
                             clickWithScroll(projectTreeItems, node!!, this)
                         }
                     }
@@ -161,6 +162,12 @@ object SharedSteps {
             }
             lastNode!!.remoteTexts[0].rightClick()
         }
+    }
+
+    private fun getMultiSelectKey(remoteRobot: RemoteRobot) = if (remoteRobot.isMac()) {
+        VK_META
+    } else {
+        VK_CONTROL
     }
 
     private fun clickWithScroll(projectTreeItems: List<RemoteText>, node: Node, keyboard: Keyboard) = with(keyboard) {
