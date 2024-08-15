@@ -1,25 +1,35 @@
 [versions]
 # libraries
-annotations = "24.1.0"
-junitJupiter = "5.10.0"
+junitBom = "5.11.0"
 hamcrest = "2.2"
+kotlinTest = "1.8.10"
+mockk = "1.13.10"
+remoteRobot = "0.11.23"
+loggingInterceptor = "4.12.0"
+videoRecorderJunit5 = "2.0"
 
 # plugins
-kotlin = "1.9.21"
-changelog = "2.2.0"
-gradleIntelliJPlugin = "1.16.1"
-qodana = "0.1.13"
-kover = "0.7.5"
+changelog = "2.2.1"
+intelliJPlatform = "2.0.1"
+kotlin = "1.9.25"
+kover = "0.8.3"
+qodana = "2024.1.9"
 
 [libraries]
-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
-junitJupiterApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }
-junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
+junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junitBom" }
+junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine"}
+junitJupiterSuite = { group = "org.junit.platform", name = "junit-platform-suite"}
 hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }
+kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+remoteRobot = { group = "com.intellij.remoterobot", name = "remote-robot", version.ref = "remoteRobot" }
+remoteFixtures = { group = "com.intellij.remoterobot", name = "remote-fixtures", version.ref = "remoteRobot" }
+loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
+videoRecorderJunit5 = { group = "com.automation-remarks", name = "video-recorder-junit5", version.ref = "videoRecorderJunit5" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
-gradleIntelliJPlugin = { id = "org.jetbrains.intellij", version.ref = "gradleIntelliJPlugin" }
+intelliJPlatform = { id = "org.jetbrains.intellij.platform", version.ref = "intelliJPlatform" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 qodana = { id = "org.jetbrains.qodana", version.ref = "qodana" }

@@ -12,9 +12,8 @@ on:
   workflow_dispatch
 
 jobs:
-
-  testUI:
-    runs-on: ${{ matrix.os }}
+  run-ui-test:
+    name: run tests for ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -22,16 +21,30 @@ jobs:
           - os: ubuntu-latest
             runIde: |
               export DISPLAY=:99.0
-              Xvfb -ac :99 -screen 0 1920x1080x16 &
-              gradle runIdeForUiTests &
+              Xvfb -ac :99 -screen 0 1920x1080x24 &
+              sleep 10
+              mkdir -p build/reports
+              ./gradlew runIdeForUiTests > build/reports/idea.log &
+            runTests: |
+              export DISPLAY=:99.0
+              ./gradlew test -Ptags=ui
+            url: http://127.0.0.1:8082
+            reportName: ui-test-fails-report-linux
+          - os: macos-13
+            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test -Ptags=ui
+            url: http://127.0.0.1:8082
+            reportName: ui-test-fails-report-mac
           - os: windows-latest
             runIde: start gradlew.bat runIdeForUiTests
-          - os: macos-latest
-            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test -Ptags=ui
+            url: http://localhost:8082
+            reportName: ui-test-fails-report-windows
 
+    runs-on: ${{ matrix.os }}
     steps:
 
-      # Check out current repository
+      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
 
@@ -42,11 +55,15 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
         with:
-          gradle-home-cache-cleanup: true
+          # Not strictly necessary, but it may prevent rate limit
+          # errors especially on GitHub-hosted macos machines.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean
+        run: ./gradlew clean
 
       # Run IDEA prepared for UI testing
       - name: Run IDE
@@ -54,12 +71,28 @@ jobs:
 
       # Wait for IDEA to be started
       - name: Health Check
-        uses: jtalk/url-health-check-action@v3
+        uses: jtalk/url-health-check-action@v4
         with:
-          url: http://127.0.0.1:8082
+          url: ${{ matrix.url }}
           max-attempts: 15
           retry-delay: 30s
 
       # Run tests
-      - name: Tests
-        run: ./gradlew test
+      - name: Run tests
+        run: ${{ matrix.runTests }}
+
+      - name: Move video
+        if: ${{ failure() }}
+        run: mv video build/reports
+
+      - name: Copy logs
+        if: ${{ failure() }}
+        run: mv build/idea-sandbox/system/log/ build/reports
+
+      - name: Save fails report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.reportName }}
+          path: |
+            build/reports
