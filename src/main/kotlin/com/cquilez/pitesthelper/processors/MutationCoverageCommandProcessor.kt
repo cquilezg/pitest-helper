@@ -60,12 +60,11 @@ abstract class MutationCoverageCommandProcessor(
     protected open fun processProjectNodes(navigatableArray: Array<Navigatable>): MutationCoverageData {
         val module = projectService.getModuleForNavigatable(project, navigatableArray[0])
         val mutationCoverage = processNavigatables(module, navigatableArray)
-        syncClassesAndPackages(module, mutationCoverage)
+        syncClassesAndPackages(mutationCoverage)
         return PITestService.buildMutationCoverageCommand(module, mutationCoverage)
     }
 
     private fun syncClassesAndPackages(
-        module: Module,
         mutationCoverage: MutationCoverage
     ) {
         val dumb = DumbService.getInstance(project).isDumb
@@ -74,7 +73,6 @@ abstract class MutationCoverageCommandProcessor(
                 findCandidateClass(
                     it,
                     dumb,
-                    module,
                     mutationCoverage.normalSource,
                     TestService.getClassUnderTestName(it.name),
                     mainSourceModules
@@ -92,7 +90,6 @@ abstract class MutationCoverageCommandProcessor(
                 findCandidateClass(
                     it,
                     dumb,
-                    module,
                     mutationCoverage.testSource,
                     it.name + "Test",
                     testSourceModules
@@ -128,7 +125,6 @@ abstract class MutationCoverageCommandProcessor(
     private fun findCandidateClass(
         it: CodeItem,
         dumb: Boolean,
-        module: Module,
         sourceList: MutableList<CodeItem>,
         targetClassName: String,
         targetSourceModules: List<Module>

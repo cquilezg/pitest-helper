@@ -38,6 +38,14 @@ class IdeaFrame(remoteRobot: RemoteRobot, remoteComponent: RemoteComponent) :
             )
         )
 
+    private val inlineProgressPanel
+        get() = jLabels(
+            byXpath(
+                "InlineProgressPanel type",
+                "//div[@class='InlineProgressPanel']//div[@class='TextPanel' and @mytext.key='progress.update.text']"
+            )
+        )
+
     val menuBar: JMenuBarFixture
         get() = step("Menu...") {
             return@step remoteRobot.find(JMenuBarFixture::class.java, JMenuBarFixture.byType())
@@ -53,12 +61,12 @@ class IdeaFrame(remoteRobot: RemoteRobot, remoteComponent: RemoteComponent) :
     fun dumbAware(timeout: Duration = Duration.ofMinutes(5), function: () -> Unit) {
         step("Wait for smart mode") {
             waitFor(duration = timeout, interval = Duration.ofSeconds(5)) {
-                runCatching { isDumbMode().not() }.getOrDefault(false)
+                runCatching { isDumbMode().not() && !isProjectLoading() }.getOrDefault(false)
             }
             function()
             step("..wait for smart mode again") {
                 waitFor(duration = timeout, interval = Duration.ofSeconds(5)) {
-                    isDumbMode().not()
+                    isDumbMode().not() && !isProjectLoading()
                 }
             }
         }
@@ -76,6 +84,10 @@ class IdeaFrame(remoteRobot: RemoteRobot, remoteComponent: RemoteComponent) :
             }
         """, true
         )
+    }
+
+    private fun isProjectLoading(): Boolean {
+        return inlineProgressPanel.isNotEmpty()
     }
 
     fun modulesJs(): Int {

@@ -34,3 +34,4 @@ tasks.test {
 pitest {
     propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String::class.java)
     propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String::class.java)
+}
