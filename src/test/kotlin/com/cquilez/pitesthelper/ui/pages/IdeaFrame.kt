@@ -10,6 +10,7 @@ import com.intellij.remoterobot.fixtures.FixtureName
 import com.intellij.remoterobot.fixtures.JMenuBarFixture
 import com.intellij.remoterobot.search.locators.byXpath
 import com.intellij.remoterobot.stepsProcessing.step
+import com.intellij.remoterobot.utils.waitFor
 import java.time.Duration
 
 fun RemoteRobot.idea(function: IdeaFrame.() -> Unit) {
@@ -48,6 +49,20 @@ class IdeaFrame(remoteRobot: RemoteRobot, remoteComponent: RemoteComponent) :
             byXpath("//div[@class='MyDialog' and @title='Mutation Coverage']")
         ).isNotEmpty()
 
+    @JvmOverloads
+    fun dumbAware(timeout: Duration = Duration.ofMinutes(5), function: () -> Unit) {
+        step("Wait for smart mode") {
+            waitFor(duration = timeout, interval = Duration.ofSeconds(5)) {
+                runCatching { isDumbMode().not() }.getOrDefault(false)
+            }
+            function()
+            step("..wait for smart mode again") {
+                waitFor(duration = timeout, interval = Duration.ofSeconds(5)) {
+                    isDumbMode().not()
+                }
+            }
+        }
+    }
 
     fun isDumbMode(): Boolean {
         return callJs(

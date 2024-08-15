@@ -66,36 +66,37 @@ object SharedSteps {
         consumer: Consumer<ProjectToolWindow>
     ) = with(remoteRobot) {
         idea {
-            waitFor(ofMinutes(5)) { isDumbMode().not() }
-            openProjectView(this)
-            val buttons =
-                buttons(byXpath("//div[@class='ToolWindowHeader']//div[@class='ActionButton' and @myicon='hideToolWindow.svg']"))
-            val hideButton = button(
-                byXpath(
-                    "ActionButton type",
-                    "//div[@class='ToolWindowHeader']//div[@class='JPanel']//div[@class='TabPanel']//div[@class='ContentComboLabel' and @text='Project']/../../../div[@class='JPanel']//div[@tooltiptext='Hide']"
+            dumbAware {
+                openProjectView(this)
+                val buttons =
+                    buttons(byXpath("//div[@class='ToolWindowHeader']//div[@class='ActionButton' and @myicon='hideToolWindow.svg']"))
+                val hideButton = button(
+                    byXpath(
+                        "ActionButton type",
+                        "//div[@class='ToolWindowHeader']//div[@class='JPanel']//div[@class='TabPanel']//div[@class='ContentComboLabel' and @text='Project']/../../../div[@class='JPanel']//div[@tooltiptext='Hide']"
+                    )
                 )
-            )
-            for (button in buttons) {
-                if (button.locationOnScreen != hideButton.locationOnScreen) {
-                    button.click()
+                for (button in buttons) {
+                    if (button.locationOnScreen != hideButton.locationOnScreen) {
+                        button.click()
+                    }
                 }
-            }
-            projectToolWindow {
-                if (checkProjectLoaded) {
-                    waitFor(ofMinutes(5)) { modulesJs() > 1 }
-                }
+                projectToolWindow {
+                    if (checkProjectLoaded) {
+                        waitFor(ofMinutes(5)) { modulesJs() > 1 }
+                    }
 
-                retry(3) {
-                    collapseAllButton.click()
-                    projectViewTree.data[projectName].doubleClick()
-                    consumer.accept(this)
+                    retry(3) {
+                        collapseAllButton.click()
+                        projectViewTree.data[projectName].doubleClick()
+                        consumer.accept(this)
+                    }
                 }
+                idea {
+                    waitFor(ofMinutes(5)) { isDumbMode().not() }
+                }
+                actionMenuItem("Run Mutation Coverage...").click()
             }
-            idea {
-                waitFor(ofMinutes(5)) { isDumbMode().not() }
-            }
-            actionMenuItem("Run Mutation Coverage...").click()
         }
         mutationCoverageDialog {
             assertEquals(expectedCommand, commandTextArea.text)

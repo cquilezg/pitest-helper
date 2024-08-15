@@ -1,10 +1,7 @@
-import java.nio.charset.Charset
-
 plugins {
     id 'java'
-//    id 'info.solidsoft.pitest' version '1.15.1-SNAPSHOT'
     id 'info.solidsoft.pitest' version '1.15.0'
-    id "com.cquilezg.properties-manager" version '1.0'
+    id "io.github.cquilezg.properties-manager" version '1.0'
 }
 
 group = 'org.example'
@@ -29,69 +26,10 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 }
 
-apply plugin: 'info.solidsoft.pitest'
-
 test {
     useJUnitPlatform()
 }
-
-task helloWorld {
-    println propertyManager.loadStringProperty(project, "myProperty")
-}
-
-//task customCharset {
-//    Property<Charset> charsetProperty = project.objects.property(Charset)
-//    propertyManager.bindCustomProperty(project, charsetProperty, "pitest.inputCharset", Charset, this::charsetConverter)
-//    println("Input charset: " + charsetProperty)
-//}
-//
 pitest {
     propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String)
-    propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String)
-    propertyManager.bindMultiValueProperty(project, features, "pitest.features", String)
-    propertyManager.bindMultiValueProperty(project, outputFormats, "pitest.outputFormats", String)
-    propertyManager.bindIntProperty(project, threads, "pitest.threads")
-    propertyManager.bindStringProperty(project, junit5PluginVersion, "pitest.junit5PluginVersion")
-    propertyManager.bindBooleanProperty(project, verbose, "pitest.verbose")
-    propertyManager.bindBigDecimalProperty(project, timeoutFactor, "pitest.timeoutFactor")
-
-    Property<Charset> charsetProperty = project.objects.property(Charset)
-    println("Input charset: " + charsetProperty)
-    propertyManager.bindCustomProperty(project, charsetProperty, "pitest.inputCharset", Charset, this::charsetConverter)
-    println("Input charset: " + charsetProperty)
-
-    SetProperty<BigDecimal> setDecimalProperty = project.objects.setProperty(BigDecimal)
-    println("Big decimal: " + setDecimalProperty)
-    propertyManager.bindMultiValueProperty(project, setDecimalProperty, "bigDecimal", BigDecimal)
-    println("Big decimal: " + setDecimalProperty.getOrNull())
-
-    Property<Character> charProperty = project.objects.property(Character)
-    println("Char: " + charProperty)
-    propertyManager.bindCharProperty(project, charProperty, "char")
-    println("Char: " + charProperty.getOrNull())
-
-    SetProperty<Character> setCharProperty = project.objects.setProperty(Character)
-    println("Set Char: " + setCharProperty)
-    propertyManager.bindMultiValueProperty(project, setCharProperty, "setChar", Character)
-    println("Set Char: " + setCharProperty.getOrNull())
-}
-//
-//Charset charsetConverter(String charsetName) {
-//    return Charset.forName(charsetName)
-//}
-
-tasks.register("bindProperties") {
-    Property<String> stringProperty = project.objects.property(String)
-    propertyManager.bindStringProperty(project, stringProperty, "myStringProperty")
-    println "My String property: ${stringProperty.orNull}"
-
-    Property<Integer> intProperty = project.objects.property(Integer)
-    propertyManager.bindIntProperty(project, intProperty, "myIntProperty")
-    println "My Int property: ${intProperty.orNull}"
-}
-
-tasks.register("bindMultiValueProperties") {
-    SetProperty<Character> setCharProperty = project.objects.setProperty(Character)
-    propertyManager.bindMultiValueProperty(project, setCharProperty, "setChar", Character)
-    println("Set Char: " + setCharProperty.getOrNull())
+    propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String)
 }
