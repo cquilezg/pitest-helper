@@ -219,26 +219,7 @@ object SharedSteps {
         return null
     }
 
-    fun findSequencePosition(longList: List<RemoteText>, sequence: List<String>): RemoteText? {
-        val seqSize = sequence.size
-        val longSize = longList.size
-
-        // Iterar sobre la lista larga buscando la secuencia
-        for (i in 0..(longSize - seqSize)) {
-            // Tomar una sublista de longitud igual a la secuencia
-            val sublist = longList.subList(i, i + seqSize)
-            // Comparar con la secuencia
-            if (sublist.map { it.text } == sequence) {
-                // Retornar la posición del último elemento de la secuencia encontrada
-                return sublist.last()
-            }
-        }
-
-        // Si no se encontró la secuencia, retornar null
-        return null
-    }
-
-    fun buildProjectTree(elements: List<RemoteText>): ProjectTree {
+    private fun buildProjectTree(elements: List<RemoteText>): ProjectTree {
         val projectTree = ProjectTree(mutableListOf())
         val root = Node(mutableListOf(elements.first()), null, mutableListOf())
         projectTree.nodes.add(root)
@@ -338,28 +319,6 @@ object SharedSteps {
                 projectViewTree.data[node].click()
                 keyboard {
                     key(VK_MULTIPLY)
-                }
-            }
-        }
-
-    private fun openNodes(projectToolWindow: ProjectToolWindow, parentNodeList: List<String>) =
-        with(projectToolWindow) {
-            var parentNode: Node? = null
-            waitFor {
-                val projectTree = buildProjectTree(projectViewTree.data.getAll())
-                parentNode = findNodeInTree(projectTree.nodes[0], parentNodeList.first(), 10)
-                parentNode != null
-            }
-            parentNode!!.remoteTexts[0].click()
-            keyboard {
-                key(VK_MULTIPLY)
-            }
-            var currentNode: Node? = parentNode
-            for (nodeName in parentNodeList.drop(1)) {
-                waitFor {
-                    val projectTree = buildProjectTree(projectViewTree.data.getAll())
-                    currentNode = findChildNode(currentNode!!.children, nodeName, 0)
-                    currentNode != null
                 }
             }
         }
