@@ -69,7 +69,7 @@ plugins {
 ```kotlin
 plugins {
     id("info.solidsoft.pitest") version ("1.15.0")  // Choose your version
-    id("io.github.cquilezg.properties-manager' version '1.0")
+    // Other plugins...
 }
 ```
 For more details on configuring the gradle-pitest-plugin for PITest in Gradle, visit the [official plugin documentation](https://github.com/szpak/gradle-pitest-plugin).
@@ -77,7 +77,7 @@ For more details on configuring the gradle-pitest-plugin for PITest in Gradle, v
 #### 2. Configure your pitest task to load the command-line project properties
 
 Unlike the Maven plugin, gradle-pitest-plugin does not support command-line arguments to configure the PITest execution.  
-To support this you need to do load properties manually and pass its values to the property providers the plugin uses.
+To support this you need to load properties manually and pass its values to the property providers the plugin uses.
 I have made a simple plugin that make the things easy for you: [properties-manager](https://github.com/cquilezg/properties-manager).
 Below you have the instructions to use it:
 
@@ -101,7 +101,7 @@ pitest {
 
 ```kotlin
 plugins {
-    id("io.github.cquilezg.properties-manager' version '1.0")
+    id("io.github.cquilezg.properties-manager") version ("1.0")
     // Other plugins
 }
 
