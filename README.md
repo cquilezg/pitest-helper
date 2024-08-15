@@ -18,27 +18,24 @@ Requisites:
 Usage:  
 - Right-click on your classes and packages you want to run mutation coverage and click _Run Mutation Coverage..._
 
-Note: depending on your build system, you need to do extra steps to make PITest Helper work.
+Note: if you use Gradle you need to do extra steps to make PITest Helper work: [Setup Gradle project](#gradle-project).
 
-Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at the [Plugin Site](https://github.com/carmeloquilez/pitest-helper/issues)
+Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at the [Plugin Site](https://github.com/cquilezg/pitest-helper/issues)
 
 PITest logo used in this plugin was created by Ling Yeung.
 
 <!-- Plugin description end -->
 
-## Installation
+# Index
+- [How PITest Helper works?](#how-pitest-helper-works)
+- [Set up your project](#set-up-your-project)
+- [Compatibility](#compatibility)
 
-- Using the IDE built-in plugin system:
-  
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "PITest Helper"</kbd> >
-  <kbd>Install Plugin</kbd>
-  
-- Manually:
+## How PITest Helper works?
 
-  Download the [latest release](https://github.com/carmeloquilez/pitest-helper/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+PITest Helper relies on pitest-maven (for Maven) and gradle-pitest-plugin (for Gradle) plugins to work. You need to configure the corresponding plugin in your project beforehand.
 
-## Project setup
+## Set up your project
 
 ### Maven project
 
@@ -55,7 +52,7 @@ For projects using Gradle, you need to follow the next steps.
 
 #### 1. Add the gradle-pitest-plugin to your project
 
-To add the [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) plugin, edit your `build.gradle` (or `build.gradle.kts` for Kotlin DSL) file by adding the following code:
+Add the [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) plugin, edit your `build.gradle` (or `build.gradle.kts` for Kotlin DSL) file by adding the following code:
 
 #### `build.gradle`
 
@@ -76,7 +73,7 @@ plugins {
 ```
 For more details on configuring the gradle-pitest-plugin for PITest in Gradle, visit the [official plugin documentation](https://github.com/szpak/gradle-pitest-plugin).
 
-#### 2. Configure your pitest task to load the properties successfully
+#### 2. Configure your pitest task to load the command-line project properties
 
 #### `build.gradle`
 
@@ -84,8 +81,7 @@ For more details on configuring the gradle-pitest-plugin for PITest in Gradle, v
 pitest {
   propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String)
   propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String)
-  propertyManager.bindStringProperty(project, junit5PluginVersion, "pitest.junit5PluginVersion")
-  propertyManager.bindBooleanProperty(project, verbose, "pitest.verbose")
+  // More PITest config...
 }
 ```
 
@@ -95,24 +91,27 @@ pitest {
 pitest {
   propertyManager.bindMultiValueProperty(project, targetClasses, "pitest.targetClasses", String::class.java)
   propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String::class.java)
-  propertyManager.bindStringProperty(project, junit5PluginVersion, "pitest.junit5PluginVersion")
-  propertyManager.bindBooleanProperty(project, verbose, "pitest.verbose")
+  // More PITest config...
 }
 ```
 
-This table shows the relation between gradle-pitest-plugin properties and PITest Helper properties:
+Currently, PITest Helper supports only these properties to customize your PITest command:
 
 | gradle-pitest-plugin property | PITest Helper property     |
 |-------------------------------|----------------------------|
 | targetClasses                 | pitest.targetClasses       |
 | targetTests                   | pitest.targetTests         |
-| junit5PluginVersion           | pitest.junit5PluginVersion |
-| verbose                       | pitest.verbose             |
 
+
+## Compatibility
+PITest Helper is compatible with Java projects using Maven and Gradle (in beta phase).
+At this time only configuring target classes and tests is allowed, but more options to customize the PITest command will be added soon.  
+Kotlin classes are not supported yet, but its support is planned in a future release.
+
+The plugin is compatible with IntelliJ IDEA Community and Ultimate, from versions 2022.3 to 2024.2.
 
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation

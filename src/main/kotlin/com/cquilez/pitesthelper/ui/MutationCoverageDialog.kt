@@ -41,6 +41,12 @@ class MutationCoverageDialog(
 
     override fun createCenterPanel(): JComponent {
         return panel {
+            row {
+                browserLink(
+                    "How to setup PITest Helper in your project",
+                    "https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#set-up-your-project"
+                ).align(AlignX.RIGHT)
+            }
             row("Target Classes:") {
                 textField()
                     .align(AlignX.FILL)
