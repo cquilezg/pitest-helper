@@ -47,6 +47,7 @@ abstract class MutationCoverageCommandProcessor(
     protected abstract fun resolveModules()
     abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData): String
     abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData)
+    abstract fun checkAllElementsAreInSameModule()
 
     private fun readMultipleNodes(
         navigatableArray: Array<Navigatable>
