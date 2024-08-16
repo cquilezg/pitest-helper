@@ -78,8 +78,8 @@ intellijPlatform {
         }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
-        // Major and minor versions are mandatory. Fix version can be omitted if it is 0. Snapshot versions are allowed
-        changelog.headerParserRegex = "^(\\d+)\\.(\\d+)(\\.(\\d+))?(-SNAPSHOT)?\$"
+        // Major and minor versions are mandatory. Fix version can be omitted if it is 0. alpha.x and beta.x versions are allowed
+//        changelog.headerParserRegex = "^(\\d+)\\.(\\d+)(\\.(\\d+))?(-(SNAPSHOT|alpha\\.\\d+|beta\\.\\d+))?\$"
         // Get the latest available change notes from the changelog file
         changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
             with(changelog) {
@@ -109,7 +109,11 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map {
+                listOf(
+                    it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" })
+            }
     }
 
     pluginVerification {
@@ -141,16 +145,12 @@ tasks {
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
-                includeTags(tags.toString() )
+                includeTags(tags.toString())
             }
             val excludedtags = project.findProperty("excludeTags")
             if (excludedtags != null) {
                 excludeTags = setOf(excludedtags.toString())
             }
-//            includeEngines("junit-jupiter")
-//            testLogging {
-//                events("passed", "skipped", "failed")
-//            }
         }
     }
 
