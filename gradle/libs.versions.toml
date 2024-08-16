@@ -1,7 +1,7 @@
 [versions]
 # libraries
 junitBom = "5.11.0"
-hamcrest = "2.2"
+hamcrest = "3.0"
 kotlinTest = "1.8.10"
 mockk = "1.13.10"
 remoteRobot = "0.11.23"
