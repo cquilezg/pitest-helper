@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Fixed issues with Gradle multi-module projects
+
 ## [2024.1] - 2024-08-15
 
 ### Added
@@ -18,4 +22,3 @@
 
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
-- 

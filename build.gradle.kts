@@ -78,6 +78,8 @@ intellijPlatform {
         }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
+        // Major and minor versions are mandatory. Fix version can be omitted if it is 0. Snapshot versions are allowed
+        changelog.headerParserRegex = "^(\\d+)\\.(\\d+)(\\.(\\d+))?(-SNAPSHOT)?\$"
         // Get the latest available change notes from the changelog file
         changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
             with(changelog) {
