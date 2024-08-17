@@ -1,6 +1,7 @@
 .gradle
 .idea
 .intellijPlatform
+.kotlin
 !.idea/icon.png
 .qodana
 build
