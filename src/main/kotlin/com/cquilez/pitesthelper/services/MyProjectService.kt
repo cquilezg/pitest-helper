@@ -2,13 +2,11 @@ package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.MyBundle
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.BuildSystem
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
@@ -24,9 +22,6 @@ import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.util.containers.stream
 import org.jetbrains.jps.model.java.JavaSourceRootProperties
 import org.jetbrains.jps.model.java.JavaSourceRootType
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.function.Predicate
 
 
@@ -117,34 +112,4 @@ class MyProjectService(project: Project) {
     fun getModuleFromElement(psiElement: PsiElement): Module =
         ModuleUtil.findModuleForPsiElement(psiElement)
             ?: throw PitestHelperException("Module was not found!")
-
-    /**
-     * Checks if the project uses Gradle or Maven build systems
-     */
-    fun getBuildSystem(project: Project): BuildSystem {
-        return if (existsPathInProject(project, "settings.gradle") || existsPathInProject(
-                project,
-                "settings.gradle.kts"
-            )
-        ) {
-            BuildSystem.GRADLE
-        } else if (existsPathInProject(project, "pom.xml")) {
-            BuildSystem.MAVEN
-        } else
-            BuildSystem.OTHER
-    }
-
-    /**
-     * Checks a path exists in the project
-     */
-    private fun existsPathInProject(project: Project, filePath: String): Boolean {
-        return Files.exists(getProjectNioPath(project).resolve(filePath))
-    }
-
-    /**
-     * Gets the project root path
-     */
-    private fun getProjectNioPath(project: Project): Path {
-        return Paths.get(project.basePath!!)
-    }
 }
