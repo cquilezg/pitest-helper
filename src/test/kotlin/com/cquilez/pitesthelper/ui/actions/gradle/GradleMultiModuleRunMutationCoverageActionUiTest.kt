@@ -1,4 +1,4 @@
-package com.cquilez.pitesthelper.ui.actions.maven
+package com.cquilez.pitesthelper.ui.actions.gradle
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.actions.CommonUITests
@@ -15,18 +15,18 @@ import java.time.Duration.ofMinutes
 
 @ExtendWith(RemoteRobotExtension::class)
 @Tag("ui")
-@Tag("maven")
-class MavenRunMutationCoverageActionUiTest {
+@Tag("gradle")
+class GradleMultiModuleRunMutationCoverageActionUiTest {
 
     init {
         StepsLogger.init()
     }
 
     companion object {
-        private const val TEST_PROJECT = "sample-maven"
-        private const val BUILD_COMMAND = "mvn test-compile pitest:mutationCoverage"
-        private const val TARGET_CLASSES = "-DtargetClasses"
-        private const val TARGET_TESTS = "-DtargetTests"
+        private const val TEST_PROJECT = "gradle-multi-module"
+        private const val BUILD_COMMAND = "./gradlew pitest"
+        private const val TARGET_CLASSES = "-Ppitest.targetClasses"
+        private const val TARGET_TESTS = "-Ppitest.targetTests"
 
         @JvmStatic
         @BeforeAll
@@ -68,7 +68,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Single Main Class selected and Test Class exists, single target class and single test class`(remoteRobot: RemoteRobot) =
             CommonUITests.SingleNodeTest.singleMainClass_testClassExists_singleMainClassAndSingleTestClass(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -81,7 +81,7 @@ class MavenRunMutationCoverageActionUiTest {
             remoteRobot: RemoteRobot
         ) = CommonUITests.SingleNodeTest.singleMainPackage_testPackageExists_singleMainPackageAndSingleTestPackage(
             TEST_PROJECT,
-            null,
+            "app",
             BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
@@ -93,7 +93,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Single Test Class selected and Main Class exists, single target class and single test class`(remoteRobot: RemoteRobot) =
             CommonUITests.SingleNodeTest.singleTestClass_mainClassExists_singleTargetClassAndSingleTestClass(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -106,7 +106,7 @@ class MavenRunMutationCoverageActionUiTest {
             remoteRobot: RemoteRobot
         ) = CommonUITests.SingleNodeTest.singleTestPackage_mainPackageExists_singleTargetPackageAndSingleTestPackage(
             TEST_PROJECT,
-            null,
+            "lib",
             BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
@@ -123,7 +123,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Two Main Classes selected and Test Classes exists, two target classes and two test classes`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoMainClassesSelected_testClassesExists_TwoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -135,7 +135,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Two Test Classes selected and Main Classes exists, two target classes and two test classes`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoTestClassesSelected_mainClassesExists_twoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -147,7 +147,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Two Main Packages selected and Test Packages exists, two target packages and two test packages`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoMainPackages_testPackagesExists_twoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -159,7 +159,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Two Test Packages selected and Main Packages exists, two target packages and two test packages`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoTestPackages_mainPackagesExists_TwoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -171,7 +171,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Main Class and its package selected, test package exists, only packages are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.mainClassAndItsPackage_testPackageExists_onlyPackagesAreSelected(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -183,7 +183,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Test Class and its package selected, main package exists, only packages are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.testClassAndParentPackage_mainPackageExists_onlyPackageSelected(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -200,7 +200,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Main Class and its test class selected, both classes are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.CrossSourceTest.mainClassAndItsTestClass_bothClassesAreSelected(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -212,7 +212,7 @@ class MavenRunMutationCoverageActionUiTest {
         fun `Main Class and different test class selected, main classes and test classes selected`(remoteRobot: RemoteRobot) =
             CommonUITests.CrossSourceTest.mainClassAndDifferentTestClass_mainClassesAndTestClassesSelected(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -231,7 +231,7 @@ class MavenRunMutationCoverageActionUiTest {
         ) =
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInSamePackage_testClassInSamePackage(
                 TEST_PROJECT,
-                null,
+                "lib",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -245,24 +245,11 @@ class MavenRunMutationCoverageActionUiTest {
         ) =
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInASuperiorPackage_testClassInSuperiorPackage(
                 TEST_PROJECT,
-                null,
+                "app",
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
             )
-
-//        @Test
-//        @Video
-//        fun `Test Class selected, single main class in a superior package, select main class in superior package`(remoteRobot: RemoteRobot) =
-//            CommonUITests.SpecialCasesTest.testClass_singleMainClassCandidateInASuperiorPackage_mainClassFound(
-//                TEST_PROJECT,
-//                BUILD_COMMAND,
-//                TARGET_CLASSES,
-//                TARGET_TESTS,
-//                remoteRobot
-//            )
     }
-
-
 }
