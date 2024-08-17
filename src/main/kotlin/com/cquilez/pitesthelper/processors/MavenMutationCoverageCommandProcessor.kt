@@ -39,22 +39,24 @@ open class MavenMutationCoverageCommandProcessor(
 
     override fun processProjectNodes(navigatableArray: Array<Navigatable>): MutationCoverageData {
         if (navigatableArray.size > 1) {
-            checkAllElementsAreInSameModule(navigatableArray)
+            checkAllElementsAreInSameModule()
         }
         return super.processProjectNodes(navigatableArray)
     }
 
-    private fun checkAllElementsAreInSameModule(navigatableArray: Array<Navigatable>) {
-        if (navigatableArray.isEmpty()) {
-            throw PitestHelperException("There are no elements to process")
-        }
-        var module: Module? = null
-        navigatableArray.forEach {
-            val newModule: Module = projectService.getModuleForNavigatable(project, it)
-            if (module == null) {
-                module = newModule
-            } else if (module != newModule) {
-                throw PitestHelperException("You cannot choose elements from different modules")
+    override fun checkAllElementsAreInSameModule() {
+        if (navigatableArray != null) {
+            if (navigatableArray.isEmpty()) {
+                throw PitestHelperException("There are no elements to process")
+            }
+            var module: Module? = null
+            navigatableArray.forEach {
+                val newModule: Module = projectService.getModuleForNavigatable(project, it)
+                if (module == null) {
+                    module = newModule
+                } else if (module != newModule) {
+                    throw PitestHelperException("You cannot choose elements from different modules")
+                }
             }
         }
     }
