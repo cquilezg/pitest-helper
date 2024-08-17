@@ -31,9 +31,38 @@ open class GradleMutationCoverageCommandProcessor(
     psiFile
 ) {
 
+    private var gradleModules: Set<String> = setOf()
+    private var moduleName = ""
+
     override fun resolveModules() {
         checkAllElementsAreInSameModule()
         resolveModules(resolveWorkingModule())
+        resolveGradleModules()
+    }
+
+    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
+        "gradle ${buildPitestGoal()} ${buildPitestArgs(mutationCoverageCommandData)}"
+
+
+    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
+        GradleService.runCommand(project, "${buildPitestGoal()} ${buildPitestArgs(mutationCoverageCommandData)}")
+    }
+
+    override fun checkAllElementsAreInSameModule() {
+        if (navigatableArray != null) {
+            if (navigatableArray.isEmpty()) {
+                throw PitestHelperException("There are no elements to process")
+            }
+            var module: DataNode<ModuleData>? = null
+            navigatableArray.forEach {
+                val newModule = GradleUtil.findGradleModuleData(projectService.getModuleForNavigatable(project, it))
+                if (module == null) {
+                    module = newModule
+                } else if (module != newModule) {
+                    throw PitestHelperException("You cannot choose elements from different modules")
+                }
+            }
+        }
     }
 
     /**
@@ -58,40 +87,26 @@ open class GradleMutationCoverageCommandProcessor(
             .filter { module ->
                 module != sourceModule && module.rootManager.contentEntries.any { contentEntry ->
                     contentEntry.url.startsWith(modulePath) && !contentEntry.sourceFolders.stream().filter {
-                        ((isTestModule && projectService.isMainSourceFolder(it)) || (!isTestModule && projectService.isTestSourceFolder(it)))
+                        ((isTestModule && projectService.isMainSourceFolder(it)) || (!isTestModule && projectService.isTestSourceFolder(
+                            it
+                        )))
                     }.isEmpty()
                 }
             }.toList()
     }
 
     private fun getModuleBasePath(module: Module): String {
-        val moduleChunks = module.name.split(".")
-        val moduleName = moduleChunks[moduleChunks.lastIndex - 1]
+        moduleName = getModuleName(module.name)
         return module.rootManager.contentEntries[0].url.substringBefore("/$moduleName/") + "/$moduleName/"
     }
 
-    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
-        "./gradlew pitest ${buildPitestArgs(mutationCoverageCommandData)}"
-
-    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
-        GradleService.runCommand(project, "pitest ${buildPitestArgs(mutationCoverageCommandData)}")
-    }
-
-    override fun checkAllElementsAreInSameModule() {
-        if (navigatableArray != null) {
-            if (navigatableArray.isEmpty()) {
-                throw PitestHelperException("There are no elements to process")
-            }
-            var module: DataNode<ModuleData>? = null
-            navigatableArray.forEach {
-                val newModule = GradleUtil.findGradleModuleData(projectService.getModuleForNavigatable(project, it))
-                if (module == null) {
-                    module = newModule
-                } else if (module != newModule) {
-                    throw PitestHelperException("You cannot choose elements from different modules")
-                }
-            }
+    private fun buildPitestGoal(): String {
+        val pitestGoal = if (gradleModules.size > 1 && moduleName.isNotBlank()) {
+            ":${moduleName}:pitest"
+        } else {
+            "pitest"
         }
+        return pitestGoal
     }
 
     private fun resolveWorkingModule(): Module {
@@ -106,4 +121,17 @@ open class GradleMutationCoverageCommandProcessor(
 
     private fun buildPitestArgs(mutationCoverageCommandData: MutationCoverageCommandData) =
         "-Ppitest.targetClasses=${mutationCoverageCommandData.targetClasses} -Ppitest.targetTests=${mutationCoverageCommandData.targetTests}"
+
+    private fun resolveGradleModules() {
+        gradleModules = ModuleManager.getInstance(project).modules.stream()
+            .filter { it.name.contains(".") }
+            .map {
+                getModuleName(it.name)
+            }.toList().toSet()
+    }
+
+    private fun getModuleName(moduleName: String): String {
+        val moduleChunks = moduleName.split(".")
+        return moduleChunks[moduleChunks.lastIndex - 1]
+    }
 }

@@ -2,8 +2,6 @@ package com.cquilez.pitesthelper.ui.actions.gradle
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.actions.CommonUITests
-import com.cquilez.pitesthelper.ui.pages.idea
-import com.cquilez.pitesthelper.ui.pages.mutationCoverageDialog
 import com.cquilez.pitesthelper.ui.steps.SharedSteps
 import com.cquilez.pitesthelper.ui.utils.RemoteRobotExtension
 import com.cquilez.pitesthelper.ui.utils.StepsLogger
@@ -37,6 +35,7 @@ class GradleKotlinRunMutationCoverageActionUiTest {
         @JvmStatic
         @AfterAll
         fun closeProjectAfterTests(remoteRobot: RemoteRobot) {
+            SharedSteps.closeMutationCoverageDialog(remoteRobot)
             SharedSteps.closeProjectAfterTests(remoteRobot)
         }
     }
@@ -44,19 +43,12 @@ class GradleKotlinRunMutationCoverageActionUiTest {
     @BeforeEach
     fun waitForIde(remoteRobot: RemoteRobot) {
         waitForIgnoringError(ofMinutes(3)) { remoteRobot.callJs("true") }
+        SharedSteps.closeMutationCoverageDialog(remoteRobot)
     }
 
     @AfterEach
     fun closeMutationCoverageDialogIfOpened(remoteRobot: RemoteRobot) {
-        with(remoteRobot) {
-            idea {
-                if (isMutationCoverageOpen()) {
-                    mutationCoverageDialog {
-                        cancelButton.click()
-                    }
-                }
-            }
-        }
+        SharedSteps.closeMutationCoverageDialog(remoteRobot)
     }
 
     @Tag("single-node")
