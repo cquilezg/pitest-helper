@@ -2,8 +2,6 @@ package com.cquilez.pitesthelper.ui.actions.gradle
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.actions.CommonUITests
-import com.cquilez.pitesthelper.ui.pages.idea
-import com.cquilez.pitesthelper.ui.pages.mutationCoverageDialog
 import com.cquilez.pitesthelper.ui.steps.SharedSteps
 import com.cquilez.pitesthelper.ui.utils.RemoteRobotExtension
 import com.cquilez.pitesthelper.ui.utils.StepsLogger
@@ -24,7 +22,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
 
     companion object {
         private const val TEST_PROJECT = "gradle-multi-module"
-        private const val BUILD_COMMAND = "./gradlew pitest"
+        private const val BUILD_COMMAND = "gradle"
         private const val TARGET_CLASSES = "-Ppitest.targetClasses"
         private const val TARGET_TESTS = "-Ppitest.targetTests"
 
@@ -37,6 +35,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         @JvmStatic
         @AfterAll
         fun closeProjectAfterTests(remoteRobot: RemoteRobot) {
+            SharedSteps.closeMutationCoverageDialog(remoteRobot)
             SharedSteps.closeProjectAfterTests(remoteRobot)
         }
     }
@@ -44,19 +43,12 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
     @BeforeEach
     fun waitForIde(remoteRobot: RemoteRobot) {
         waitForIgnoringError(ofMinutes(3)) { remoteRobot.callJs("true") }
+        SharedSteps.closeMutationCoverageDialog(remoteRobot)
     }
 
     @AfterEach
     fun closeMutationCoverageDialogIfOpened(remoteRobot: RemoteRobot) {
-        with(remoteRobot) {
-            idea {
-                if (isMutationCoverageOpen()) {
-                    mutationCoverageDialog {
-                        cancelButton.click()
-                    }
-                }
-            }
-        }
+        SharedSteps.closeMutationCoverageDialog(remoteRobot)
     }
 
     @Tag("single-node")
@@ -69,7 +61,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.SingleNodeTest.singleMainClass_testClassExists_singleMainClassAndSingleTestClass(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -82,7 +74,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         ) = CommonUITests.SingleNodeTest.singleMainPackage_testPackageExists_singleMainPackageAndSingleTestPackage(
             TEST_PROJECT,
             "app",
-            BUILD_COMMAND,
+            "$BUILD_COMMAND :app:pitest",
             TARGET_CLASSES,
             TARGET_TESTS,
             remoteRobot
@@ -94,7 +86,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.SingleNodeTest.singleTestClass_mainClassExists_singleTargetClassAndSingleTestClass(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -107,7 +99,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         ) = CommonUITests.SingleNodeTest.singleTestPackage_mainPackageExists_singleTargetPackageAndSingleTestPackage(
             TEST_PROJECT,
             "lib",
-            BUILD_COMMAND,
+            "$BUILD_COMMAND :lib:pitest",
             TARGET_CLASSES,
             TARGET_TESTS,
             remoteRobot
@@ -124,7 +116,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoMainClassesSelected_testClassesExists_TwoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -136,7 +128,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoTestClassesSelected_mainClassesExists_twoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -148,7 +140,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoMainPackages_testPackagesExists_twoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -160,7 +152,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoTestPackages_mainPackagesExists_TwoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -172,7 +164,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.mainClassAndItsPackage_testPackageExists_onlyPackagesAreSelected(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -184,7 +176,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.testClassAndParentPackage_mainPackageExists_onlyPackageSelected(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -201,7 +193,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.CrossSourceTest.mainClassAndItsTestClass_bothClassesAreSelected(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -213,7 +205,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.CrossSourceTest.mainClassAndDifferentTestClass_mainClassesAndTestClassesSelected(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -232,7 +224,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInSamePackage_testClassInSamePackage(
                 TEST_PROJECT,
                 "lib",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :lib:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -246,7 +238,7 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInASuperiorPackage_testClassInSuperiorPackage(
                 TEST_PROJECT,
                 "app",
-                BUILD_COMMAND,
+                "$BUILD_COMMAND :app:pitest",
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot

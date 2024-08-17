@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [2024.1.2] - 2024-08-17
+
+### Fixed
+
+- Command build for Gradle multi-module projects
+
 ## [2024.1.1] - 2024-08-17
 
 ### Fixed
@@ -25,7 +31,8 @@
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
 
-[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.1...HEAD
+[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.2...HEAD
+[2024.1.2]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.1...v2024.1.2
 [2024.1.1]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.0...v2024.1.1
 [2024.1.0]: https://github.com/cquilezg/pitest-helper/compare/v1.0.0...v2024.1.0
 [1.0.0]: https://github.com/cquilezg/pitest-helper/commits/v1.0.0

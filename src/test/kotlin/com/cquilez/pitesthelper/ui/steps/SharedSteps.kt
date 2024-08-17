@@ -58,6 +58,16 @@ object SharedSteps {
         }
     }
 
+    fun closeMutationCoverageDialog(remoteRobot: RemoteRobot) = with(remoteRobot) {
+        idea {
+            if (isMutationCoverageOpen()) {
+                mutationCoverageDialog {
+                    cancelButton.click()
+                }
+            }
+        }
+    }
+
     private fun runMutationCoverage(
         projectName: String,
         remoteRobot: RemoteRobot,
