@@ -22,7 +22,7 @@ class GradleKotlinRunMutationCoverageActionUiTest {
 
     companion object {
         private const val TEST_PROJECT = "sample-gradle-kotlin"
-        private const val BUILD_COMMAND = "./gradlew pitest"
+        private const val BUILD_COMMAND = "gradle pitest"
         private const val TARGET_CLASSES = "-Ppitest.targetClasses"
         private const val TARGET_TESTS = "-Ppitest.targetTests"
 
