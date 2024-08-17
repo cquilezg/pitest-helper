@@ -3,7 +3,7 @@
 junitBom = "5.11.0"
 hamcrest = "3.0"
 kotlinTest = "2.0.10"
-mockk = "1.13.10"
+mockk = "1.13.12"
 remoteRobot = "0.11.23"
 loggingInterceptor = "4.12.0"
 videoRecorderJunit5 = "2.0"
