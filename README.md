@@ -15,11 +15,11 @@ Requisites:
 - For Maven: [pitest-maven](https://pitest.org/quickstart/maven/) configured on your project.
 - For Gradle: [gradle-pitest-plugin](https://github.com/szpak/gradle-pitest-plugin) configured on your project.
 
+> **_NOTE:_** if you use Gradle you need to do extra steps to make PITest Helper work: [Setup Gradle project](https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#gradle-project).
+
 Usage:  
 - Right-click on your classes and packages you want to run mutation coverage and click _Run Mutation Coverage..._
 
-
-> **_NOTE:_** if you use Gradle you need to do extra steps to make PITest Helper work: [Setup Gradle project](#gradle-project).
 
 Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at the [Plugin Site](https://github.com/cquilezg/pitest-helper/issues)
 
