@@ -7,6 +7,7 @@ import com.cquilez.pitesthelper.model.MutationCoverage
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
+import org.jetbrains.kotlin.psi.KtClass
 
 object PITestService {
 
@@ -42,7 +43,11 @@ object PITestService {
     }
 
     fun getTestClassQualifiedName(psiClass: PsiClass): String {
-        val packageName = PsiService.getPackageName(psiClass)
+        val packageName = if (psiClass is KtClass) {
+            psiClass.containingKtFile.packageFqName.asString()
+        } else {
+            PsiService.getPackageName(psiClass)
+        }
         if (psiClass.name != null) {
             return buildFullClassName(packageName, TestService.getClassUnderTestName(psiClass.name as String))
         } else {

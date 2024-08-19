@@ -3,15 +3,20 @@ package com.cquilez.pitesthelper.services
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.intellij.openapi.components.Service
 import com.intellij.psi.*
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtFile
 
 @Service(Service.Level.PROJECT)
 class ClassService {
-    fun getPublicClass(psiFile: PsiFile): PsiClass {
+    fun getPublicJavaClass(psiFile: PsiFile): PsiClass {
         if (psiFile is PsiJavaFile) {
-            val psiClasses: Array<PsiClass> = psiFile.classes
-            return psiClasses.first { service -> service.isPhysical }
+            return psiFile.classes.first { it.isPhysical }
         }
         throw PitestHelperException("Invalid class")
+    }
+
+    fun getPublicKotlinClass(ktFile: KtFile): KtClass {
+        return ktFile.children.filterIsInstance<KtClass>().first { it.isPhysical }
     }
 
     fun isCodeFile(psiFile: PsiFile): Boolean {

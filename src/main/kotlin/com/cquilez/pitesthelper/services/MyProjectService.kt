@@ -4,6 +4,7 @@ import com.cquilez.pitesthelper.MyBundle
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
+import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.Module
@@ -91,22 +92,53 @@ class MyProjectService(project: Project) {
         }.toTypedArray()
     }
 
-    fun getModuleForNavigatable(project: Project, navigatable: Navigatable): Module {
-        val module = when (navigatable) {
-            is ClassTreeNode -> {
-                ModuleUtilCore.findModuleForFile((navigatable).virtualFile!!, project)
-            }
+    fun findNavigatableModule(
+        project: Project,
+        languageProcessorService: LanguageProcessorService,
+        navigatable: Navigatable
+    ): Module {
+        val module: Module? = if (navigatable is PsiDirectoryNode) {
+            ModuleUtilCore.findModuleForFile(navigatable.value.virtualFile, project)
+        } else {
+            getFileModule(project, languageProcessorService, navigatable)
+        }
+        return module
+            ?: throw PitestHelperException("There is/are elements not supported. $helpMessage")
+    }
 
-            is PsiDirectoryNode -> {
-                ModuleUtilCore.findModuleForFile((navigatable.value).virtualFile, project)
-            }
+    private fun getFileModule(
+        project: Project,
+        languageProcessorService: LanguageProcessorService,
+        navigatable: Navigatable
+    ): Module {
+        var module: Module? = null
+        if (isJavaFile(navigatable)) {
+            module = ModuleUtilCore.findModuleForFile(findJavaVirtualFile(navigatable), project)
+        } else if (isKotlinFile(navigatable)) {
+            val kotlinProcessor = languageProcessorService.getKotlinExtension()
+            module = kotlinProcessor.findNavigatableModule(navigatable)
+        }
+        return module
+            ?: throw PitestHelperException("There is/are elements not supported. $helpMessage")
+    }
 
-            else -> {
-                null
+    private fun findJavaVirtualFile(navigatable: Navigatable): VirtualFile {
+        if (navigatable is ClassTreeNode) {
+            val virtualFile = navigatable.virtualFile
+            if (virtualFile != null) {
+                return virtualFile
             }
         }
-            ?: throw PitestHelperException("There is/are elements not supported. $helpMessage")
-        return module
+        throw PitestHelperException("The Java virtual file was not found. $helpMessage")
+    }
+
+    private fun isJavaFile(navigatable: Navigatable): Boolean {
+        return navigatable is ClassTreeNode && navigatable.virtualFile?.extension == "java"
+    }
+
+    private fun isKotlinFile(navigatable: Navigatable): Boolean {
+        return navigatable is AbstractTreeNode<*> && navigatable.value is PsiElement
+                && (navigatable.value as PsiElement).containingFile.virtualFile.extension == "kt"
     }
 
     fun getModuleFromElement(psiElement: PsiElement): Module =
