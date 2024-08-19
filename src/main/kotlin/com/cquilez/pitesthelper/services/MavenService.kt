@@ -19,13 +19,7 @@ object MavenService {
         val toolWindow: ToolWindow? = toolWindowManager.getToolWindow("Maven")
 
         if (toolWindow != null) {
-            if (!toolWindow.isVisible) {
-                toolWindow.setAvailable(true, null)
-                toolWindow.setType(toolWindow.type, null)
-                toolWindow.activate(null)
-            }
             if (toolWindow.contentManager.contents.isNotEmpty()) {
-                // TODO: comprobar que tiene un SDK asociado antes de ejecutar el goal
                 if (module.rootManager.contentRoots.isNotEmpty()) {
                     val parameters = MavenRunnerParameters(
                         true, module.rootManager.contentRoots[0].path, "pom.xml", goals, emptyList()
