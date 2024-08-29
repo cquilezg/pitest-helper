@@ -96,8 +96,16 @@ open class GradleMutationCoverageCommandProcessor(
     }
 
     private fun getModuleBasePath(module: Module): String {
-        moduleName = getModuleName(module.name)
-        return module.rootManager.contentEntries[0].url.substringBefore("/$moduleName/") + "/$moduleName/"
+        if (module.rootManager.contentEntries.isEmpty()) {
+            return ""
+        }
+        moduleName = extractModuleName(module.name)
+        val basePath = module.rootManager.contentEntries[0].url
+        if(moduleName.isNotBlank()) {
+            val moduleSubPath = "/$moduleName/"
+            return basePath.substringBeforeLast(moduleSubPath) + moduleSubPath
+        }
+        return "$basePath/"
     }
 
     private fun buildPitestGoal(): String {
@@ -126,12 +134,16 @@ open class GradleMutationCoverageCommandProcessor(
         gradleModules = ModuleManager.getInstance(project).modules.stream()
             .filter { it.name.contains(".") }
             .map {
-                getModuleName(it.name)
+                extractModuleName(it.name)
             }.toList().toSet()
     }
 
-    private fun getModuleName(moduleName: String): String {
+    private fun extractModuleName(moduleName: String): String {
         val moduleChunks = moduleName.split(".")
-        return moduleChunks[moduleChunks.lastIndex - 1]
+        return if(moduleChunks.size > 1) {
+            moduleChunks[moduleChunks.lastIndex - 1]
+        } else {
+            ""
+        }
     }
 }
