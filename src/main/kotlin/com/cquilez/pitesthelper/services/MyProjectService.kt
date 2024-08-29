@@ -18,6 +18,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.util.containers.stream
@@ -112,9 +113,9 @@ class MyProjectService(project: Project) {
         navigatable: Navigatable
     ): Module {
         var module: Module? = null
-        if (isJavaFile(navigatable)) {
+        if (isJavaNavigatable(navigatable)) {
             module = ModuleUtilCore.findModuleForFile(findJavaVirtualFile(navigatable), project)
-        } else if (isKotlinFile(navigatable)) {
+        } else if (isKotlinNavigatable(navigatable)) {
             val kotlinProcessor = languageProcessorService.getKotlinExtension()
             module = kotlinProcessor.findNavigatableModule(navigatable)
         }
@@ -132,14 +133,20 @@ class MyProjectService(project: Project) {
         throw PitestHelperException("The Java virtual file was not found. $helpMessage")
     }
 
-    private fun isJavaFile(navigatable: Navigatable): Boolean {
+    fun isSupportedPsiFile(psiFile: PsiFile): Boolean {
+        return hasExtension(psiFile, "java") || hasExtension(psiFile, "kt")
+    }
+
+    fun isJavaNavigatable(navigatable: Navigatable): Boolean {
         return navigatable is ClassTreeNode && navigatable.virtualFile?.extension == "java"
     }
 
-    private fun isKotlinFile(navigatable: Navigatable): Boolean {
+    fun isKotlinNavigatable(navigatable: Navigatable): Boolean {
         return navigatable is AbstractTreeNode<*> && navigatable.value is PsiElement
-                && (navigatable.value as PsiElement).containingFile.virtualFile.extension == "kt"
+                && hasExtension((navigatable.value as PsiElement).containingFile, "kt")
     }
+
+    private fun hasExtension(psiFile: PsiFile, extension: String): Boolean = psiFile.virtualFile.extension == extension
 
     fun getModuleFromElement(psiElement: PsiElement): Module =
         ModuleUtil.findModuleForPsiElement(psiElement)

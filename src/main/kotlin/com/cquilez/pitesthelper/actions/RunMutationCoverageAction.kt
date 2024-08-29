@@ -39,10 +39,10 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val project = event.project
         if (project != null) {
             val serviceProvider = project.service<ServiceProvider>()
-            val classService = serviceProvider.getService<ClassService>(project)
+            val projectService = serviceProvider.getService<MyProjectService>(project)
             val psiFile = event.getData(CommonDataKeys.PSI_FILE)
             // TODO: Check if the directory is inside of a module and in a source root
-            if (psiFile != null && classService.isCodeFile(psiFile)) {
+            if (psiFile != null && projectService.isSupportedPsiFile(psiFile)) {
                 visible = true
             } else {
                 val navigatableArray = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)

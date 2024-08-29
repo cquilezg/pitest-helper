@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- Kotlin support (beta)
+
+### Fixed
+
+- Do not open Maven tool window when execute PITest command
+
 ## [2024.1.2] - 2024-08-17
 
 ### Fixed

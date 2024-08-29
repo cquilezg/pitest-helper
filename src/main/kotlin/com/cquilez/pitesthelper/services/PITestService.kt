@@ -55,6 +55,7 @@ object PITestService {
         }
     }
 
+    //TODO: test this method with a Kotlin class
     fun extractTargetTestsByPsiClass(psiClass: PsiClass): String {
         val packageName = PsiService.getPackageName(psiClass)
         if (psiClass.name != null) {

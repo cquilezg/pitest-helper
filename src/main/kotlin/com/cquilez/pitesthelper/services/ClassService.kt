@@ -2,9 +2,9 @@ package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.intellij.openapi.components.Service
-import com.intellij.psi.*
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtFile
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
 
 @Service(Service.Level.PROJECT)
 class ClassService {
@@ -13,14 +13,6 @@ class ClassService {
             return psiFile.classes.first { it.isPhysical }
         }
         throw PitestHelperException("Invalid class")
-    }
-
-    fun getPublicKotlinClass(ktFile: KtFile): KtClass {
-        return ktFile.children.filterIsInstance<KtClass>().first { it.isPhysical }
-    }
-
-    fun isCodeFile(psiFile: PsiFile): Boolean {
-        return psiFile is PsiJavaFile
     }
 
     fun getPackageName(psiClass: PsiClass): String {

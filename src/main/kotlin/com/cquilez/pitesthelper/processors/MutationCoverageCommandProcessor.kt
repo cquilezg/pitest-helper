@@ -1,12 +1,8 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.services.LanguageProcessorService
 import com.cquilez.pitesthelper.model.*
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.services.PITestService
-import com.cquilez.pitesthelper.services.TestService
+import com.cquilez.pitesthelper.services.*
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.module.Module
@@ -18,9 +14,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import org.jetbrains.jps.model.java.JavaSourceRootType
-import org.jetbrains.kotlin.idea.projectView.KtClassOrObjectTreeNode
-import org.jetbrains.kotlin.idea.refactoring.memberInfo.qualifiedClassNameForRendering
-import org.jetbrains.kotlin.psi.KtFile
 
 abstract class MutationCoverageCommandProcessor(
     val project: Project,
@@ -41,7 +34,7 @@ abstract class MutationCoverageCommandProcessor(
         val mutationCoverageData: MutationCoverageData =
             if (navigatableArray != null) {
                 readMultipleNodes(navigatableArray)
-            } else if (psiFile != null && classService.isCodeFile(psiFile)) {
+            } else if (psiFile != null && projectService.isSupportedPsiFile(psiFile)) {
                 readSingleNode(psiFile)
             } else {
                 throw PitestHelperException("No elements found")
@@ -223,6 +216,7 @@ abstract class MutationCoverageCommandProcessor(
         } else ""
     }
 
+    // TODO: test this method with Kotlin classes
     private fun readSingleNode(psiFile: PsiFile): MutationCoverageData {
         val psiClass = classService.getPublicJavaClass(psiFile)
         val targetClasses = PITestService.getTestClassQualifiedName(psiClass)
@@ -251,18 +245,17 @@ abstract class MutationCoverageCommandProcessor(
         module: Module,
         mutationCoverage: MutationCoverage
     ) {
-        when (navigatable) {
-            is PsiDirectoryNode -> {
-                processDirectory(javaDirectoryService, navigatable, module, mutationCoverage)
-            }
-
-            is ClassTreeNode -> {
-                processJavaClass(navigatable, module, mutationCoverage)
-            }
-
-            is KtClassOrObjectTreeNode -> {
-                processKotlinClass(navigatable, module, mutationCoverage)
-            }
+        if (navigatable is PsiDirectoryNode) {
+            processDirectory(javaDirectoryService, navigatable, module, mutationCoverage)
+        } else if (projectService.isJavaNavigatable(navigatable)) {
+            processJavaClass(navigatable as ClassTreeNode, module, mutationCoverage)
+        } else if (projectService.isKotlinNavigatable(navigatable)) {
+            processKotlinClass(
+                navigatable,
+                languageProcessorService.getKotlinExtension().findVirtualFile(navigatable),
+                module,
+                mutationCoverage
+            )
         }
     }
 
@@ -276,27 +269,28 @@ abstract class MutationCoverageCommandProcessor(
         if (psiFile is PsiJavaFile) {
             val psiClass = classService.getPublicJavaClass(psiFile)
             addIfNotPresent(
-                projectService.findNavigatableModule(project, languageProcessorService, navigatable), sourceRoot!!, mutationCoverage,
+                projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+                sourceRoot!!,
+                mutationCoverage,
                 CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
             )
         }
     }
 
     protected open fun processKotlinClass(
-        navigatable: KtClassOrObjectTreeNode,
+        navigatable: Navigatable,
+        virtualFile: VirtualFile,
         module: Module,
         mutationCoverage: MutationCoverage
     ) {
-        val virtualFile = navigatable.value.containingFile.virtualFile
         val sourceRoot: VirtualFile? = projectService.getSourceRoot(project, virtualFile)
         val psiFile = getPsiFile(virtualFile)
-        if (psiFile is KtFile) {
-            val ktClass = classService.getPublicKotlinClass(psiFile)
-            addIfNotPresent(
-                projectService.findNavigatableModule(project, languageProcessorService, navigatable), sourceRoot!!, mutationCoverage,
-                CodeItem(ktClass.name!!, ktClass.qualifiedClassNameForRendering(), CodeItemType.CLASS, navigatable)
-            )
-        }
+        addIfNotPresent(
+            projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+            sourceRoot!!,
+            mutationCoverage,
+            languageProcessorService.getKotlinExtension().createClassCodeItem(navigatable, psiFile)
+        )
     }
 
     protected open fun processDirectory(
