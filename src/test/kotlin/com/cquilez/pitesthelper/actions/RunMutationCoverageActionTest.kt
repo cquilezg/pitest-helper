@@ -94,7 +94,7 @@ class RunMutationCoverageActionTest {
         fun `Array is present, action is visible`() {
             every { anActionEvent.project } returns project
             every { project.service<ServiceProvider>() } returns serviceProvider
-            every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
+            every { serviceProvider.mockedServiceMap[MyProjectService::class] } returns projectService
             every { anActionEvent.getData(CommonDataKeys.PSI_FILE) } returns null
             every { anActionEvent.getData(CommonDataKeys.NAVIGATABLE_ARRAY) } returns arrayOf(directoryNode)
             every { anActionEvent.presentation } returns presentation
@@ -109,7 +109,7 @@ class RunMutationCoverageActionTest {
         fun `Neither array nor class are present, action is not visible`() {
             every { anActionEvent.project } returns project
             every { project.service<ServiceProvider>() } returns serviceProvider
-            every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
+            every { serviceProvider.mockedServiceMap[MyProjectService::class] } returns projectService
             every { anActionEvent.getData(CommonDataKeys.PSI_FILE) } returns null
             every { anActionEvent.getData(CommonDataKeys.NAVIGATABLE_ARRAY) } returns null
             every { anActionEvent.presentation } returns presentation
@@ -133,7 +133,7 @@ class RunMutationCoverageActionTest {
             every { serviceProvider.mockedServiceMap[BuildSystemService::class] } returns buildSystemService
             every { serviceProvider.mockedServiceMap[UIService::class] } returns uiService
             every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
-            every { serviceProvider.mockedServiceMap[LanguageProcessorService::class] } returns classService
+            every { serviceProvider.mockedServiceMap[LanguageProcessorService::class] } returns languageProcessorService
             val navigatableArray = arrayOf(navigatable)
             every { anActionEvent.getData(CommonDataKeys.NAVIGATABLE_ARRAY) } returns navigatableArray
             every { anActionEvent.getData(CommonDataKeys.PSI_FILE) } returns psiFile
