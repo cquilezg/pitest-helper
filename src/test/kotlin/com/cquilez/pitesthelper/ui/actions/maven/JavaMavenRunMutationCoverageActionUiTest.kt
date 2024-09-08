@@ -2,6 +2,7 @@ package com.cquilez.pitesthelper.ui.actions.maven
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.actions.CommonUITests
+import com.cquilez.pitesthelper.ui.actions.JavaAction
 import com.cquilez.pitesthelper.ui.steps.SharedSteps
 import com.cquilez.pitesthelper.ui.utils.RemoteRobotExtension
 import com.cquilez.pitesthelper.ui.utils.StepsLogger
@@ -14,7 +15,8 @@ import java.time.Duration.ofMinutes
 @ExtendWith(RemoteRobotExtension::class)
 @Tag("ui")
 @Tag("maven")
-class MavenRunMutationCoverageActionUiTest {
+@Tag("java")
+class JavaMavenRunMutationCoverageActionUiTest : JavaAction() {
 
     init {
         StepsLogger.init()
@@ -61,6 +63,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.SingleNodeTest.singleMainClass_testClassExists_singleMainClassAndSingleTestClass(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -74,6 +77,7 @@ class MavenRunMutationCoverageActionUiTest {
         ) = CommonUITests.SingleNodeTest.singleMainPackage_testPackageExists_singleMainPackageAndSingleTestPackage(
             TEST_PROJECT,
             null,
+            getLanguage(),
             BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
@@ -86,6 +90,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.SingleNodeTest.singleTestClass_mainClassExists_singleTargetClassAndSingleTestClass(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -99,6 +104,7 @@ class MavenRunMutationCoverageActionUiTest {
         ) = CommonUITests.SingleNodeTest.singleTestPackage_mainPackageExists_singleTargetPackageAndSingleTestPackage(
             TEST_PROJECT,
             null,
+            getLanguage(),
             BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
@@ -116,6 +122,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoMainClassesSelected_testClassesExists_TwoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -128,6 +135,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoTestClassesSelected_mainClassesExists_twoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -140,6 +148,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoMainPackages_testPackagesExists_twoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -152,6 +161,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.twoTestPackages_mainPackagesExists_TwoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -164,6 +174,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.mainClassAndItsPackage_testPackageExists_onlyPackagesAreSelected(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -176,6 +187,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.MultiNodeTest.testClassAndParentPackage_mainPackageExists_onlyPackageSelected(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -193,6 +205,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.CrossSourceTest.mainClassAndItsTestClass_bothClassesAreSelected(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -205,6 +218,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.CrossSourceTest.mainClassAndDifferentTestClass_mainClassesAndTestClassesSelected(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -224,6 +238,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInSamePackage_testClassInSamePackage(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
@@ -238,6 +253,7 @@ class MavenRunMutationCoverageActionUiTest {
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInASuperiorPackage_testClassInSuperiorPackage(
                 TEST_PROJECT,
                 null,
+                getLanguage(),
                 BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,

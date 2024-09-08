@@ -19,6 +19,7 @@ class CommonUITests {
             fun singleMainClass_testClassExists_singleMainClassAndSingleTestClass(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -29,7 +30,7 @@ class CommonUITests {
                     remoteRobot,
                     buildNodeList(
                         testModule,
-                        mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassA")
+                        mutableListOf("src", "main", language, "com.myproject", "package1", "ClassA")
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package1.ClassA " +
@@ -40,6 +41,7 @@ class CommonUITests {
             fun singleMainPackage_testPackageExists_singleMainPackageAndSingleTestPackage(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -47,7 +49,7 @@ class CommonUITests {
             ) = SharedSteps.runMutationCoverage(
                 testProject,
                 remoteRobot,
-                buildNodeList(testModule, mutableListOf("src", "main", "java", "com.myproject", "package2")),
+                buildNodeList(testModule, mutableListOf("src", "main", language, "com.myproject", "package2")),
                 "$buildCommand " +
                         "$targetClasses=com.myproject.package2.* " +
                         "$targetTests=com.myproject.package2.*",
@@ -57,6 +59,7 @@ class CommonUITests {
             fun singleTestClass_mainClassExists_singleTargetClassAndSingleTestClass(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -67,7 +70,7 @@ class CommonUITests {
                     remoteRobot,
                     buildNodeList(
                         testModule,
-                        mutableListOf("src", "test", "java", "com.myproject", "package2", "ClassBTest")
+                        mutableListOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package2.ClassB " +
@@ -78,6 +81,7 @@ class CommonUITests {
             fun singleTestPackage_mainPackageExists_singleTargetPackageAndSingleTestPackage(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -85,7 +89,7 @@ class CommonUITests {
             ) = SharedSteps.runMutationCoverage(
                 testProject,
                 remoteRobot,
-                buildNodeList(testModule, mutableListOf("src", "test", "java", "com.myproject", "package1")),
+                buildNodeList(testModule, mutableListOf("src", "test", language, "com.myproject", "package1")),
                 "$buildCommand " +
                         "$targetClasses=com.myproject.package1.* " +
                         "$targetTests=com.myproject.package1.*",
@@ -99,6 +103,7 @@ class CommonUITests {
             fun twoMainClassesSelected_testClassesExists_TwoTargetClassesAndTwoTestClasses(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -109,11 +114,11 @@ class CommonUITests {
                     setOf(
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassA")
+                            mutableListOf("src", "main", language, "com.myproject", "package1", "ClassA")
                         ),
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassD")
+                            mutableListOf("src", "main", language, "com.myproject", "package1", "ClassD")
                         )
                     ),
                     "$buildCommand " +
@@ -125,6 +130,7 @@ class CommonUITests {
             fun twoTestClassesSelected_mainClassesExists_twoTargetClassesAndTwoTestClasses(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -135,11 +141,11 @@ class CommonUITests {
                     setOf(
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "test", "java", "com.myproject", "package1", "ClassATest")
+                            mutableListOf("src", "test", language, "com.myproject", "package1", "ClassATest")
                         ),
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "test", "java", "com.myproject", "package2", "ClassBTest")
+                            mutableListOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
                         )
                     ),
                     "$buildCommand " +
@@ -151,6 +157,7 @@ class CommonUITests {
             fun twoMainPackages_testPackagesExists_twoMainPackagesAndTwoTestPackages(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -159,8 +166,8 @@ class CommonUITests {
                 SharedSteps.runMutationCoverage(
                     testProject, remoteRobot,
                     setOf(
-                        buildNodeList(testModule, mutableListOf("src", "main", "java", "com.myproject", "package1")),
-                        buildNodeList(testModule, mutableListOf("src", "main", "java", "com.myproject", "package2"))
+                        buildNodeList(testModule, mutableListOf("src", "main", language, "com.myproject", "package1")),
+                        buildNodeList(testModule, mutableListOf("src", "main", language, "com.myproject", "package2"))
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package1.*,com.myproject.package2.* " +
@@ -171,6 +178,7 @@ class CommonUITests {
             fun twoTestPackages_mainPackagesExists_TwoMainPackagesAndTwoTestPackages(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -179,8 +187,8 @@ class CommonUITests {
                 SharedSteps.runMutationCoverage(
                     testProject, remoteRobot,
                     setOf(
-                        buildNodeList(testModule, mutableListOf("src", "test", "java", "com.myproject", "package1")),
-                        buildNodeList(testModule, mutableListOf("src", "test", "java", "com.myproject", "package2"))
+                        buildNodeList(testModule, mutableListOf("src", "test", language, "com.myproject", "package1")),
+                        buildNodeList(testModule, mutableListOf("src", "test", language, "com.myproject", "package2"))
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package1.*,com.myproject.package2.* " +
@@ -191,6 +199,7 @@ class CommonUITests {
             fun mainClassAndItsPackage_testPackageExists_onlyPackagesAreSelected(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -201,9 +210,9 @@ class CommonUITests {
                     setOf(
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassA")
+                            mutableListOf("src", "main", language, "com.myproject", "package1", "ClassA")
                         ),
-                        buildNodeList(testModule, mutableListOf("src", "main", "java", "com.myproject", "package1"))
+                        buildNodeList(testModule, mutableListOf("src", "main", language, "com.myproject", "package1"))
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package1.* " +
@@ -214,6 +223,7 @@ class CommonUITests {
             fun testClassAndParentPackage_mainPackageExists_onlyPackageSelected(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -224,9 +234,9 @@ class CommonUITests {
                     setOf(
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "test", "java", "com.myproject", "package2", "ClassBTest")
+                            mutableListOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
                         ),
-                        buildNodeList(testModule, mutableListOf("src", "test", "java", "com.myproject", "package2"))
+                        buildNodeList(testModule, mutableListOf("src", "test", language, "com.myproject", "package2"))
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package2.* " +
@@ -241,6 +251,7 @@ class CommonUITests {
             fun mainClassAndItsTestClass_bothClassesAreSelected(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -250,11 +261,11 @@ class CommonUITests {
                     testProject, remoteRobot, setOf(
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassA")
+                            mutableListOf("src", "main", language, "com.myproject", "package1", "ClassA")
                         ),
                         buildNodeList(
                             testModule,
-                            mutableListOf("src", "test", "java", "com.myproject", "package1", "ClassATest")
+                            mutableListOf("src", "test", language, "com.myproject", "package1", "ClassATest")
                         )
                     ),
                     "$buildCommand " +
@@ -266,6 +277,7 @@ class CommonUITests {
             fun mainClassAndDifferentTestClass_mainClassesAndTestClassesSelected(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -274,11 +286,11 @@ class CommonUITests {
                 testProject, remoteRobot, setOf(
                     buildNodeList(
                         testModule,
-                        mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassA")
+                        mutableListOf("src", "main", language, "com.myproject", "package1", "ClassA")
                     ),
                     buildNodeList(
                         testModule,
-                        mutableListOf("src", "test", "java", "com.myproject", "package2", "ClassBTest")
+                        mutableListOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
                     )
                 ),
                 "$buildCommand " +
@@ -294,6 +306,7 @@ class CommonUITests {
             fun mainClass_multipleTestClassCandidatesAndOneInSamePackage_testClassInSamePackage(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -304,7 +317,7 @@ class CommonUITests {
                     remoteRobot,
                     buildNodeList(
                         testModule,
-                        mutableListOf("src", "main", "java", "com.myproject", "package1", "ClassC")
+                        mutableListOf("src", "main", language, "com.myproject", "package1", "ClassC")
                     ),
                     "$buildCommand " +
                             "$targetClasses=com.myproject.package1.ClassC " +
@@ -315,6 +328,7 @@ class CommonUITests {
             fun mainClass_multipleTestClassCandidatesAndOneInASuperiorPackage_testClassInSuperiorPackage(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -324,7 +338,7 @@ class CommonUITests {
                 remoteRobot,
                 buildNodeList(
                     testModule,
-                    mutableListOf("src", "main", "java", "com.myproject", "package3.impl", "ClassC")
+                    mutableListOf("src", "main", language, "com.myproject", "package3.impl", "ClassC")
                 ),
                 "$buildCommand " +
                         "$targetClasses=com.myproject.package3.impl.ClassC " +
@@ -335,6 +349,7 @@ class CommonUITests {
             fun testClass_singleMainClassCandidateInASuperiorPackage_mainClassFound(
                 testProject: String,
                 testModule: String?,
+                language: String,
                 buildCommand: String,
                 targetClasses: String,
                 targetTests: String,
@@ -344,7 +359,7 @@ class CommonUITests {
                 remoteRobot,
                 buildNodeList(
                     testModule,
-                    mutableListOf("src", "test", "java", "com.myproject", "package4.impl", "ClassETest")
+                    mutableListOf("src", "test", language, "com.myproject", "package4.impl", "ClassETest")
                 ),
                 "$buildCommand " +
                         "$targetClasses=com.myproject.package4.ClassE " +
