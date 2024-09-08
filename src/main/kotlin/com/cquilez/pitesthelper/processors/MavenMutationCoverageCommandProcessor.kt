@@ -1,6 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.services.LanguageProcessorService
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.services.ClassService
@@ -15,19 +16,21 @@ open class MavenMutationCoverageCommandProcessor(
     project: Project,
     projectService: MyProjectService,
     classService: ClassService,
+    languageProcessorService: LanguageProcessorService,
     navigatableArray: Array<Navigatable>?,
     psiFile: PsiFile?
 ) : MutationCoverageCommandProcessor(
     project,
     projectService,
     classService,
+    languageProcessorService,
     navigatableArray,
     psiFile
 ) {
 
     override fun resolveModules() {
         val moduleList = if (!navigatableArray.isNullOrEmpty()) {
-            listOf(projectService.getModuleForNavigatable(project, navigatableArray[0]))
+            listOf(projectService.findNavigatableModule(project, languageProcessorService, navigatableArray[0]))
         } else if (psiFile != null) {
             listOf(projectService.getModuleFromElement(psiFile))
         } else {
@@ -51,7 +54,7 @@ open class MavenMutationCoverageCommandProcessor(
             }
             var module: Module? = null
             navigatableArray.forEach {
-                val newModule: Module = projectService.getModuleForNavigatable(project, it)
+                val newModule: Module = projectService.findNavigatableModule(project, languageProcessorService, it)
                 if (module == null) {
                     module = newModule
                 } else if (module != newModule) {

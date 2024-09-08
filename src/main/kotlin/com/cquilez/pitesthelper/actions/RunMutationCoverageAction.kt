@@ -1,6 +1,7 @@
 package com.cquilez.pitesthelper.actions
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.services.LanguageProcessorService
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.*
@@ -38,10 +39,10 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val project = event.project
         if (project != null) {
             val serviceProvider = project.service<ServiceProvider>()
-            val classService = serviceProvider.getService<ClassService>(project)
+            val projectService = serviceProvider.getService<MyProjectService>(project)
             val psiFile = event.getData(CommonDataKeys.PSI_FILE)
             // TODO: Check if the directory is inside of a module and in a source root
-            if (psiFile != null && classService.isCodeFile(psiFile)) {
+            if (psiFile != null && projectService.isSupportedPsiFile(psiFile)) {
                 visible = true
             } else {
                 val navigatableArray = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
@@ -64,12 +65,13 @@ class RunMutationCoverageAction : DumbAwareAction() {
         val buildSystemService = serviceProvider.getService<BuildSystemService>(project)
         val uiService = serviceProvider.getService<UIService>(project)
         val classService = serviceProvider.getService<ClassService>(project)
+        val languageProcessorService = serviceProvider.getService<LanguageProcessorService>(project)
 
         val navigatableArray = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
         val psiFile = event.getData(CommonDataKeys.PSI_FILE)
 
         try {
-            val processor = buildSystemService.getCommandBuilder(project, projectService, classService, navigatableArray, psiFile)
+            val processor = buildSystemService.getCommandBuilder(project, projectService, classService, languageProcessorService, navigatableArray, psiFile)
             showMutationCoverageDialog(uiService, processor)
         } catch (e: PitestHelperException) {
             Messages.showErrorDialog(project, e.message, "Unable To Run Mutation Coverage")
