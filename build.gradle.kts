@@ -151,6 +151,15 @@ tasks {
             if (excludedtags != null) {
                 excludeTags = setOf(excludedtags.toString())
             }
+            val remoteRobotUrl = project.properties["remote-robot-url"]
+            if (remoteRobotUrl is String && remoteRobotUrl.isNotBlank()) {
+                systemProperty("remote-robot-url", remoteRobotUrl)
+                systemProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2")
+            }
+            val testPath = project.properties["test.path"]
+            if (testPath is String && testPath.isNotBlank()) {
+                systemProperty("test.path", testPath)
+            }
         }
     }
 
@@ -178,6 +187,7 @@ intellijPlatformTesting {
                         "-Dide.mac.file.chooser.native=false"
                     )
                 }
+                systemProperty("robot-server.host.public", "true")
             }
 
             plugins {

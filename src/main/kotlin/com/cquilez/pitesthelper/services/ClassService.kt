@@ -2,20 +2,17 @@ package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.intellij.openapi.components.Service
-import com.intellij.psi.*
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
 
 @Service(Service.Level.PROJECT)
 class ClassService {
-    fun getPublicClass(psiFile: PsiFile): PsiClass {
+    fun getPublicJavaClass(psiFile: PsiFile): PsiClass {
         if (psiFile is PsiJavaFile) {
-            val psiClasses: Array<PsiClass> = psiFile.classes
-            return psiClasses.first { service -> service.isPhysical }
+            return psiFile.classes.first { it.isPhysical }
         }
         throw PitestHelperException("Invalid class")
-    }
-
-    fun isCodeFile(psiFile: PsiFile): Boolean {
-        return psiFile is PsiJavaFile
     }
 
     fun getPackageName(psiClass: PsiClass): String {

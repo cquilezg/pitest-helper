@@ -2,10 +2,7 @@ package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.*
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MyProjectService
-import com.cquilez.pitesthelper.services.PITestService
-import com.cquilez.pitesthelper.services.TestService
+import com.cquilez.pitesthelper.services.*
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.module.Module
@@ -22,6 +19,7 @@ abstract class MutationCoverageCommandProcessor(
     val project: Project,
     val projectService: MyProjectService,
     private val classService: ClassService,
+    protected val languageProcessorService: LanguageProcessorService,
     val navigatableArray: Array<Navigatable>?,
     val psiFile: PsiFile?
 ) {
@@ -36,7 +34,7 @@ abstract class MutationCoverageCommandProcessor(
         val mutationCoverageData: MutationCoverageData =
             if (navigatableArray != null) {
                 readMultipleNodes(navigatableArray)
-            } else if (psiFile != null && classService.isCodeFile(psiFile)) {
+            } else if (psiFile != null && projectService.isSupportedPsiFile(psiFile)) {
                 readSingleNode(psiFile)
             } else {
                 throw PitestHelperException("No elements found")
@@ -59,7 +57,7 @@ abstract class MutationCoverageCommandProcessor(
     }
 
     protected open fun processProjectNodes(navigatableArray: Array<Navigatable>): MutationCoverageData {
-        val module = projectService.getModuleForNavigatable(project, navigatableArray[0])
+        val module = projectService.findNavigatableModule(project, languageProcessorService, navigatableArray[0])
         val mutationCoverage = processNavigatables(module, navigatableArray)
         syncClassesAndPackages(mutationCoverage)
         return PITestService.buildMutationCoverageCommand(module, mutationCoverage)
@@ -218,8 +216,9 @@ abstract class MutationCoverageCommandProcessor(
         } else ""
     }
 
+    // TODO: test this method with Kotlin classes
     private fun readSingleNode(psiFile: PsiFile): MutationCoverageData {
-        val psiClass = classService.getPublicClass(psiFile)
+        val psiClass = classService.getPublicJavaClass(psiFile)
         val targetClasses = PITestService.getTestClassQualifiedName(psiClass)
         val targetTests = PITestService.extractTargetTestsByPsiClass(psiClass)
         val module = projectService.getModuleFromElement(psiFile)
@@ -248,25 +247,50 @@ abstract class MutationCoverageCommandProcessor(
     ) {
         if (navigatable is PsiDirectoryNode) {
             processDirectory(javaDirectoryService, navigatable, module, mutationCoverage)
-        } else if (navigatable is ClassTreeNode) {
-            processClass(navigatable, module, mutationCoverage)
+        } else if (projectService.isJavaNavigatable(navigatable)) {
+            processJavaClass(navigatable as ClassTreeNode, module, mutationCoverage)
+        } else if (projectService.isKotlinNavigatable(navigatable)) {
+            processKotlinClass(
+                navigatable,
+                languageProcessorService.getKotlinExtension().findVirtualFile(navigatable),
+                module,
+                mutationCoverage
+            )
         }
     }
 
-    protected open fun processClass(
+    protected open fun processJavaClass(
         navigatable: ClassTreeNode,
         module: Module,
         mutationCoverage: MutationCoverage
     ) {
         val sourceRoot: VirtualFile? = projectService.getSourceRoot(project, navigatable.virtualFile!!)
-        val psiFile = getPsiFile(navigatable)
+        val psiFile = getPsiFile(navigatable.virtualFile!!)
         if (psiFile is PsiJavaFile) {
-            val psiClass = classService.getPublicClass(psiFile)
+            val psiClass = classService.getPublicJavaClass(psiFile)
             addIfNotPresent(
-                projectService.getModuleForNavigatable(project, navigatable), sourceRoot!!, mutationCoverage,
+                projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+                sourceRoot!!,
+                mutationCoverage,
                 CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
             )
         }
+    }
+
+    protected open fun processKotlinClass(
+        navigatable: Navigatable,
+        virtualFile: VirtualFile,
+        module: Module,
+        mutationCoverage: MutationCoverage
+    ) {
+        val sourceRoot: VirtualFile? = projectService.getSourceRoot(project, virtualFile)
+        val psiFile = getPsiFile(virtualFile)
+        addIfNotPresent(
+            projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+            sourceRoot!!,
+            mutationCoverage,
+            languageProcessorService.getKotlinExtension().createClassCodeItem(navigatable, psiFile)
+        )
     }
 
     protected open fun processDirectory(
@@ -368,16 +392,13 @@ abstract class MutationCoverageCommandProcessor(
         return false
     }
 
-    private fun getPsiFile(classTreeNode: ClassTreeNode): PsiFile {
+    private fun getPsiFile(virtualFile: VirtualFile): PsiFile {
         val psiManager = PsiManager.getInstance(project)
-        val virtualFile = classTreeNode.virtualFile
-        if (virtualFile != null) {
-            val psiFile = psiManager.findFile(virtualFile)
-            if (psiFile != null) {
-                return psiFile
-            }
+        val psiFile = psiManager.findFile(virtualFile)
+        if (psiFile != null) {
+            return psiFile
         }
-        throw PitestHelperException("There are selected elements not supported: ${classTreeNode.name}. $helpMessage")
+        throw PitestHelperException("There are selected elements not supported: ${virtualFile.name}. $helpMessage")
     }
 
     private fun findClassInSamePackage(psiClasses: Array<PsiClass>, packageName: String): PsiClass? {
