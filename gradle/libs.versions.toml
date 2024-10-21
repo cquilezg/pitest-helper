@@ -1,6 +1,6 @@
 [versions]
 # libraries
-junitBom = "5.11.0"
+junitBom = "5.11.3"
 hamcrest = "3.0"
 kotlinTest = "2.0.20"
 mockk = "1.13.12"
