@@ -48,7 +48,7 @@ class RunMutationCoverageActionTest {
     lateinit var uiService: UIService
 
     @MockK
-    lateinit var languageProcessorService: LanguageProcessorService
+    lateinit var extensionsService: ExtensionsService
 
     @MockK
     lateinit var psiFile: PsiFile
@@ -133,7 +133,7 @@ class RunMutationCoverageActionTest {
             every { serviceProvider.mockedServiceMap[BuildSystemService::class] } returns buildSystemService
             every { serviceProvider.mockedServiceMap[UIService::class] } returns uiService
             every { serviceProvider.mockedServiceMap[ClassService::class] } returns classService
-            every { serviceProvider.mockedServiceMap[LanguageProcessorService::class] } returns languageProcessorService
+            every { serviceProvider.mockedServiceMap[ExtensionsService::class] } returns extensionsService
             val navigatableArray = arrayOf(navigatable)
             every { anActionEvent.getData(CommonDataKeys.NAVIGATABLE_ARRAY) } returns navigatableArray
             every { anActionEvent.getData(CommonDataKeys.PSI_FILE) } returns psiFile
@@ -142,7 +142,7 @@ class RunMutationCoverageActionTest {
             val mutationCoverageData = MutationCoverageData(module, mainList, testList)
             mockkConstructor(MutationCoverageCommandProcessor::class)
             every {
-                buildSystemService.getCommandBuilder(project, projectService, classService, languageProcessorService, navigatableArray, psiFile)
+                buildSystemService.getCommandBuilder(project, projectService, classService, extensionsService, navigatableArray, psiFile)
             } returns commandProcessor
             every {
                 commandProcessor.handleCommand()

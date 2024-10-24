@@ -1,4 +1,4 @@
-package com.cquilez.pitesthelper.extensions
+package com.cquilez.pitesthelper.application.port
 
 import com.cquilez.pitesthelper.model.CodeItem
 import com.intellij.openapi.module.Module

@@ -1,5 +1,6 @@
-package com.cquilez.pitesthelper.extensions
+package com.cquilez.pitesthelper.infrastructure.extensions
 
+import com.cquilez.pitesthelper.application.port.LanguageProcessor
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.CodeItem
 import com.cquilez.pitesthelper.model.CodeItemType
@@ -30,6 +31,20 @@ class KotlinProcessor : LanguageProcessor {
         return module
             ?: throw PitestHelperException("There is/are elements not supported.")
     }
+
+//    private fun findNavigatableModule(psiFileSystemItem: PsiFileSystemItem): Module {
+//        var module: Module? = null
+//        if (psiFileSystemItem is KtClassOrObjectTreeNode) {
+//            module = ModuleUtilCore.findModuleForFile(psiFileSystemItem.value.containingFile)
+//        } else if (psiFileSystemItem is KtFileTreeNode) {
+//            throw PitestHelperException(
+//                "The file ${psiFileSystemItem.name} does not contain classes or objects. " +
+//                        "PITest only supports Kotlin classes and objects."
+//            )
+//        }
+//        return module
+//            ?: throw PitestHelperException("There is/are elements not supported.")
+//    }
 
     override fun findVirtualFile(navigatable: Navigatable): VirtualFile {
         if (navigatable is KtClassOrObjectTreeNode) {

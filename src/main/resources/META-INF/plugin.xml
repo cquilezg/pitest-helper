@@ -7,11 +7,15 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
     <depends optional="true"
-             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin</depends>
-    <depends>org.jetbrains.idea.maven</depends>
-    <depends>org.jetbrains.plugins.terminal</depends>
-    <depends>org.jetbrains.plugins.gradle</depends>
-
+             config-file="pitest-helper-maven.xml">org.jetbrains.idea.maven
+    </depends>
+    <depends optional="true"
+             config-file="pitest-helper-gradle.xml">org.jetbrains.plugins.gradle
+    </depends>
+    <depends optional="true"
+             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin
+    </depends>
+    <depends>org.jetbrains.android</depends>
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <actions>
@@ -29,11 +33,44 @@
             <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
                           relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
         </action>
+        <action
+                id="org.intellij.sdk.action.pitest.create2.command"
+                class="com.cquilez.pitesthelper.infrastructure.action.RunMutationCoverageFromToolWindowAction"
+                text="PITest - Test Classs"
+                description="Create PITest Command"
+                icon="pitest_icon.png">
+            <override-text place="EditorPopup" text="Run Mutation Coverage From Project Tool Window..."/>
+            <override-text place="ProjectViewPopup" text="Run Mutation Coverage From Project Tool Window..."/>
+
+            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command"
+                          anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
+                          relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+        </action>
+        <action
+                id="org.intellij.sdk.action.pitest.create3.command"
+                class="com.cquilez.pitesthelper.infrastructure.action.RunMutationCoverageFromEditorAction"
+                text="PITest - Test Class From Editor"
+                description="Create PITest Command From Editor"
+                icon="pitest_icon.png">
+            <override-text place="EditorPopup" text="Run Mutation Coverage From Editor..."/>
+            <override-text place="ProjectViewPopup" text="Run Mutation Coverage From Editor..."/>
+
+            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command"
+                          anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
+                          relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+        </action>
     </actions>
     <extensionPoints>
         <extensionPoint
                 name="languageProcessor"
-                interface="com.cquilez.pitesthelper.extensions.LanguageProcessor"
+                interface="com.cquilez.pitesthelper.application.port.LanguageProcessor"
+                dynamic="true">
+        </extensionPoint>
+        <extensionPoint
+                name="buildSystemProcessor"
+                interface="com.cquilez.pitesthelper.application.port.BuildSystemProcessor"
                 dynamic="true">
         </extensionPoint>
     </extensionPoints>

@@ -1,7 +1,7 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.services.LanguageProcessorService
+import com.cquilez.pitesthelper.services.ExtensionsService
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
@@ -22,14 +22,14 @@ open class GradleMutationCoverageCommandProcessor(
     project: Project,
     projectService: MyProjectService,
     classService: ClassService,
-    languageProcessorService: LanguageProcessorService,
+    extensionsService: ExtensionsService,
     navigatableArray: Array<Navigatable>?,
     psiFile: PsiFile?
 ) : MutationCoverageCommandProcessor(
     project,
     projectService,
     classService,
-    languageProcessorService,
+    extensionsService,
     navigatableArray,
     psiFile
 ) {
@@ -58,7 +58,7 @@ open class GradleMutationCoverageCommandProcessor(
             }
             var module: DataNode<ModuleData>? = null
             navigatableArray.forEach {
-                val newModule = GradleUtil.findGradleModuleData(projectService.findNavigatableModule(project, languageProcessorService, it))
+                val newModule = GradleUtil.findGradleModuleData(projectService.findNavigatableModule(project, extensionsService, it))
                 if (module == null) {
                     module = newModule
                 } else if (module != newModule) {
@@ -124,7 +124,7 @@ open class GradleMutationCoverageCommandProcessor(
         return if (psiFile != null) {
             projectService.getModuleFromElement(psiFile)
         } else if (!navigatableArray.isNullOrEmpty()) {
-            projectService.findNavigatableModule(project, languageProcessorService, navigatableArray[0])
+            projectService.findNavigatableModule(project, extensionsService, navigatableArray[0])
         } else {
             throw PitestHelperException("No elements to process")
         }

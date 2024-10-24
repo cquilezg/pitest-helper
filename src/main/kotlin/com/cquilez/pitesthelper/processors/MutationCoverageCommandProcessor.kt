@@ -19,7 +19,7 @@ abstract class MutationCoverageCommandProcessor(
     val project: Project,
     val projectService: MyProjectService,
     private val classService: ClassService,
-    protected val languageProcessorService: LanguageProcessorService,
+    protected val extensionsService: ExtensionsService,
     val navigatableArray: Array<Navigatable>?,
     val psiFile: PsiFile?
 ) {
@@ -57,7 +57,7 @@ abstract class MutationCoverageCommandProcessor(
     }
 
     protected open fun processProjectNodes(navigatableArray: Array<Navigatable>): MutationCoverageData {
-        val module = projectService.findNavigatableModule(project, languageProcessorService, navigatableArray[0])
+        val module = projectService.findNavigatableModule(project, extensionsService, navigatableArray[0])
         val mutationCoverage = processNavigatables(module, navigatableArray)
         syncClassesAndPackages(mutationCoverage)
         return PITestService.buildMutationCoverageCommand(module, mutationCoverage)
@@ -252,7 +252,7 @@ abstract class MutationCoverageCommandProcessor(
         } else if (projectService.isKotlinNavigatable(navigatable)) {
             processKotlinClass(
                 navigatable,
-                languageProcessorService.getKotlinExtension().findVirtualFile(navigatable),
+                extensionsService.getKotlinExtension().findVirtualFile(navigatable),
                 module,
                 mutationCoverage
             )
@@ -269,7 +269,7 @@ abstract class MutationCoverageCommandProcessor(
         if (psiFile is PsiJavaFile) {
             val psiClass = classService.getPublicJavaClass(psiFile)
             addIfNotPresent(
-                projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+                projectService.findNavigatableModule(project, extensionsService, navigatable),
                 sourceRoot!!,
                 mutationCoverage,
                 CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
@@ -286,10 +286,10 @@ abstract class MutationCoverageCommandProcessor(
         val sourceRoot: VirtualFile? = projectService.getSourceRoot(project, virtualFile)
         val psiFile = getPsiFile(virtualFile)
         addIfNotPresent(
-            projectService.findNavigatableModule(project, languageProcessorService, navigatable),
+            projectService.findNavigatableModule(project, extensionsService, navigatable),
             sourceRoot!!,
             mutationCoverage,
-            languageProcessorService.getKotlinExtension().createClassCodeItem(navigatable, psiFile)
+            extensionsService.getKotlinExtension().createClassCodeItem(navigatable, psiFile)
         )
     }
 

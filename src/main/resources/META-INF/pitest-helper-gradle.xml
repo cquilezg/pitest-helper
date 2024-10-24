@@ -1,0 +1,7 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+        <buildSystemProcessor
+                id="gradle"
+                implementation="com.cquilez.pitesthelper.infrastructure.extensions.GradleProcessor"/>
+    </extensions>
+</idea-plugin>

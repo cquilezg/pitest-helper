@@ -1,0 +1,7 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+        <buildSystemProcessor
+                id="maven"
+                implementation="com.cquilez.pitesthelper.infrastructure.extensions.MavenProcessor"/>
+    </extensions>
+</idea-plugin>

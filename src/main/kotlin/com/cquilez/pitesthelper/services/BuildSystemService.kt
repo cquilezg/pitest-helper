@@ -1,7 +1,7 @@
 package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.BuildSystem
+import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.processors.GradleMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MavenMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
@@ -22,12 +22,12 @@ class BuildSystemService {
     private fun getBuildSystem(
         project: Project,
         projectService: MyProjectService,
-        languageProcessorService: LanguageProcessorService,
+        extensionsService: ExtensionsService,
         navigatableArray: Array<Navigatable>?,
         psiFile: PsiFile?
     ): BuildSystem {
         return if (!navigatableArray.isNullOrEmpty()) {
-            getBuildSystemForNavigatables(project, projectService, languageProcessorService, navigatableArray)
+            getBuildSystemForNavigatables(project, projectService, extensionsService, navigatableArray)
         } else if (psiFile != null) {
             getBuildSystemForPsiFile(psiFile)
         } else {
@@ -38,14 +38,14 @@ class BuildSystemService {
     private fun getBuildSystemForNavigatables(
         project: Project,
         projectService: MyProjectService,
-        languageProcessorService: LanguageProcessorService,
+        extensionsService: ExtensionsService,
         navigatableArray: Array<Navigatable>
     ): BuildSystem {
         return if (navigatableArray.all {
                 MavenUtil.isMavenModule(
                     projectService.findNavigatableModule(
                         project,
-                        languageProcessorService,
+                        extensionsService,
                         it
                     )
                 )
@@ -55,7 +55,7 @@ class BuildSystemService {
                 GradleUtil.findGradleModuleData(
                     projectService.findNavigatableModule(
                         project,
-                        languageProcessorService,
+                        extensionsService,
                         it
                     )
                 ) != null
@@ -87,18 +87,18 @@ class BuildSystemService {
         project: Project,
         projectService: MyProjectService,
         classService: ClassService,
-        languageProcessorService: LanguageProcessorService,
+        extensionsService: ExtensionsService,
         navigatableArray: Array<Navigatable>?,
         psiFile: PsiFile?
     ): MutationCoverageCommandProcessor {
         return if (!ApplicationManager.getApplication().isUnitTestMode) {
-            when (getBuildSystem(project, projectService, languageProcessorService, navigatableArray, psiFile)) {
+            when (getBuildSystem(project, projectService, extensionsService, navigatableArray, psiFile)) {
                 BuildSystem.GRADLE -> {
                     GradleMutationCoverageCommandProcessor(
                         project,
                         projectService,
                         classService,
-                        languageProcessorService,
+                        extensionsService,
                         navigatableArray,
                         psiFile
                     )
@@ -109,7 +109,7 @@ class BuildSystemService {
                         project,
                         projectService,
                         classService,
-                        languageProcessorService,
+                        extensionsService,
                         navigatableArray,
                         psiFile
                     )
@@ -118,7 +118,7 @@ class BuildSystemService {
                 else -> throw PitestHelperException("Unsupported build system. PITest Helper supports only Gradle and Maven projects.")
             }
         } else {
-            MavenMutationCoverageCommandProcessor(project, projectService, classService, languageProcessorService, navigatableArray, psiFile)
+            MavenMutationCoverageCommandProcessor(project, projectService, classService, extensionsService, navigatableArray, psiFile)
         }
     }
 }

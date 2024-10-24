@@ -95,13 +95,13 @@ class MyProjectService(project: Project) {
 
     fun findNavigatableModule(
         project: Project,
-        languageProcessorService: LanguageProcessorService,
+        extensionsService: ExtensionsService,
         navigatable: Navigatable
     ): Module {
         val module: Module? = if (navigatable is PsiDirectoryNode) {
             ModuleUtilCore.findModuleForFile(navigatable.value.virtualFile, project)
         } else {
-            getFileModule(project, languageProcessorService, navigatable)
+            getFileModule(project, extensionsService, navigatable)
         }
         return module
             ?: throw PitestHelperException("There is/are elements not supported. $helpMessage")
@@ -109,14 +109,14 @@ class MyProjectService(project: Project) {
 
     private fun getFileModule(
         project: Project,
-        languageProcessorService: LanguageProcessorService,
+        extensionsService: ExtensionsService,
         navigatable: Navigatable
     ): Module {
         var module: Module? = null
         if (isJavaNavigatable(navigatable)) {
             module = ModuleUtilCore.findModuleForFile(findJavaVirtualFile(navigatable), project)
         } else if (isKotlinNavigatable(navigatable)) {
-            val kotlinProcessor = languageProcessorService.getKotlinExtension()
+            val kotlinProcessor = extensionsService.getKotlinExtension()
             module = kotlinProcessor.findNavigatableModule(navigatable)
         }
         return module
