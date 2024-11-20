@@ -1,7 +1,6 @@
 # GitHub Actions Workflow is created for testing and preparing the plugin release in the following steps:
 # - Validate Gradle Wrapper.
 # - Run 'test' and 'verifyPlugin' tasks.
-# - Run Qodana inspections.
 # - Run the 'buildPlugin' task and prepare artifact for further tests.
 # - Run the 'runPluginVerifier' task.
 # - Create a draft release.
@@ -192,7 +191,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, inspectCode, verify ]
+    needs: [ build, test, verify ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
