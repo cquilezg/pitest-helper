@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated plugin compatibility to IntelliJ 2024.3
+
 ## [2024.1.3] - 2024-08-29
 
 ### Fixed
