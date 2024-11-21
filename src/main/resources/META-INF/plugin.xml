@@ -6,6 +6,8 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends optional="true"
+             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin</depends>
     <depends>org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
@@ -22,8 +24,17 @@
             <override-text place="EditorPopup" text="Run Mutation Coverage..."/>
             <override-text place="ProjectViewPopup" text="Run Mutation Coverage..."/>
 
-            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="first"/>
-            <add-to-group group-id="ProjectViewPopupMenuModifyGroup" relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command"
+                          anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
+                          relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
         </action>
     </actions>
+    <extensionPoints>
+        <extensionPoint
+                name="languageProcessor"
+                interface="com.cquilez.pitesthelper.extensions.LanguageProcessor"
+                dynamic="true">
+        </extensionPoint>
+    </extensionPoints>
 </idea-plugin>

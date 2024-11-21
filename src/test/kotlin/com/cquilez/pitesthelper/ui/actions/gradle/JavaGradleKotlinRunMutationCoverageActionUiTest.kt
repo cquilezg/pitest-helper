@@ -2,6 +2,7 @@ package com.cquilez.pitesthelper.ui.actions.gradle
 
 import com.automation.remarks.junit5.Video
 import com.cquilez.pitesthelper.ui.actions.CommonUITests
+import com.cquilez.pitesthelper.ui.actions.JavaAction
 import com.cquilez.pitesthelper.ui.steps.SharedSteps
 import com.cquilez.pitesthelper.ui.utils.RemoteRobotExtension
 import com.cquilez.pitesthelper.ui.utils.StepsLogger
@@ -14,15 +15,16 @@ import java.time.Duration.ofMinutes
 @ExtendWith(RemoteRobotExtension::class)
 @Tag("ui")
 @Tag("gradle")
-class GradleMultiModuleRunMutationCoverageActionUiTest {
+@Tag("java")
+class JavaGradleKotlinRunMutationCoverageActionUiTest : JavaAction() {
 
     init {
         StepsLogger.init()
     }
 
     companion object {
-        private const val TEST_PROJECT = "gradle-multi-module"
-        private const val BUILD_COMMAND = "gradle"
+        private const val TEST_PROJECT = "sample-gradle-kotlin"
+        private const val BUILD_COMMAND = "gradle pitest"
         private const val TARGET_CLASSES = "-Ppitest.targetClasses"
         private const val TARGET_TESTS = "-Ppitest.targetTests"
 
@@ -60,8 +62,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Single Main Class selected and Test Class exists, single target class and single test class`(remoteRobot: RemoteRobot) =
             CommonUITests.SingleNodeTest.singleMainClass_testClassExists_singleMainClassAndSingleTestClass(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -73,8 +76,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             remoteRobot: RemoteRobot
         ) = CommonUITests.SingleNodeTest.singleMainPackage_testPackageExists_singleMainPackageAndSingleTestPackage(
             TEST_PROJECT,
-            "app",
-            "$BUILD_COMMAND :app:pitest",
+            null,
+            getLanguage(),
+            BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
             remoteRobot
@@ -85,8 +89,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Single Test Class selected and Main Class exists, single target class and single test class`(remoteRobot: RemoteRobot) =
             CommonUITests.SingleNodeTest.singleTestClass_mainClassExists_singleTargetClassAndSingleTestClass(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -98,8 +103,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
             remoteRobot: RemoteRobot
         ) = CommonUITests.SingleNodeTest.singleTestPackage_mainPackageExists_singleTargetPackageAndSingleTestPackage(
             TEST_PROJECT,
-            "lib",
-            "$BUILD_COMMAND :lib:pitest",
+            null,
+            getLanguage(),
+            BUILD_COMMAND,
             TARGET_CLASSES,
             TARGET_TESTS,
             remoteRobot
@@ -115,8 +121,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Two Main Classes selected and Test Classes exists, two target classes and two test classes`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoMainClassesSelected_testClassesExists_TwoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -127,8 +134,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Two Test Classes selected and Main Classes exists, two target classes and two test classes`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoTestClassesSelected_mainClassesExists_twoTargetClassesAndTwoTestClasses(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -139,8 +147,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Two Main Packages selected and Test Packages exists, two target packages and two test packages`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoMainPackages_testPackagesExists_twoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -151,8 +160,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Two Test Packages selected and Main Packages exists, two target packages and two test packages`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.twoTestPackages_mainPackagesExists_TwoMainPackagesAndTwoTestPackages(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -163,8 +173,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Main Class and its package selected, test package exists, only packages are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.mainClassAndItsPackage_testPackageExists_onlyPackagesAreSelected(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -175,8 +186,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Test Class and its package selected, main package exists, only packages are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.MultiNodeTest.testClassAndParentPackage_mainPackageExists_onlyPackageSelected(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -192,8 +204,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Main Class and its test class selected, both classes are selected`(remoteRobot: RemoteRobot) =
             CommonUITests.CrossSourceTest.mainClassAndItsTestClass_bothClassesAreSelected(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -204,8 +217,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         fun `Main Class and different test class selected, main classes and test classes selected`(remoteRobot: RemoteRobot) =
             CommonUITests.CrossSourceTest.mainClassAndDifferentTestClass_mainClassesAndTestClassesSelected(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -223,8 +237,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         ) =
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInSamePackage_testClassInSamePackage(
                 TEST_PROJECT,
-                "lib",
-                "$BUILD_COMMAND :lib:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot
@@ -237,8 +252,9 @@ class GradleMultiModuleRunMutationCoverageActionUiTest {
         ) =
             CommonUITests.SpecialCasesTest.mainClass_multipleTestClassCandidatesAndOneInASuperiorPackage_testClassInSuperiorPackage(
                 TEST_PROJECT,
-                "app",
-                "$BUILD_COMMAND :app:pitest",
+                null,
+                getLanguage(),
+                BUILD_COMMAND,
                 TARGET_CLASSES,
                 TARGET_TESTS,
                 remoteRobot

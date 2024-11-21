@@ -8,6 +8,10 @@
 
 - Updated plugin compatibility to IntelliJ 2024.3
 
+## [2024.2.0] - 2024-09-08
+
+- Add Kotlin support by @cquilezg in https://github.com/cquilezg/pitest-helper/pull/50
+
 ## [2024.1.3] - 2024-08-29
 
 ### Fixed
@@ -42,7 +46,8 @@
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
 
-[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.3...HEAD
+[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.0...HEAD
+[2024.2.0]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.3...v2024.2.0
 [2024.1.3]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.2...v2024.1.3
 [2024.1.2]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.1...v2024.1.2
 [2024.1.1]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.0...v2024.1.1
