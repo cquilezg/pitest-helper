@@ -123,9 +123,8 @@ Currently, PITest Helper supports only these properties to customize your PITest
 
 
 ## Compatibility
-PITest Helper is compatible with Java/Kotlin projects using Maven and Gradle (in beta phase).
-At this time only configuring target classes and tests is allowed, but more options to customize the PITest command will be added soon.  
-Kotlin classes are not supported yet, but its support is planned in a future release.
+PITest Helper is compatible with Java and Kotlin projects using Maven or Gradle.
+At this time only configuring target classes and tests is allowed, but more options to customize the PITest command will be added soon.
 
 The plugin is compatible with IntelliJ IDEA Community and Ultimate, from versions 2022.3 to 2024.3.
 
