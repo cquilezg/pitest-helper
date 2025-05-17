@@ -7,12 +7,17 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
     <depends optional="true"
-             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin</depends>
+             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin
+    </depends>
     <depends>org.jetbrains.idea.maven</depends>
-    <depends>org.jetbrains.plugins.terminal</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
+
+    <!-- Add Kotlin plugin K2 mode compatibility -->
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true"/>
+    </extensions>
 
     <actions>
         <action
