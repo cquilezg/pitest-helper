@@ -6,6 +6,9 @@ import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
 import com.cquilez.pitesthelper.services.MyProjectService
+import com.cquilez.pitesthelper.services.ServiceProvider
+import com.cquilez.pitesthelper.services.persistence.PitestConfigService
+import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.module.Module
@@ -44,11 +47,21 @@ open class GradleMutationCoverageCommandProcessor(
     }
 
     override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
-        "gradle ${buildPitestGoal()} ${buildPitestArgs(mutationCoverageCommandData)}"
+        let {
+            val tasks = buildTaskList(mutationCoverageCommandData).joinToString(" ")
+            "gradle $tasks ${buildPitestArgs(mutationCoverageCommandData)}"
+        }
 
 
     override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
-        GradleService.runCommand(project, "${buildPitestGoal()} ${buildPitestArgs(mutationCoverageCommandData)}")
+        GradleService.runCommand(project, "${buildTaskList(mutationCoverageCommandData)} ${buildPitestArgs(mutationCoverageCommandData)}")
+    }
+
+    override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommandData) {
+        val serviceProvider = project.service<ServiceProvider>()
+        val pitestConfigService = serviceProvider.getService<PitestConfigService>(project)
+        pitestConfigService.preGoals = mutationCoverageCommandData.preActions
+        pitestConfigService.postGoals = mutationCoverageCommandData.postActions
     }
 
     override fun checkAllElementsAreInSameModule() {
@@ -140,6 +153,12 @@ open class GradleMutationCoverageCommandProcessor(
                 extractModuleName(it.name)
             }.toList().toSet()
     }
+
+    private fun buildTaskList(mutationCoverageCommandData: MutationCoverageCommandData) =
+        buildActions(
+            mutationCoverageCommandData.preActions, buildPitestGoal(),
+            mutationCoverageCommandData.postActions
+        )
 
     private fun extractModuleName(moduleName: String): String {
         val moduleChunks = moduleName.split(".")

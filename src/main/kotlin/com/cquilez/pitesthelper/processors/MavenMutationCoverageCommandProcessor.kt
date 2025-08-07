@@ -1,12 +1,11 @@
 package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.services.LanguageProcessorService
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.model.MutationCoverageData
-import com.cquilez.pitesthelper.services.ClassService
-import com.cquilez.pitesthelper.services.MavenService
-import com.cquilez.pitesthelper.services.MyProjectService
+import com.cquilez.pitesthelper.services.*
+import com.cquilez.pitesthelper.services.persistence.PitestConfigService
+import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
@@ -65,14 +64,34 @@ open class MavenMutationCoverageCommandProcessor(
     }
 
     override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
-        "mvn test-compile pitest:mutationCoverage ${MavenService.buildPitestArgs(mutationCoverageCommandData)}"
+        let {
+            val goals = buildGoals(mutationCoverageCommandData).joinToString(" ")
+            "mvn $goals ${
+                MavenService.buildPitestArgs(
+                    mutationCoverageCommandData
+                )
+            }"
+        }
 
     override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
         MavenService.runMavenCommand(
             project,
             mutationCoverageCommandData.module,
-            listOf("test-compile", "pitest:mutationCoverage"),
+            buildGoals(mutationCoverageCommandData),
             MavenService.buildPitestArgs(mutationCoverageCommandData)
         )
     }
+
+    override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommandData) {
+        val serviceProvider = project.service<ServiceProvider>()
+        val pitestConfigService = serviceProvider.getService<PitestConfigService>(project)
+        pitestConfigService.preGoals = mutationCoverageCommandData.preActions
+        pitestConfigService.postGoals = mutationCoverageCommandData.postActions
+    }
+
+    private fun buildGoals(mutationCoverageCommandData: MutationCoverageCommandData) =
+        buildActions(
+            mutationCoverageCommandData.preActions, "pitest:mutationCoverage",
+            mutationCoverageCommandData.postActions
+        )
 }

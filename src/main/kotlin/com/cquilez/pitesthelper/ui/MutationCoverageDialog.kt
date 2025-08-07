@@ -1,5 +1,6 @@
 package com.cquilez.pitesthelper.ui
 
+import com.cquilez.pitesthelper.model.BuildSystem
 import com.cquilez.pitesthelper.model.MutationCoverageCommandData
 import com.cquilez.pitesthelper.model.MutationCoverageData
 import com.intellij.openapi.observable.util.whenTextChanged
@@ -7,6 +8,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.ui.JBUI
+import org.jetbrains.idea.maven.statistics.MavenDependencyInsertionCollector
 import java.awt.Dimension
 import java.awt.Toolkit
 import javax.swing.Action
@@ -14,12 +16,15 @@ import javax.swing.JComponent
 
 class MutationCoverageDialog(
     mutationCoverageData: MutationCoverageData,
-    private val commandBuilder: java.util.function.Function<MutationCoverageCommandData, String>
+    private val commandBuilder: java.util.function.Function<MutationCoverageCommandData, String>,
+    private val buildSystem: BuildSystem
 ) : DialogWrapper(true) {
     private val commandTextArea = JBTextArea()
 
     var commandData = MutationCoverageCommandData(
         mutationCoverageData.module,
+        mutationCoverageData.preActions,
+        mutationCoverageData.postActions,
         mutationCoverageData.targetClasses.joinToString(","),
         mutationCoverageData.targetTests.joinToString(",")
     )
@@ -46,6 +51,28 @@ class MutationCoverageDialog(
                     "How to setup PITest Helper in your project",
                     "https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#set-up-your-project"
                 ).align(AlignX.RIGHT)
+            }
+            row(if(buildSystem == BuildSystem.MAVEN) "Pre goals:" else "Pre tasks:") {
+                textField()
+                    .align(AlignX.FILL)
+                    .bindText(commandData::preActions)
+                    .applyToComponent {
+                        document.whenTextChanged {
+                            commandData.preActions = text.trim()
+                            updateCommandTextArea()
+                        }
+                    }
+            }
+            row(if(buildSystem == BuildSystem.MAVEN) "Post goals:" else "Post tasks:") {
+                textField()
+                    .align(AlignX.FILL)
+                    .bindText(commandData::postActions)
+                    .applyToComponent {
+                        document.whenTextChanged {
+                            commandData.postActions = text.trim()
+                            updateCommandTextArea()
+                        }
+                    }
             }
             row("Target Classes:") {
                 textField()

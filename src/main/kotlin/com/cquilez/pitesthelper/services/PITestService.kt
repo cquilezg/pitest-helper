@@ -1,10 +1,9 @@
 package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.CodeItem
-import com.cquilez.pitesthelper.model.CodeItemType
-import com.cquilez.pitesthelper.model.MutationCoverage
-import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.model.*
+import com.cquilez.pitesthelper.services.persistence.PitestConfigService
+import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.psi.KtClass
@@ -18,8 +17,12 @@ object PITestService {
         module: Module,
         mutationCoverage: MutationCoverage
     ): MutationCoverageData {
+        val serviceProvider = module.project.service<ServiceProvider>()
+        val pitestConfigService = serviceProvider.getService<PitestConfigService>(module.project)
         return MutationCoverageData(
             module,
+            pitestConfigService.preGoals,
+            pitestConfigService.postGoals,
             collectTargetCode(mutationCoverage.normalSource),
             collectTargetCode(mutationCoverage.testSource)
         )

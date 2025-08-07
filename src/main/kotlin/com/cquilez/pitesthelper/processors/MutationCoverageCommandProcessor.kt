@@ -3,8 +3,10 @@ package com.cquilez.pitesthelper.processors
 import com.cquilez.pitesthelper.exception.PitestHelperException
 import com.cquilez.pitesthelper.model.*
 import com.cquilez.pitesthelper.services.*
+import com.cquilez.pitesthelper.services.persistence.PitestConfigService
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
+import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -45,6 +47,7 @@ abstract class MutationCoverageCommandProcessor(
     protected abstract fun resolveModules()
     abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData): String
     abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData)
+    abstract fun saveSettings(mutationCoverageCommandData: MutationCoverageCommandData)
     abstract fun checkAllElementsAreInSameModule()
 
     private fun readMultipleNodes(
@@ -144,7 +147,8 @@ abstract class MutationCoverageCommandProcessor(
                     throw PitestHelperException(
                         "Class under test is not in the same package. Unable to find valid class. " +
                                 "Candidates are: ${
-                                    psiClasses.joinToString(", ",
+                                    psiClasses.joinToString(
+                                        ", ",
                                         transform = {
                                             PITestService.buildFullClassName(
                                                 classService.getPackageName(it),
@@ -222,7 +226,15 @@ abstract class MutationCoverageCommandProcessor(
         val targetClasses = PITestService.getTestClassQualifiedName(psiClass)
         val targetTests = PITestService.extractTargetTestsByPsiClass(psiClass)
         val module = projectService.getModuleFromElement(psiFile)
-        return MutationCoverageData(module, listOf(targetClasses), listOf(targetTests))
+        val serviceProvider = project.service<ServiceProvider>()
+        val pitestConfigService = serviceProvider.getService<PitestConfigService>(project)
+        return MutationCoverageData(
+            module,
+            pitestConfigService.preGoals,
+            pitestConfigService.postGoals,
+            listOf(targetClasses),
+            listOf(targetTests)
+        )
     }
 
     private fun processNavigatables(
@@ -337,6 +349,11 @@ abstract class MutationCoverageCommandProcessor(
             }
         }
     }
+
+    protected fun buildActions(preActions: String, pitestActionName: String, postActions: String): List<String> =
+        (preActions.split(" ") + pitestActionName + postActions.split(" "))
+            .filter { it.isNotBlank() }
+            .toList()
 
     private fun getBasePackage(rootFile: VirtualFile): String {
         var lastNode = rootFile
