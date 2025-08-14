@@ -2,7 +2,7 @@
 # libraries
 junitBom = "5.11.3"
 hamcrest = "3.0"
-kotlinTest = "2.0.21"
+kotlinTest = "2.2.10"
 mockk = "1.13.13"
 remoteRobot = "0.11.23"
 loggingInterceptor = "4.12.0"
