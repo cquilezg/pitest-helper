@@ -52,7 +52,7 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        pluginVerifier(version="1.383")
+        pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
     }
@@ -94,7 +94,6 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
-            untilBuild = providers.gradleProperty("pluginUntilBuild")
         }
     }
 
@@ -110,15 +109,15 @@ intellijPlatform {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels = providers.gradleProperty("pluginVersion")
-            .map {
-                listOf(
-                    it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" })
-            }
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
         ides {
-            recommended()
+            create("IC", "2025.2.6")
+            create("IC", "2024.3.7")
+            create("IC", "2023.3.8")
+            create("IC", "2022.3.3")
         }
     }
 }
