@@ -9,7 +9,7 @@
 - Extended plugin compatibility
 - Added plugin compatibility with Kotlin K2 mode
 
-## [2024.1.0 - 2025-05-04]
+## [2024.1.0] - 2025-05-04
 
 ### Fixed
 
