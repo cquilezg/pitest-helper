@@ -3,6 +3,11 @@ package com.cquilez.pitesthelper.ui.steps
 import com.cquilez.pitesthelper.ui.components.Node
 import com.cquilez.pitesthelper.ui.components.ProjectTree
 import com.cquilez.pitesthelper.ui.pages.*
+import com.intellij.driver.sdk.ui.components.common.IdeaFrameUI
+import com.intellij.driver.sdk.ui.components.common.toolwindows.ProjectViewToolWindowUi
+import com.intellij.driver.sdk.ui.components.common.toolwindows.projectView
+import com.intellij.driver.sdk.ui.keyboard.RemoteKeyboard
+import com.intellij.driver.sdk.ui.xQuery
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText
 import com.intellij.remoterobot.search.locators.byXpath
@@ -25,6 +30,14 @@ object SharedSteps {
             if (projectVerticalBar.isEmpty()) {
                 projectToolWindow.click()
             }
+        }
+    }
+
+    private fun openProjectView(idea: IdeaFrameUI) = with(idea) {
+        step("Open Project View if it is closed") {
+//            if (projectVerticalBar.isEmpty()) {
+//                projectToolWindow.click()
+//            }
         }
     }
 
@@ -114,6 +127,26 @@ object SharedSteps {
         }
     }
 
+    private fun runMutationCoverageNew(
+        projectName: String,
+        ideaFrame: IdeaFrameUI,
+        expectedCommand: String,
+        checkProjectLoaded: Boolean,
+        consumer: Consumer<ProjectViewToolWindowUi>
+    ) = with(ideaFrame) {
+        projectView {
+            consumer.accept(this)
+        }
+        x(xQuery { byAccessibleName("Run Mutation Coverage...") }).click()
+//        assertEquals(expectedCommand, commandTextArea.text)
+//        cancelButton.click()
+//        mutationCoverageDialog
+//        {
+//            assertEquals(expectedCommand, commandTextArea.text)
+//            cancelButton.click()
+//        }
+    }
+
     fun runMutationCoverage(
         projectName: String,
         remoteRobot: RemoteRobot,
@@ -131,6 +164,24 @@ object SharedSteps {
                     clickWithScroll(projectTreeItems, node!!, this)
                 }
                 node!!.remoteTexts[0].rightClick()
+            }
+        }
+    }
+
+    fun runMutationCoverageNew(
+        projectName: String,
+        ideaFrame: IdeaFrameUI,
+        nodeList: List<String>,
+        expectedCommand: String,
+        checkProjectLoaded: Boolean
+    ) = with(ideaFrame) {
+        runMutationCoverageNew(projectName, ideaFrame, expectedCommand, checkProjectLoaded) {
+//            findLastNode(it, nodeList)
+            retry(3, preRetryAction = { keyboard { key(VK_PAGE_DOWN) } }) {
+                projectView {
+                    projectViewTree.expandPath(*nodeList.toTypedArray())
+                    projectViewTree.rightClickPath(*nodeList.toTypedArray())
+                }
             }
         }
     }
@@ -189,6 +240,14 @@ object SharedSteps {
         node.remoteTexts[0].click()
     }
 
+    private fun clickWithScroll(projectTreeItems: List<RemoteText>, node: Node, keyboard: RemoteKeyboard) = with(keyboard) {
+        if (projectTreeItems.subList(projectTreeItems.size - 3, projectTreeItems.size)
+                .contains(node.remoteTexts[0])
+        ) {
+            key(VK_PAGE_DOWN)
+        }
+        node.remoteTexts[0].click()
+    }
 
     private fun findNodes(nodeTree: Node, nodeNames: List<String>): Node? {
         val parentNode = findNodeInTree(nodeTree, nodeNames[0], 10)
