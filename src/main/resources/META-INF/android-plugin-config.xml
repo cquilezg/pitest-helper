@@ -1,0 +1,19 @@
+<idea-plugin>
+  <!-- Available in both IntelliJ IDEA and Android Studio when Android plugin is installed -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectService
+      serviceInterface="com.cquilez.pitesthelper.application.port.out.BuildUnitPort"
+      serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.AndroidBuildUnitAdapter"
+      overrides="true"/>
+  </extensions>
+
+</idea-plugin>
+
+
+
+
+
+
+
+
