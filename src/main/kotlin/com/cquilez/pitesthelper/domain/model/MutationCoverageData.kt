@@ -1,4 +1,4 @@
-package com.cquilez.pitesthelper.model
+package com.cquilez.pitesthelper.domain.model
 
 import com.intellij.openapi.module.Module
 

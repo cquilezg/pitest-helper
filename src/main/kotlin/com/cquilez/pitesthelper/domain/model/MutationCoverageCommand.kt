@@ -1,8 +1,8 @@
-package com.cquilez.pitesthelper.model
+package com.cquilez.pitesthelper.domain.model
 
 import com.intellij.openapi.module.Module
 
-data class MutationCoverageCommandData(
+data class MutationCoverageCommand(
     val module: Module,
     var preActions: String,
     var postActions: String,
