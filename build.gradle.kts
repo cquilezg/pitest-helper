@@ -193,5 +193,19 @@ intellijPlatformTesting {
                 robotServerPlugin()
             }
         }
+        register("runAndroidStudioDebug") {
+            task {
+                jvmArgumentProviders += CommandLineArgumentProvider {
+                    listOf(
+                        "-Xmx2048m",
+                        "-XX:+UseG1GC"
+                    )
+                }
+            }
+
+            // Sobrescribe el tipo de plataforma para Android Studio
+            type = org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.AndroidStudio
+            version = "2025.2.1.7" // Ajusta a la versión de Android Studio que quieras
+        }
     }
 }

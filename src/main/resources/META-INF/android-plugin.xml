@@ -1,0 +1,12 @@
+<idea-plugin>
+  <!-- Android Studio IDE specific extensions and actions -->
+  <!-- It depends on com.intellij.modules.androidstudio module which ONLY exists in Android Studio -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService
+      serviceInterface="com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort"
+      serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.AndroidNavigatableAdapter"
+      overrides="true"/>
+  </extensions>
+
+</idea-plugin>

@@ -9,7 +9,12 @@
     <depends optional="true"
              config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin
     </depends>
-    <depends>org.jetbrains.idea.maven</depends>
+    <depends optional="true" config-file="kotlin-plugin.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="maven-plugin.xml">org.jetbrains.idea.maven</depends>
+    <!-- Loads android-plugin-config.xml when Android plugin is present (IntelliJ & Android Studio) -->
+    <depends optional="true" config-file="android-plugin-config.xml">org.jetbrains.android</depends>
+    <!-- Android Studio IDE module dependency: loads android-plugin.xml ONLY in Android Studio -->
+    <depends optional="true" config-file="android-plugin.xml">com.intellij.modules.androidstudio</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -19,13 +24,42 @@
         <supportsKotlinPluginMode supportsK2="true"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <dependencySupport coordinate="org.pitest:pitest-maven" kind="java" displayName="PITest"/>
+        <dependencySupport coordinate="info.solidsoft.pitest:gradle-pitest-plugin" kind="java" displayName="PITest"/>
+        <!-- Use cases -->
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.in.RunMutationCoverageFromProjectViewPort"
+                serviceImplementation="com.cquilez.pitesthelper.application.usecase.RunMutationCoverageFromProjectViewUseCase"/>
+
+        <!-- Adapters -->
+        <applicationService
+                serviceInterface="com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.NavigatableAdapter"/>
+        <applicationService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.PsiPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.JavaPsiAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.BuildUnitPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.BuildUnitAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.CodeElementPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.CodeElementAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.ProjectConfigPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
+    </extensions>
+
     <actions>
         <action
                 id="org.intellij.sdk.action.pitest.create.command"
-                class="com.cquilez.pitesthelper.actions.RunMutationCoverageAction"
+                class="com.cquilez.pitesthelper.infrastructure.action.RunMutationCoverageFromProjectViewAction"
                 text="PITest - Test Class"
                 description="Create PITest Command"
-                icon="pitest_icon.png">
+                icon="/icons/bird.svg">
             <override-text place="EditorPopup" text="Run Mutation Coverage..."/>
             <override-text place="ProjectViewPopup" text="Run Mutation Coverage..."/>
 
