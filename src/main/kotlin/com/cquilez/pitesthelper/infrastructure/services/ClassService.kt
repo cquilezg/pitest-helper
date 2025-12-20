@@ -1,6 +1,6 @@
 package com.cquilez.pitesthelper.services
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.intellij.openapi.components.Service
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile

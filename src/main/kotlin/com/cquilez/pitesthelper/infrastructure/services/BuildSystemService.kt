@@ -1,10 +1,13 @@
-package com.cquilez.pitesthelper.services
+package com.cquilez.pitesthelper.infrastructure.services
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.BuildSystem
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.processors.GradleMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MavenMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
+import com.cquilez.pitesthelper.services.ClassService
+import com.cquilez.pitesthelper.services.LanguageProcessorService
+import com.cquilez.pitesthelper.services.MyProjectService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.module.Module

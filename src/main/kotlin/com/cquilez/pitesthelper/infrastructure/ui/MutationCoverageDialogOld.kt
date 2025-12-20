@@ -1,27 +1,26 @@
-package com.cquilez.pitesthelper.ui
+package com.cquilez.pitesthelper.infrastructure.ui
 
-import com.cquilez.pitesthelper.model.BuildSystem
-import com.cquilez.pitesthelper.model.MutationCoverageCommandData
-import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.domain.BuildSystem
+import com.cquilez.pitesthelper.domain.model.MutationCoverageCommand
+import com.cquilez.pitesthelper.domain.model.MutationCoverageData
 import com.intellij.openapi.observable.util.whenTextChanged
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.ui.JBUI
-import org.jetbrains.idea.maven.statistics.MavenDependencyInsertionCollector
 import java.awt.Dimension
 import java.awt.Toolkit
 import javax.swing.Action
 import javax.swing.JComponent
 
-class MutationCoverageDialog(
+class MutationCoverageDialogOld(
     mutationCoverageData: MutationCoverageData,
-    private val commandBuilder: java.util.function.Function<MutationCoverageCommandData, String>,
+    private val commandBuilder: java.util.function.Function<MutationCoverageCommand, String>,
     private val buildSystem: BuildSystem
 ) : DialogWrapper(true) {
     private val commandTextArea = JBTextArea()
 
-    var commandData = MutationCoverageCommandData(
+    var commandData = MutationCoverageCommand(
         mutationCoverageData.module,
         mutationCoverageData.preActions,
         mutationCoverageData.postActions,

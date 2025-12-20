@@ -1,7 +1,7 @@
 package com.cquilez.pitesthelper.services
 
 import com.cquilez.pitesthelper.MyBundle
-import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
