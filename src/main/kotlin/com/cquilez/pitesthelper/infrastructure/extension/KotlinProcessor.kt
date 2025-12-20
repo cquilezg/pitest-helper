@@ -1,8 +1,8 @@
 package com.cquilez.pitesthelper.extensions
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.CodeItem
-import com.cquilez.pitesthelper.model.CodeItemType
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.model.CodeItem
+import com.cquilez.pitesthelper.domain.model.CodeItemType
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.vfs.VirtualFile
@@ -48,7 +48,7 @@ class KotlinProcessor : LanguageProcessor {
     override fun createClassCodeItem(navigatable: Navigatable, psiFile: PsiFile): CodeItem {
         if (psiFile is KtFile) {
             val psiClass = getPublicClass(psiFile)
-            return CodeItem(psiClass.name!!, psiClass.qualifiedClassNameForRendering(), CodeItemType.CLASS, navigatable)
+            return CodeItem(psiClass.name!!, psiClass.qualifiedClassNameForRendering(), CodeItemType.CLASS)
         }
         throw PitestHelperException("There is/are elements not supported.")
     }

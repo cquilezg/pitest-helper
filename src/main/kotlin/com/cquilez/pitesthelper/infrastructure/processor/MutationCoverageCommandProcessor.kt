@@ -1,9 +1,9 @@
 package com.cquilez.pitesthelper.processors
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.*
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.model.*
 import com.cquilez.pitesthelper.services.*
-import com.cquilez.pitesthelper.services.persistence.PitestConfigService
+import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.components.service
@@ -45,9 +45,9 @@ abstract class MutationCoverageCommandProcessor(
     }
 
     protected abstract fun resolveModules()
-    abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData): String
-    abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData)
-    abstract fun saveSettings(mutationCoverageCommandData: MutationCoverageCommandData)
+    abstract fun buildCommand(mutationCoverageCommandData: MutationCoverageCommand): String
+    abstract fun runCommand(mutationCoverageCommandData: MutationCoverageCommand)
+    abstract fun saveSettings(mutationCoverageCommandData: MutationCoverageCommand)
     abstract fun checkAllElementsAreInSameModule()
 
     private fun readMultipleNodes(
@@ -169,8 +169,7 @@ abstract class MutationCoverageCommandProcessor(
                 CodeItem(
                     targetClassName,
                     targetClassQualifiedName,
-                    CodeItemType.CLASS,
-                    it.navigatable
+                    CodeItemType.CLASS
                 )
             )
         }
@@ -227,11 +226,11 @@ abstract class MutationCoverageCommandProcessor(
         val targetTests = PITestService.extractTargetTestsByPsiClass(psiClass)
         val module = projectService.getModuleFromElement(psiFile)
         val serviceProvider = project.service<ServiceProvider>()
-        val pitestConfigService = serviceProvider.getService<PitestConfigService>(project)
+        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(project)
         return MutationCoverageData(
             module,
-            pitestConfigService.preGoals,
-            pitestConfigService.postGoals,
+            projectConfigPersistenceAdapter.preGoals,
+            projectConfigPersistenceAdapter.postGoals,
             listOf(targetClasses),
             listOf(targetTests)
         )
@@ -284,7 +283,7 @@ abstract class MutationCoverageCommandProcessor(
                 projectService.findNavigatableModule(project, languageProcessorService, navigatable),
                 sourceRoot!!,
                 mutationCoverage,
-                CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS, navigatable)
+                CodeItem(psiClass.name!!, psiClass.qualifiedName!!, CodeItemType.CLASS)
             )
         }
     }
@@ -324,7 +323,7 @@ abstract class MutationCoverageCommandProcessor(
             sourceRoot = projectService.getSourceRoot(project, psiDirectoryNode.virtualFile!!)
             addIfNotPresent(
                 module, sourceRoot!!, mutationCoverage,
-                CodeItem(packageName, qualifiedName, CodeItemType.PACKAGE, psiDirectoryNode)
+                CodeItem(packageName, qualifiedName, CodeItemType.PACKAGE)
             )
         } else {
             val sourceFolders = projectService.getFilteredSourceFolders(module) {
@@ -339,7 +338,7 @@ abstract class MutationCoverageCommandProcessor(
                     packageName = getBasePackage(sourceFolderFound.get().file!!)
                     diffElements(
                         mutationCoverage.normalSource,
-                        CodeItem(packageName, packageName, CodeItemType.PACKAGE, psiDirectoryNode)
+                        CodeItem(packageName, packageName, CodeItemType.PACKAGE)
                     )
                 } else {
                     throw PitestHelperException("The directory appears to contain no code. $helpMessage")

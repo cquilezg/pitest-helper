@@ -1,13 +1,13 @@
 package com.cquilez.pitesthelper.processors
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.services.LanguageProcessorService
-import com.cquilez.pitesthelper.model.MutationCoverageCommandData
+import com.cquilez.pitesthelper.domain.model.MutationCoverageCommand
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.services.ServiceProvider
-import com.cquilez.pitesthelper.services.persistence.PitestConfigService
+import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
 import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ModuleData
@@ -46,22 +46,22 @@ open class GradleMutationCoverageCommandProcessor(
         resolveGradleModules()
     }
 
-    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommandData) =
+    override fun buildCommand(mutationCoverageCommandData: MutationCoverageCommand) =
         let {
             val tasks = buildTaskList(mutationCoverageCommandData).joinToString(" ")
             "gradle $tasks ${buildPitestArgs(mutationCoverageCommandData)}"
         }
 
 
-    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommandData) {
+    override fun runCommand(mutationCoverageCommandData: MutationCoverageCommand) {
         GradleService.runCommand(project, "${buildTaskList(mutationCoverageCommandData)} ${buildPitestArgs(mutationCoverageCommandData)}")
     }
 
-    override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommandData) {
+    override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommand) {
         val serviceProvider = project.service<ServiceProvider>()
-        val pitestConfigService = serviceProvider.getService<PitestConfigService>(project)
-        pitestConfigService.preGoals = mutationCoverageCommandData.preActions
-        pitestConfigService.postGoals = mutationCoverageCommandData.postActions
+        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(project)
+        projectConfigPersistenceAdapter.preGoals = mutationCoverageCommandData.preActions
+        projectConfigPersistenceAdapter.postGoals = mutationCoverageCommandData.postActions
     }
 
     override fun checkAllElementsAreInSameModule() {
@@ -143,7 +143,7 @@ open class GradleMutationCoverageCommandProcessor(
         }
     }
 
-    private fun buildPitestArgs(mutationCoverageCommandData: MutationCoverageCommandData) =
+    private fun buildPitestArgs(mutationCoverageCommandData: MutationCoverageCommand) =
         "-Ppitest.targetClasses=${mutationCoverageCommandData.targetClasses} -Ppitest.targetTests=${mutationCoverageCommandData.targetTests}"
 
     private fun resolveGradleModules() {
@@ -154,7 +154,7 @@ open class GradleMutationCoverageCommandProcessor(
             }.toList().toSet()
     }
 
-    private fun buildTaskList(mutationCoverageCommandData: MutationCoverageCommandData) =
+    private fun buildTaskList(mutationCoverageCommandData: MutationCoverageCommand) =
         buildActions(
             mutationCoverageCommandData.preActions, buildPitestGoal(),
             mutationCoverageCommandData.postActions

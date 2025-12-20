@@ -1,12 +1,13 @@
-package com.cquilez.pitesthelper.actions
+package com.cquilez.pitesthelper.infrastructure.action
 
-import com.cquilez.pitesthelper.exception.PitestHelperException
-import com.cquilez.pitesthelper.model.BuildSystem
-import com.cquilez.pitesthelper.model.MutationCoverageData
+import com.cquilez.pitesthelper.domain.exception.PitestHelperException
+import com.cquilez.pitesthelper.domain.BuildSystem
+import com.cquilez.pitesthelper.domain.model.MutationCoverageData
+import com.cquilez.pitesthelper.infrastructure.services.BuildSystemService
 import com.cquilez.pitesthelper.processors.GradleMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.*
-import com.cquilez.pitesthelper.ui.MutationCoverageDialog
+import com.cquilez.pitesthelper.infrastructure.ui.MutationCoverageDialogOld
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.TestOnly
 /**
  * Run Mutation Coverage action
  */
-class RunMutationCoverageAction : DumbAwareAction() {
+class RunMutationCoverageFromEditorViewAction : DumbAwareAction() {
 
     /**
      * Object only needed for unit tests
@@ -92,7 +93,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
     private fun showMutationCoverageDialog(uiService: UIService, processor: MutationCoverageCommandProcessor) {
         val mutationCoverageData = processor.handleCommand()
         uiService.showDialog({
-            val dialog = MutationCoverageDialog(
+            val dialog = MutationCoverageDialogOld(
                 mutationCoverageData, processor::buildCommand,
                 if (processor is GradleMutationCoverageCommandProcessor) BuildSystem.GRADLE else BuildSystem.MAVEN
             )
@@ -101,7 +102,7 @@ class RunMutationCoverageAction : DumbAwareAction() {
                 processor.saveSettings(dialog.commandData)
                 processor.runCommand(dialog.commandData)
             }
-        }, orElseAction = { RunMutationCoverageAction.mutationCoverageData = mutationCoverageData })
+        }, orElseAction = { RunMutationCoverageFromEditorViewAction.mutationCoverageData = mutationCoverageData })
     }
 
     /**
