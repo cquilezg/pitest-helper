@@ -1,32 +1,27 @@
 package com.cquilez.pitesthelper.ui
 
+import com.intellij.driver.sdk.ui.*
 import com.intellij.driver.sdk.ui.components.common.ideFrame
 import com.intellij.driver.sdk.ui.components.common.toolwindows.projectView
-import com.intellij.driver.sdk.ui.present
-import com.intellij.driver.sdk.ui.shouldBe
-import com.intellij.driver.sdk.ui.xQuery
 import com.intellij.driver.sdk.waitForIndicators
 import com.intellij.ide.starter.ci.CIServer
 import com.intellij.ide.starter.ci.NoCIServer
 import com.intellij.ide.starter.di.di
+import com.intellij.ide.starter.driver.engine.BackgroundRun
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
-import com.intellij.ide.starter.ide.*
+import com.intellij.ide.starter.ide.IDETestContext
+import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.IdeInfo
 import com.intellij.ide.starter.models.TestCase
-import com.intellij.ide.starter.path.IDEDataPaths
 import com.intellij.ide.starter.plugins.PluginConfigurator
 import com.intellij.ide.starter.project.LocalProjectInfo
 import com.intellij.ide.starter.runner.Starter
-import com.intellij.openapi.util.SystemInfo
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import org.junit.jupiter.api.*
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
-import java.io.File
-import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * UI tests to verify that the "Run Mutation Coverage..." context menu option
@@ -85,13 +80,13 @@ class ContextMenuVisibilityTest {
             ideFrame {
                 projectView {
                     // Expand and right-click on the project root
-                    projectViewTree.expandPath("sample-maven")
-                    projectViewTree.rightClickPath("sample-maven")
+                    projectViewTree.expandPath("sample-maven", fullMatch = false)
+                    projectViewTree.rightClickPath("sample-maven", fullMatch = false)
                 }
 
                 // Verify that the menu option is present
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present in Maven project", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible in Maven project", present)
             }
         }
     }
@@ -118,7 +113,7 @@ class ContextMenuVisibilityTest {
 
                 // Verify that the menu option is present
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present in Gradle project", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible in Gradle project", present)
             }
         }
     }
@@ -145,7 +140,7 @@ class ContextMenuVisibilityTest {
 
                 // Verify that the menu option is present
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present on source folder", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible on source folder", present)
             }
         }
     }
@@ -172,7 +167,7 @@ class ContextMenuVisibilityTest {
 
                 // Verify that the menu option is present
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present on package", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible on package", present)
             }
         }
     }
@@ -199,7 +194,7 @@ class ContextMenuVisibilityTest {
 
                 // Verify that the menu option is present
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present on class", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible on class", present)
             }
         }
     }
@@ -208,42 +203,291 @@ class ContextMenuVisibilityTest {
     // Logic Validation Tests for Maven
     // ========================================
 
-    @Test
-    fun testActionLogicOnMavenProject() {
-        Starter.newContext(
-            testName = "actionLogicOnMavenProject",
-            TestCase(
-                IdeProductProvider.IC,
-                LocalProjectInfo(Path("src/test/testData/sample-maven"))
-            ).withVersion(INTELLIJ_VERSION)
-        ).apply {
-            val pathToPlugin = System.getProperty("path.to.build.plugin")
-            PluginConfigurator(this).installPluginFromPath(Path(pathToPlugin))
-        }.runIdeWithDriver().useDriverAndCloseIde {
-            waitForIndicators(1.minutes)
-            ideFrame {
-                projectView {
-                    Thread.sleep(3600000)
-                    // Right-click on the project root (BuildUnit)
-                    projectViewTree.expandPath("sample-maven", fullMatch = false)
-                    projectViewTree.rightClickPath("sample-maven", fullMatch = false)
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NestedTest {
+
+        lateinit var run : BackgroundRun
+
+        @BeforeAll
+        fun setUp() {
+            println("Ejecutado una vez antes de todos los tests")
+            run = newIDE("actionLogicOnMavenProject2", IdeProductProvider.IC, INTELLIJ_VERSION).runIdeWithDriver()
+        }
+
+        @AfterAll
+        fun tearDown() {
+            println("Ejecutado una vez después de todos los tests")
+            run.closeIdeAndWait()
+        }
+
+        @AfterEach
+        fun afterEachHook() {
+            run.driver.withContext {
+                ideFrame {
+                    fin
+                    val dialog = x(xQuery { byTitle("Mutation Coverage") })
+                    val cancelButton = dialog.x(xQuery { byText("Cancel") })
+                    cancelButton.click()
                 }
-
-                // Click on the menu option
-                val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
-                menuOption.click()
-
-                // Verify that the dialog opens without errors
-                // The dialog title is "Mutation Coverage"
-                val dialog = x(xQuery { byTitle("Mutation Coverage") })
-                dialog.shouldBe("Mutation Coverage dialog should be open", present)
-
-                // Close the dialog by pressing Cancel button
-                val cancelButton = x(xQuery { byText("Cancel") })
-                cancelButton.click()
             }
         }
+
+        @Test
+        fun testActionLogicOnMavenProject() {
+            run.driver.withContext {
+                waitForIndicators(1.minutes)
+                ideFrame {
+                    projectView {
+//                    Thread.sleep(3600000)
+                        // Right-click on the project root (BuildUnit)
+                        projectViewTree.expandPath("sample-maven", fullMatch = false)
+                        projectViewTree.rightClickPath("sample-maven", fullMatch = false)
+                    }
+
+                    // Click on the menu option
+                    val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
+                    menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 3.seconds)
+                    menuOption.click()
+
+                    // Verify that the dialog opens without errors
+                    // The dialog title is "Mutation Coverage"
+                    val dialog = x(xQuery { byTitle("Mutation Coverage") })
+                    dialog.shouldBe("Mutation Coverage dialog should be open", visible)
+
+                    dialog.x(xQuery {
+                        byClass("BrowserLink")
+                        byText("How to setup PITest Helper in your project")
+                    }).shouldBe("PITest Helper help link should be visible", visible, 3.seconds)
+
+                    dialog.x(xQuery {
+                        byClass("DropDownLink")
+                        byText("Modify options")
+                    }).shouldBe("Modify options link should be visible", visible, 3.seconds)
+                        .shouldBe("Modify options link should be enabled", enabled)
+
+                    // Assert module icon exists
+                    val moduleIcon = x(xQuery {
+                        byClass("JLabel")
+                        byAttribute("defaulticon", "module.svg")
+                    })
+                    moduleIcon.shouldBe("Module icon should be visible", visible, 3.seconds)
+
+                    // Assert module DropDownLink
+                    val moduleLink = x(xQuery {
+                        byClass("DropDownLink")
+                        byText("sample-maven")
+                    })
+                    moduleLink.shouldBe("Module link should be visible", visible, 3.seconds)
+
+                    // Assert "Target Classes:" label
+                    val targetClassesLabel = x(xQuery {
+                        byClass("JLabel")
+                        byText("Target Classes:")
+                    })
+                    targetClassesLabel.shouldBe("Target Classes label should be visible", visible, 3.seconds)
+
+                    // Assert Target Classes text field
+                    dialog.x(xQuery {
+                        byAccessibleName("Target Classes:")
+                    }).shouldBe("Target Classes field should be visible", visible, 3.seconds)
+                        .hasText("com.myproject.*")
+
+                    // Assert "Target Tests:" label
+                    dialog.x(xQuery {
+                        byClass("JLabel")
+                        byText("Target Tests:")
+                    }).shouldBe("Target Tests label should be visible", visible, 3.seconds)
+
+                    // Assert Target Tests text field
+                    dialog.x(xQuery {
+                        byAccessibleName("Target Tests:")
+                    }).shouldBe("Target Tests field should be visible", visible, 3.seconds)
+
+                    // Assert JSeparator exists
+                    dialog.x(xQuery { byClass("JSeparator") })
+                        .shouldBe("Separator should be visible", visible, 3.seconds)
+
+                    // Assert copy button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byAttribute("defaulticon", "copy.svg")
+                    }).shouldBe("Copy button should be visible", visible, 3.seconds)
+
+                    // Assert "Run command:" label
+                    dialog.x(xQuery {
+                        byClass("JLabel")
+                        byText("Run command:")
+                    }).shouldBe("Run command label should be visible", visible, 3.seconds)
+
+                    // Assert command text area
+                    dialog.x(xQuery { byClass("JBTextArea") })
+                        .shouldBe("Command text area should be visible", visible, 3.seconds)
+
+                    // Assert "Enable verbose logging" checkbox
+                    dialog.x(xQuery {
+                        byClass("JCheckBox")
+                        byText("Enable verbose logging")
+                    }).shouldBe("Verbose logging checkbox should be visible", visible, 3.seconds)
+
+                    // Assert "Run" button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byText("Run")
+                    }).shouldBe("Run button should be visible", visible, 3.seconds)
+                        .shouldBe("Run button should be enabled", enabled)
+
+                    // Assert "Cancel" button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byText("Cancel")
+                    }).shouldBe("Cancel button should be visible", visible, 3.seconds)
+                        .shouldBe("Cancel button should be enabled", enabled)
+
+
+                    // Close the dialog by pressing Cancel button
+                    val cancelButton = x(xQuery { byText("Cancel") })
+                    cancelButton.click()
+                }
+            }
+        }
+
+        private fun newIDE(testName: String, ideInfo: IdeInfo, version: String): IDETestContext =
+            Starter.newContext(
+                testName = testName,
+                TestCase(
+                    ideInfo,
+                    LocalProjectInfo(Path("src/test/testData/sample-maven"))
+                ).withVersion(version)
+            ).apply {
+                val pathToPlugin = System.getProperty("path.to.build.plugin")
+                PluginConfigurator(this).installPluginFromPath(Path(pathToPlugin))
+            }
+
+
+        @Test
+        fun testActionLogicOnMavenProject2() {
+//            val context = newIDE("actionLogicOnMavenProject2", IdeProductProvider.IC, INTELLIJ_VERSION).runIdeWithDriver()
+
+//            run.driver.withContext { waitForIndicators(1.minutes) }
+
+            run.driver.withContext {
+                waitForIndicators(1.minutes)
+                ideFrame {
+                    projectView {
+//                    Thread.sleep(3600000)
+                        // Right-click on the project root (BuildUnit)
+                        projectViewTree.expandPath("sample-maven", fullMatch = false)
+                        projectViewTree.rightClickPath("sample-maven", fullMatch = false)
+                    }
+
+                    // Click on the menu option
+                    val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
+                    menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 3.seconds)
+                    menuOption.click()
+
+                    // Verify that the dialog opens without errors
+                    // The dialog title is "Mutation Coverage"
+                    val dialog = x(xQuery { byTitle("Mutation Coverage") })
+                    dialog.shouldBe("Mutation Coverage dialog should be open", visible)
+
+                    dialog.x(xQuery {
+                        byClass("BrowserLink")
+                        byText("How to setup PITest Helper in your project")
+                    }).shouldBe("PITest Helper help link should be visible", visible, 3.seconds)
+
+                    dialog.x(xQuery {
+                        byClass("DropDownLink")
+                        byText("Modify options")
+                    }).shouldBe("Modify options link should be visible", visible, 3.seconds)
+                        .shouldBe("Modify options link should be enabled", enabled)
+
+                    // Assert module icon exists
+                    val moduleIcon = x(xQuery {
+                        byClass("JLabel")
+                        byAttribute("defaulticon", "module.svg")
+                    })
+                    moduleIcon.shouldBe("Module icon should be visible", visible, 3.seconds)
+
+                    // Assert module DropDownLink
+                    val moduleLink = x(xQuery {
+                        byClass("DropDownLink")
+                        byText("sample-maven")
+                    })
+                    moduleLink.shouldBe("Module link should be visible", visible, 3.seconds)
+
+                    // Assert "Target Classes:" label
+                    val targetClassesLabel = x(xQuery {
+                        byClass("JLabel")
+                        byText("Target Classes:")
+                    })
+                    targetClassesLabel.shouldBe("Target Classes label should be visible", visible, 3.seconds)
+
+                    // Assert Target Classes text field
+                    dialog.x(xQuery {
+                        byAccessibleName("Target Classes:")
+                    }).shouldBe("Target Classes field should be visible", visible, 3.seconds)
+                        .hasText("com.myproject.*")
+
+                    // Assert "Target Tests:" label
+                    dialog.x(xQuery {
+                        byClass("JLabel")
+                        byText("Target Tests:")
+                    }).shouldBe("Target Tests label should be visible", visible, 3.seconds)
+
+                    // Assert Target Tests text field
+                    dialog.x(xQuery {
+                        byAccessibleName("Target Tests:")
+                    }).shouldBe("Target Tests field should be visible", visible, 3.seconds)
+
+                    // Assert JSeparator exists
+                    dialog.x(xQuery { byClass("JSeparator") })
+                        .shouldBe("Separator should be visible", visible, 3.seconds)
+
+                    // Assert copy button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byAttribute("defaulticon", "copy.svg")
+                    }).shouldBe("Copy button should be visible", visible, 3.seconds)
+
+                    // Assert "Run command:" label
+                    dialog.x(xQuery {
+                        byClass("JLabel")
+                        byText("Run command:")
+                    }).shouldBe("Run command label should be visible", visible, 3.seconds)
+
+                    // Assert command text area
+                    dialog.x(xQuery { byClass("JBTextArea") })
+                        .shouldBe("Command text area should be visible", visible, 3.seconds)
+
+                    // Assert "Enable verbose logging" checkbox
+                    dialog.x(xQuery {
+                        byClass("JCheckBox")
+                        byText("Enable verbose logging")
+                    }).shouldBe("Verbose logging checkbox should be visible", visible, 3.seconds)
+
+                    // Assert "Run" button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byText("Run")
+                    }).shouldBe("Run button should be visible", visible, 3.seconds)
+                        .shouldBe("Run button should be enabled", enabled)
+
+                    // Assert "Cancel" button
+                    dialog.x(xQuery {
+                        byClass("JButton")
+                        byText("Cancel")
+                    }).shouldBe("Cancel button should be visible", visible, 3.seconds)
+                        .shouldBe("Cancel button should be enabled", enabled)
+
+
+                    // Close the dialog by pressing Cancel button
+                    val cancelButton = x(xQuery { byText("Cancel") })
+                    cancelButton.click()
+                }
+            }
+        }
+
     }
 
     @Test
@@ -268,7 +512,7 @@ class ContextMenuVisibilityTest {
 
                 // Click on the menu option
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", present)
                 menuOption.click()
 
                 // Verify that the dialog opens
@@ -304,7 +548,7 @@ class ContextMenuVisibilityTest {
 
                 // Click on the menu option
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", present)
                 menuOption.click()
 
                 // Verify that the dialog opens
@@ -340,7 +584,7 @@ class ContextMenuVisibilityTest {
 
                 // Click on the menu option
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", present)
                 menuOption.click()
 
                 // Verify that the dialog opens
@@ -370,13 +614,27 @@ class ContextMenuVisibilityTest {
             ideFrame {
                 projectView {
                     // Navigate to a specific class
-                    projectViewTree.expandPath("sample-maven", "src", "main", "java", "com.myproject.package1", "ClassA")
-                    projectViewTree.rightClickPath("sample-maven", "src", "main", "java", "com.myproject.package1", "ClassA")
+                    projectViewTree.expandPath(
+                        "sample-maven",
+                        "src",
+                        "main",
+                        "java",
+                        "com.myproject.package1",
+                        "ClassA"
+                    )
+                    projectViewTree.rightClickPath(
+                        "sample-maven",
+                        "src",
+                        "main",
+                        "java",
+                        "com.myproject.package1",
+                        "ClassA"
+                    )
                 }
 
                 // Click on the menu option
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", present)
                 menuOption.click()
 
                 // Verify that the dialog opens
@@ -406,13 +664,27 @@ class ContextMenuVisibilityTest {
             ideFrame {
                 projectView {
                     // Navigate to a test class
-                    projectViewTree.expandPath("sample-maven", "src", "test", "java", "com.myproject.package1", "ClassATest")
-                    projectViewTree.rightClickPath("sample-maven", "src", "test", "java", "com.myproject.package1", "ClassATest")
+                    projectViewTree.expandPath(
+                        "sample-maven",
+                        "src",
+                        "test",
+                        "java",
+                        "com.myproject.package1",
+                        "ClassATest"
+                    )
+                    projectViewTree.rightClickPath(
+                        "sample-maven",
+                        "src",
+                        "test",
+                        "java",
+                        "com.myproject.package1",
+                        "ClassATest"
+                    )
                 }
 
                 // Click on the menu option
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be present", present)
+                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", present)
                 menuOption.click()
 
                 // Verify that the dialog opens
