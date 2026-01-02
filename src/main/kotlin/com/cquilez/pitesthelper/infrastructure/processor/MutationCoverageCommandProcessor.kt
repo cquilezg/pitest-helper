@@ -2,8 +2,8 @@ package com.cquilez.pitesthelper.processors
 
 import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.domain.model.*
+import com.cquilez.pitesthelper.infrastructure.services.PITestService
 import com.cquilez.pitesthelper.services.*
-import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.openapi.components.service
@@ -226,11 +226,10 @@ abstract class MutationCoverageCommandProcessor(
         val targetTests = PITestService.extractTargetTestsByPsiClass(psiClass)
         val module = projectService.getModuleFromElement(psiFile)
         val serviceProvider = project.service<ServiceProvider>()
-        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(project)
         return MutationCoverageData(
             module,
-            projectConfigPersistenceAdapter.preGoals,
-            projectConfigPersistenceAdapter.postGoals,
+            "",
+            "",
             listOf(targetClasses),
             listOf(targetTests)
         )

@@ -3,6 +3,7 @@ package com.cquilez.pitesthelper.infrastructure.adapter
 import com.cquilez.pitesthelper.application.port.out.BuildUnitPort
 import com.cquilez.pitesthelper.application.port.out.CodeElementPort
 import com.cquilez.pitesthelper.application.port.out.PsiPort
+import com.cquilez.pitesthelper.domain.model.CodeClass
 import com.cquilez.pitesthelper.domain.model.CodeElement
 import com.cquilez.pitesthelper.domain.model.CodePackage
 import com.cquilez.pitesthelper.domain.model.CodeType
@@ -171,6 +172,25 @@ class CodeElementAdapter(project: Project) : CodeElementPort {
         }
         val relativePath = VfsUtil.getRelativePath(lastNode, rootFile)
         return relativePath?.replace("/", ".") ?: ""
+    }
+
+    override fun removeNestedElements(codeElements: List<CodeElement>): List<CodeElement> {
+        val packages = codeElements.filterIsInstance<CodePackage>()
+        val classes = codeElements.filterIsInstance<CodeClass>()
+
+        val optimizedPackages = packages.filter { pkg ->
+            packages.none { other ->
+                other != pkg && pkg.qualifiedName.startsWith("${other.qualifiedName}.")
+            }
+        }
+
+        val optimizedClasses = classes.filter { cls ->
+            optimizedPackages.none { pkg ->
+                cls.qualifiedName.startsWith("${pkg.qualifiedName}.")
+            }
+        }
+
+        return optimizedPackages + optimizedClasses
     }
 }
 

@@ -1,10 +1,10 @@
-package com.cquilez.pitesthelper.processors
+package com.cquilez.pitesthelper.infrastructure.processor
 
 import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.domain.model.MutationCoverageCommand
 import com.cquilez.pitesthelper.domain.model.MutationCoverageData
+import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.*
-import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -84,9 +84,6 @@ open class MavenMutationCoverageCommandProcessor(
 
     override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommand) {
         val serviceProvider = project.service<ServiceProvider>()
-        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(project)
-        projectConfigPersistenceAdapter.preGoals = mutationCoverageCommandData.preActions
-        projectConfigPersistenceAdapter.postGoals = mutationCoverageCommandData.postActions
     }
 
     private fun buildGoals(mutationCoverageCommandData: MutationCoverageCommand) =

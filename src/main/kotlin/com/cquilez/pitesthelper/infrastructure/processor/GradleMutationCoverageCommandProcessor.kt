@@ -1,13 +1,13 @@
-package com.cquilez.pitesthelper.processors
+package com.cquilez.pitesthelper.infrastructure.processor
 
 import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.services.LanguageProcessorService
 import com.cquilez.pitesthelper.domain.model.MutationCoverageCommand
+import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.GradleService
 import com.cquilez.pitesthelper.services.MyProjectService
 import com.cquilez.pitesthelper.services.ServiceProvider
-import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
 import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ModuleData
@@ -59,9 +59,6 @@ open class GradleMutationCoverageCommandProcessor(
 
     override fun saveSettings(mutationCoverageCommandData: MutationCoverageCommand) {
         val serviceProvider = project.service<ServiceProvider>()
-        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(project)
-        projectConfigPersistenceAdapter.preGoals = mutationCoverageCommandData.preActions
-        projectConfigPersistenceAdapter.postGoals = mutationCoverageCommandData.postActions
     }
 
     override fun checkAllElementsAreInSameModule() {

@@ -40,7 +40,6 @@ dependencies {
     testImplementation(libs.remoteFixtures)
     testImplementation(libs.loggingInterceptor)
     testImplementation(libs.videoRecorderJunit5)
-    testImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     testRuntimeOnly(libs.junitJupiterEngine)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
@@ -55,7 +54,7 @@ dependencies {
 
         pluginVerifier()
         zipSigner()
-        testFramework(TestFrameworkType.Starter)
+        testFramework(TestFrameworkType.Platform)
     }
 }
 
@@ -142,20 +141,6 @@ kover {
 
 tasks {
     test {
-        dependsOn("buildPlugin")
-        systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
-        systemProperty("idea.home.path", "/home/carmelo/.local/share/JetBrains/Toolbox/apps/android-studio")
-//        val androidStudioHome = System.getenv("ANDROID_STUDIO_HOME")
-//            ?: "/home/carmelo/.local/share/JetBrains/Toolbox/apps/android-studio"
-//        systemProperty("idea.home.path", androidStudioHome)
-
-        // Auto-configure Android Studio path from environment if available
-        val androidStudioHome = System.getenv("ANDROID_STUDIO_HOME")
-        if (androidStudioHome != null && androidStudioHome.isNotBlank()) {
-            systemProperty("android.studio.path", androidStudioHome)
-            logger.lifecycle("Android Studio configured from ANDROID_STUDIO_HOME: $androidStudioHome")
-        }
-
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
@@ -198,10 +183,7 @@ intellijPlatformTesting {
                         "-Djb.consents.confirmation.enabled=false",
                         "-Didea.trust.all.projects=true",
                         "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.mac.file.chooser.native=false",
-                        "-Dide.win.file.chooser.native=false",
-                        "-Dide.experimental.ui=false",
-                        "-Dsun.awt.windows.useCommonItemDialog=false"
+                        "-Dide.mac.file.chooser.native=false"
                     )
                 }
                 systemProperty("robot-server.host.public", "true")
@@ -210,20 +192,6 @@ intellijPlatformTesting {
             plugins {
                 robotServerPlugin()
             }
-        }
-        register("runAndroidStudioDebug") {
-            task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Xmx2048m",
-                        "-XX:+UseG1GC"
-                    )
-                }
-            }
-
-            // Sobrescribe el tipo de plataforma para Android Studio
-            type = org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.AndroidStudio
-            version = "2025.2.1.7" // Ajusta a la versión de Android Studio que quieras
         }
     }
 }

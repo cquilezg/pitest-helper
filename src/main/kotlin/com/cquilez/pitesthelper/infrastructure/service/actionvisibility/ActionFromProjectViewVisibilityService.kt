@@ -19,7 +19,10 @@ class ActionFromProjectViewVisibilityService {
         val navigatables = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
         val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
         val buildUnitPort = project.service<BuildUnitPort>()
-        val paths = navigatableService.getAbsolutePaths(navigatables!!)
+        if (navigatables == null || navigatables.isEmpty()) {
+            return false
+        }
+        val paths = navigatableService.getAbsolutePaths(navigatables)
 
         if (paths.size != navigatables.size) {
             return false

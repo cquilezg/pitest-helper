@@ -8,6 +8,5 @@ open class BuildUnit(
     open val buildPath: Path,
     val buildFileName: String,
     val sourceFolders: List<SourceFolder> = emptyList(),
-    val parent: BuildUnit? = null,
-    val children: List<BuildUnit> = emptyList()
+    val buildUnits: List<BuildUnit> = emptyList()
 )

@@ -11,10 +11,6 @@
     </depends>
     <depends optional="true" config-file="kotlin-plugin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="maven-plugin.xml">org.jetbrains.idea.maven</depends>
-    <!-- Loads android-plugin-config.xml when Android plugin is present (IntelliJ & Android Studio) -->
-    <depends optional="true" config-file="android-plugin-config.xml">org.jetbrains.android</depends>
-    <!-- Android Studio IDE module dependency: loads android-plugin.xml ONLY in Android Studio -->
-    <depends optional="true" config-file="android-plugin.xml">com.intellij.modules.androidstudio</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -46,8 +42,8 @@
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.CodeElementPort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.CodeElementAdapter"/>
         <projectService
-                serviceInterface="com.cquilez.pitesthelper.application.port.out.ProjectConfigPort"
-                serviceImplementation="com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter"/>
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.SourceFolderPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.SourceFolderAdapter"/>
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
@@ -75,5 +71,14 @@
                 interface="com.cquilez.pitesthelper.extensions.LanguageProcessor"
                 dynamic="true">
         </extensionPoint>
+        <extensionPoint
+                name="buildSystemPort"
+                interface="com.cquilez.pitesthelper.application.port.out.BuildSystemPort"
+                dynamic="true"/>
     </extensionPoints>
+
+    <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+        <buildSystemPort
+                implementation="com.cquilez.pitesthelper.infrastructure.adapter.GradleBuildSystemAdapter"/>
+    </extensions>
 </idea-plugin>

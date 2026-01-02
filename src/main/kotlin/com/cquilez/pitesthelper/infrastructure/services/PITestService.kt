@@ -1,8 +1,10 @@
-package com.cquilez.pitesthelper.services
+package com.cquilez.pitesthelper.infrastructure.services
 
 import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.domain.model.*
-import com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter
+import com.cquilez.pitesthelper.services.PsiService
+import com.cquilez.pitesthelper.services.ServiceProvider
+import com.cquilez.pitesthelper.services.TestService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
@@ -18,11 +20,10 @@ object PITestService {
         mutationCoverage: MutationCoverage
     ): MutationCoverageData {
         val serviceProvider = module.project.service<ServiceProvider>()
-        val projectConfigPersistenceAdapter = serviceProvider.getService<ProjectConfigPersistenceAdapter>(module.project)
         return MutationCoverageData(
             module,
-            projectConfigPersistenceAdapter.preGoals,
-            projectConfigPersistenceAdapter.postGoals,
+            "",
+            "",
             collectTargetCode(mutationCoverage.normalSource),
             collectTargetCode(mutationCoverage.testSource)
         )

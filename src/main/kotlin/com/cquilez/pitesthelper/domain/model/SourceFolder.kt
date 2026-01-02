@@ -1,6 +1,5 @@
 package com.cquilez.pitesthelper.domain.model
 
-import com.cquilez.pitesthelper.domain.BuildUnit
 import java.nio.file.Path
 
 /**
@@ -8,11 +7,9 @@ import java.nio.file.Path
  * 
  * @property path File system path to the source folder
  * @property codeType Whether this contains production or test code
- * @property buildUnit The build unit (module) that contains this source folder
  */
 data class SourceFolder(
     val path: Path,
-    val codeType: CodeType,
-    val buildUnit: BuildUnit
+    val codeType: CodeType
 )
 
