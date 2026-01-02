@@ -2,8 +2,8 @@ package com.cquilez.pitesthelper.infrastructure.services
 
 import com.cquilez.pitesthelper.domain.exception.PitestHelperException
 import com.cquilez.pitesthelper.domain.BuildSystem
-import com.cquilez.pitesthelper.processors.GradleMutationCoverageCommandProcessor
-import com.cquilez.pitesthelper.processors.MavenMutationCoverageCommandProcessor
+import com.cquilez.pitesthelper.infrastructure.processor.GradleMutationCoverageCommandProcessor
+import com.cquilez.pitesthelper.infrastructure.processor.MavenMutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.processors.MutationCoverageCommandProcessor
 import com.cquilez.pitesthelper.services.ClassService
 import com.cquilez.pitesthelper.services.LanguageProcessorService

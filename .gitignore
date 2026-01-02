@@ -8,3 +8,4 @@ build
 video/*
 out/ide-tests/*
 allure-results/*
+/src/test/testData/**/target/**/*
