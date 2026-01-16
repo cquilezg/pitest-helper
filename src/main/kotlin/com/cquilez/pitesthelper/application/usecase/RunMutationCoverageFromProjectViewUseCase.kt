@@ -6,9 +6,7 @@ import com.cquilez.pitesthelper.application.port.out.BuildUnitPort
 import com.cquilez.pitesthelper.application.port.out.CodeElementPort
 import com.cquilez.pitesthelper.application.port.out.SourceFolderPort
 import com.cquilez.pitesthelper.application.port.out.UserInterfacePort
-import com.cquilez.pitesthelper.domain.BuildUnit
-import com.cquilez.pitesthelper.domain.MutationCoverageOptions
-import com.cquilez.pitesthelper.domain.model.*
+import com.cquilez.pitesthelper.domain.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
@@ -55,18 +53,22 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
         val targetTests = formatCodeItems(allTestCodeItems)
 
         val workingUnit = determineWorkingUnit(codeElements)
-        val buildSystem = workingUnit?.buildSystem!!
-        val isSubmodule = workingUnit?.let { buildUnitPort.findParent(it) != null } ?: false
+        if (workingUnit != null) {
+            val buildSystem = workingUnit.buildSystem
+            val isSubmodule = workingUnit.let { buildUnitPort.findParent(it) != null }
+            val allBuildUnits = buildUnitPort.getAllBuildUnits()
 
-        val mutationCoverageOptions = MutationCoverageOptions(
-            targetClasses,
-            targetTests,
-            errors,
-            workingUnit,
-            buildSystem,
-            isSubmodule
-        )
-        userInterfacePort.showMutationCoverageDialog(mutationCoverageOptions)
+            val mutationCoverageOptions = MutationCoverageOptions(
+                targetClasses,
+                targetTests,
+                allErrors,
+                workingUnit,
+                buildSystem,
+                isSubmodule,
+                allBuildUnits
+            )
+            userInterfacePort.showMutationCoverageDialog(mutationCoverageOptions)
+        }
     }
 
     private fun discoverCorrespondingElements(

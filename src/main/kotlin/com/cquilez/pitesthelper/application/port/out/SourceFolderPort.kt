@@ -1,9 +1,9 @@
 package com.cquilez.pitesthelper.application.port.out
 
-import com.cquilez.pitesthelper.domain.model.CodeClass
-import com.cquilez.pitesthelper.domain.model.CodeElement
-import com.cquilez.pitesthelper.domain.model.CodePackage
-import com.cquilez.pitesthelper.domain.model.SourceFolder
+import com.cquilez.pitesthelper.domain.CodeClass
+import com.cquilez.pitesthelper.domain.CodeElement
+import com.cquilez.pitesthelper.domain.CodePackage
+import com.cquilez.pitesthelper.domain.SourceFolder
 
 interface SourceFolderPort {
     fun findCorrespondingPackage(

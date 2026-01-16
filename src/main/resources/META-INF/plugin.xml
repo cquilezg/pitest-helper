@@ -6,14 +6,11 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
-    <depends optional="true"
-             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin
-    </depends>
     <depends optional="true" config-file="kotlin-plugin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="maven-plugin.xml">org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <resource-bundle>messages.app</resource-bundle>
 
     <!-- Add Kotlin plugin K2 mode compatibility -->
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
@@ -33,17 +30,17 @@
                 serviceInterface="com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.NavigatableAdapter"/>
         <applicationService
-                serviceInterface="com.cquilez.pitesthelper.application.port.out.PsiPort"
-                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.JavaPsiAdapter"/>
+                serviceInterface="com.cquilez.pitesthelper.infrastructure.extension.PsiPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.psi.JavaPsiAdapter"/>
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.BuildUnitPort"
-                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.BuildUnitAdapter"/>
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.buildunit.BuildUnitAdapter"/>
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.CodeElementPort"
-                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.CodeElementAdapter"/>
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.codeelement.CodeElementAdapter"/>
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.SourceFolderPort"
-                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.SourceFolderAdapter"/>
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.sourcefolder.SourceFolderAdapter"/>
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
@@ -51,34 +48,31 @@
 
     <actions>
         <action
-                id="org.intellij.sdk.action.pitest.create.command"
+                id="com.cquilez.pitesthelper.action.RunMutationCoverageFromProjectView"
                 class="com.cquilez.pitesthelper.infrastructure.action.RunMutationCoverageFromProjectViewAction"
-                text="PITest - Test Class"
-                description="Create PITest Command"
                 icon="/icons/bird.svg">
-            <override-text place="EditorPopup" text="Run Mutation Coverage..."/>
-            <override-text place="ProjectViewPopup" text="Run Mutation Coverage..."/>
-
-            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command"
-                          anchor="first"/>
+            <override-text place="ProjectViewPopup"/>
             <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
-                          relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+                          relative-to-action="com.cquilez.pitesthelper.action.RunMutationCoverageFromProjectView" anchor="after"/>
         </action>
     </actions>
     <extensionPoints>
         <extensionPoint
-                name="languageProcessor"
-                interface="com.cquilez.pitesthelper.extensions.LanguageProcessor"
-                dynamic="true">
-        </extensionPoint>
-        <extensionPoint
                 name="buildSystemPort"
                 interface="com.cquilez.pitesthelper.application.port.out.BuildSystemPort"
+                dynamic="true"/>
+        <extensionPoint
+                name="buildUnitServicePort"
+                interface="com.cquilez.pitesthelper.application.port.out.BuildUnitServicePort"
                 dynamic="true"/>
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.cquilez.pitesthelper">
         <buildSystemPort
-                implementation="com.cquilez.pitesthelper.infrastructure.adapter.GradleBuildSystemAdapter"/>
+                implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.GradleBuildSystemAdapter"/>
+        <buildUnitServicePort
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.MavenBuildUnitService"/>
+        <buildUnitServicePort
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.GradleBuildUnitService"/>
     </extensions>
 </idea-plugin>

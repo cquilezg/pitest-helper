@@ -3,8 +3,8 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <applicationService
-      serviceInterface="com.cquilez.pitesthelper.application.port.out.PsiPort"
-      serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.KotlinPsiAdapter"
+      serviceInterface="com.cquilez.pitesthelper.infrastructure.extension.PsiPort"
+      serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.psi.KotlinPsiAdapter"
       overrides="true"/>
 
     <applicationService

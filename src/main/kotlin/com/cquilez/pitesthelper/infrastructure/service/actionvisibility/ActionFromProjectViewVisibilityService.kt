@@ -1,7 +1,8 @@
 package com.cquilez.pitesthelper.infrastructure.service.actionvisibility
 
 import com.cquilez.pitesthelper.application.port.out.BuildUnitPort
-import com.cquilez.pitesthelper.domain.model.SourceFolder
+import com.cquilez.pitesthelper.domain.BuildUnit
+import com.cquilez.pitesthelper.domain.SourceFolder
 import com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -19,7 +20,7 @@ class ActionFromProjectViewVisibilityService {
         val navigatables = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
         val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
         val buildUnitPort = project.service<BuildUnitPort>()
-        if (navigatables == null || navigatables.isEmpty()) {
+        if (navigatables.isNullOrEmpty()) {
             return false
         }
         val paths = navigatableService.getAbsolutePaths(navigatables)
@@ -35,7 +36,7 @@ class ActionFromProjectViewVisibilityService {
             return true
         }
 
-        val allSourceFolders = buildUnits.flatMap { it.sourceFolders }
+        val allSourceFolders = buildUnits.flatMap { collectAllSourceFolders(it) }
         return allPathsAreSourceFoldersOrAreInsideThem(allSourceFolders, paths)
                 || allPathsContainsSourceFoldersAndNoBuildUnits(paths, allSourceFolders, buildUnitDirs)
     }
@@ -70,4 +71,8 @@ class ActionFromProjectViewVisibilityService {
         buildUnitPort: BuildUnitPort,
         paths: List<Path>
     ) = paths.all(buildUnitPort::isPathBuildUnit)
+
+    private fun collectAllSourceFolders(buildUnit: BuildUnit): List<SourceFolder> {
+        return buildUnit.sourceFolders + buildUnit.buildUnits.flatMap { collectAllSourceFolders(it) }
+    }
 }

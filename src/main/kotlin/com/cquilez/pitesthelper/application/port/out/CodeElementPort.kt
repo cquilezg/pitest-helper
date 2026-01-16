@@ -1,6 +1,6 @@
 package com.cquilez.pitesthelper.application.port.out
 
-import com.cquilez.pitesthelper.domain.model.CodeElement
+import com.cquilez.pitesthelper.domain.CodeElement
 import java.nio.file.Path
 
 interface CodeElementPort {
