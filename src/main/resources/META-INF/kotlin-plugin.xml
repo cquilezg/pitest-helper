@@ -1,0 +1,17 @@
+<idea-plugin>
+  <!-- Available in both IntelliJ IDEA and Android Studio when Kotlin plugin is installed -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService
+      serviceInterface="com.cquilez.pitesthelper.infrastructure.extension.PsiPort"
+      serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.psi.KotlinPsiAdapter"
+      overrides="true"/>
+
+    <applicationService
+      serviceInterface="com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort"
+      serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.KotlinNavigatableAdapter"
+      overrides="true"/>
+  </extensions>
+
+</idea-plugin>
+

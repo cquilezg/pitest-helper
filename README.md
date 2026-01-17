@@ -23,8 +23,6 @@ Usage:
 
 Are you experiencing problems with the plugin? Do you have any suggestion? You can create an issue at the [Plugin Site](https://github.com/cquilezg/pitest-helper/issues)
 
-PITest logo used in this plugin was created by Ling Yeung.
-
 <!-- Plugin description end -->
 
 # Index

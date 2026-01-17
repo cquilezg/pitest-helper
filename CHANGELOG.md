@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [2026.1.0-alpha.1] - 2026-01-17
+
+- Refactor code to use hexagonal architecture by @cquilezg in https://github.com/cquilezg/pitest-helper/pull/118
+
 ## [2025.1.1] - 2025-12-20
 
 ### Fixed
@@ -61,7 +65,8 @@
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
 
-[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.1...HEAD
+[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2026.1.0-alpha.1...HEAD
+[2026.1.0-alpha.1]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.1...v2026.1.0-alpha.1
 [2025.1.1]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.0...v2025.1.1
 [2025.1.0]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.1...v2025.1.0
 [2024.2.1]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.0...v2024.2.1
