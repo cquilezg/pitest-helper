@@ -6,7 +6,7 @@ import com.intellij.remoterobot.RemoteRobot
 class CommonUITests {
 
     companion object {
-        private fun buildNodeList(module: String?, mutableNodeList: MutableList<String>): List<String> {
+        fun buildNodeList(module: String?, mutableNodeList: MutableList<String>): List<String> {
             if (module?.isNotBlank() == true) {
                 mutableNodeList.add(0, module)
             }

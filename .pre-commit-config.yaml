@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-architecture
+        name: Validate hexagonal architecture dependency rules
+        entry: scripts/pre-commit/validate_architecture.sh
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: code-security
+        name: Validate code security
+        entry: scripts/pre-commit/validate_no_double_bang.sh
+        language: system
+        pass_filenames: false

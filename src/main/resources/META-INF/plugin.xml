@@ -6,40 +6,73 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
-    <depends optional="true"
-             config-file="pitest-helper-kotlin.xml">org.jetbrains.kotlin
-    </depends>
-    <depends>org.jetbrains.idea.maven</depends>
+    <depends optional="true" config-file="kotlin-plugin.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="maven-plugin.xml">org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <resource-bundle>messages.app</resource-bundle>
 
     <!-- Add Kotlin plugin K2 mode compatibility -->
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK2="true"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <dependencySupport coordinate="org.pitest:pitest-maven" kind="java" displayName="PITest"/>
+        <dependencySupport coordinate="info.solidsoft.pitest:gradle-pitest-plugin" kind="java" displayName="PITest"/>
+        <!-- Use cases -->
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.in.RunMutationCoverageFromProjectViewPort"
+                serviceImplementation="com.cquilez.pitesthelper.application.usecase.RunMutationCoverageFromProjectViewUseCase"/>
+
+        <!-- Adapters -->
+        <applicationService
+                serviceInterface="com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.NavigatableAdapter"/>
+        <applicationService
+                serviceInterface="com.cquilez.pitesthelper.infrastructure.extension.PsiPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.psi.JavaPsiAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.BuildUnitPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.buildunit.BuildUnitAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.CodeElementPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.codeelement.CodeElementAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.SourceFolderPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.adapter.sourcefolder.SourceFolderAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
+    </extensions>
+
     <actions>
         <action
-                id="org.intellij.sdk.action.pitest.create.command"
-                class="com.cquilez.pitesthelper.actions.RunMutationCoverageAction"
-                text="PITest - Test Class"
-                description="Create PITest Command"
-                icon="pitest_icon.png">
-            <override-text place="EditorPopup" text="Run Mutation Coverage..."/>
-            <override-text place="ProjectViewPopup" text="Run Mutation Coverage..."/>
-
-            <add-to-group group-id="EditorPopupMenu3" relative-to-action="org.intellij.sdk.action.pitest.create.command"
-                          anchor="first"/>
+                id="com.cquilez.pitesthelper.action.RunMutationCoverageFromProjectView"
+                class="com.cquilez.pitesthelper.infrastructure.action.RunMutationCoverageFromProjectViewAction"
+                icon="/icons/bird.svg">
+            <override-text place="ProjectViewPopup"/>
             <add-to-group group-id="ProjectViewPopupMenuModifyGroup"
-                          relative-to-action="org.intellij.sdk.action.pitest.create.command" anchor="after"/>
+                          relative-to-action="com.cquilez.pitesthelper.action.RunMutationCoverageFromProjectView" anchor="after"/>
         </action>
     </actions>
     <extensionPoints>
         <extensionPoint
-                name="languageProcessor"
-                interface="com.cquilez.pitesthelper.extensions.LanguageProcessor"
-                dynamic="true">
-        </extensionPoint>
+                name="buildSystemPort"
+                interface="com.cquilez.pitesthelper.application.port.out.BuildSystemPort"
+                dynamic="true"/>
+        <extensionPoint
+                name="buildUnitServicePort"
+                interface="com.cquilez.pitesthelper.application.port.out.BuildUnitServicePort"
+                dynamic="true"/>
     </extensionPoints>
+
+    <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+        <buildSystemPort
+                implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.GradleBuildSystemAdapter"/>
+        <buildUnitServicePort
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.MavenBuildUnitService"/>
+        <buildUnitServicePort
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.GradleBuildUnitService"/>
+    </extensions>
 </idea-plugin>

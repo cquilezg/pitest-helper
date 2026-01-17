@@ -1,0 +1,12 @@
+<idea-plugin>
+  <extensions defaultExtensionNs="com.intellij">
+  </extensions>
+
+  <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+    <buildSystemPort
+            implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.MavenBuildSystemAdapter"/>
+  </extensions>
+
+  <actions>
+  </actions>
+</idea-plugin>

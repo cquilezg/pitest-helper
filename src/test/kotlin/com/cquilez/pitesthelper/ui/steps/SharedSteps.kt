@@ -189,7 +189,6 @@ object SharedSteps {
         node.remoteTexts[0].click()
     }
 
-
     private fun findNodes(nodeTree: Node, nodeNames: List<String>): Node? {
         val parentNode = findNodeInTree(nodeTree, nodeNames[0], 10)
         var currentNode: Node? = null
