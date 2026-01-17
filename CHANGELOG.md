@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [2025.1.1] - 2025-12-20
+
 ### Fixed
 
 - Extended plugin compatibility
@@ -59,7 +61,8 @@
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
 
-[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.0...HEAD
+[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.1...HEAD
+[2025.1.1]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.0...v2025.1.1
 [2025.1.0]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.1...v2025.1.0
 [2024.2.1]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.0...v2024.2.1
 [2024.2.0]: https://github.com/cquilezg/pitest-helper/compare/v2024.1.3...v2024.2.0
