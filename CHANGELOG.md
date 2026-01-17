@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- Copy command icon in mutation coverage dialog
+
+### Changed
+
+- Updated plugin icon
+- Replaced dialog errors with errors section in mutation coverage dialog
+- Refactored project codebase to hexagonal architecture
+- Removed usage of experimental APIs
+
 ## [2025.1.1] - 2025-12-20
 
 ### Fixed
