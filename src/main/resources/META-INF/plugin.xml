@@ -8,7 +8,7 @@
     <depends>com.intellij.modules.java</depends>
     <depends optional="true" config-file="kotlin-plugin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="maven-plugin.xml">org.jetbrains.idea.maven</depends>
-    <depends>org.jetbrains.plugins.gradle</depends>
+    <depends optional="true" config-file="gradle-plugin.xml">org.jetbrains.plugins.gradle</depends>
 
     <resource-bundle>messages.app</resource-bundle>
 

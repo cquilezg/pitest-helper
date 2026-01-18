@@ -4,9 +4,12 @@ import com.cquilez.pitesthelper.application.port.out.BuildSystemPort
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
 import com.cquilez.pitesthelper.infrastructure.AppMessagesBundle
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.observable.util.whenTextChanged
+import com.intellij.openapi.Disposable
 import com.intellij.util.IconUtil
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.InplaceButton
 import com.intellij.ui.JBColor
 import java.awt.event.MouseAdapter
@@ -62,11 +65,11 @@ class MutationCoverageDialog(
                             layout = BoxLayout(this, BoxLayout.Y_AXIS)
                             isOpaque = false
                             border = JBUI.Borders.empty(10)
-                            add(JBLabel("Please, check the following errors:").apply {
+                            add(JBLabel(AppMessagesBundle.message("ui.dialog.mutationCoverage.errors.header")).apply {
                                 foreground = JBColor(Color(183, 28, 28), Color(255, 138, 128))
                             })
                             mutationCoverageOptions.errors.forEach { error ->
-                                add(JBLabel("- $error.").apply {
+                                add(JBLabel(AppMessagesBundle.message("ui.dialog.mutationCoverage.errors.item", error)).apply {
                                     foreground = JBColor(Color(183, 28, 28), Color(255, 138, 128))
                                 })
                             }
@@ -80,7 +83,7 @@ class MutationCoverageDialog(
                     .align(AlignX.FILL)
                     .bindText(mutationCoverageOptions::targetClasses)
                     .applyToComponent {
-                        document.whenTextChanged {
+                        document.addDocumentListener(disposable) {
                             mutationCoverageOptions.targetClasses = normalizeInput(text)
                             updateCommandTextArea()
                         }
@@ -91,7 +94,7 @@ class MutationCoverageDialog(
                     .align(AlignX.FILL)
                     .bindText(mutationCoverageOptions::targetTests)
                     .applyToComponent {
-                        document.whenTextChanged {
+                        document.addDocumentListener(disposable) {
                             mutationCoverageOptions.targetTests = normalizeInput(text)
                             updateCommandTextArea()
                         }
@@ -99,7 +102,7 @@ class MutationCoverageDialog(
             }
             row(AppMessagesBundle.message("ui.dialog.mutationCoverage.runCommand")) {
                 val scaledIcon = IconUtil.scale(AllIcons.Actions.Copy, null, 1.3f)
-                val copyButton = InplaceButton("Copy to clipboard", scaledIcon) {
+                val copyButton = InplaceButton(AppMessagesBundle.message("ui.dialog.mutationCoverage.button.copyToClipboard"), scaledIcon) {
                     val selection = StringSelection(commandTextArea.text)
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(selection, selection)
                 }.apply {
@@ -164,5 +167,18 @@ class MutationCoverageDialog(
         return text.split(Regex("[,\\s]+"))
             .filter { it.isNotEmpty() }
             .joinToString(",")
+    }
+
+    private fun javax.swing.text.Document.addDocumentListener(
+        parentDisposable: Disposable,
+        onChange: () -> Unit
+    ) {
+        val listener = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = onChange()
+            override fun removeUpdate(e: DocumentEvent) = onChange()
+            override fun changedUpdate(e: DocumentEvent) = onChange()
+        }
+        addDocumentListener(listener)
+        Disposer.register(parentDisposable) { removeDocumentListener(listener) }
     }
 }
