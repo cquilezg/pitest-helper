@@ -7,6 +7,7 @@
 ### Added
 
 - Copy command icon in mutation coverage dialog
+- Support jvm.config files for Maven projects
 
 ### Changed
 
