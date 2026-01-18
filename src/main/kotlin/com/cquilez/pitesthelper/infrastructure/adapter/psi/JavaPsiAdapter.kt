@@ -33,7 +33,7 @@ open class JavaPsiAdapter : PsiPort {
             is PsiDirectory -> {
                 val javaDirectoryService = JavaDirectoryService.getInstance()
                 val javaPackage = javaDirectoryService.getPackage(psiElement)
-                if (javaPackage != null && javaPackage.name != null && javaPackage.name!!.isNotBlank()) {
+                if (javaPackage != null && javaPackage.name != null && javaPackage.name?.isNotBlank() == true) {
                     var qualifiedName = javaPackage.qualifiedName
                     if (qualifiedName == "") {
                         qualifiedName = javaPackage.name!!
