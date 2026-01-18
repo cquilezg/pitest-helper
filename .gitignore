@@ -2,7 +2,10 @@
 .idea
 .intellijPlatform
 .kotlin
-!.idea/icon.png
+!.idea/icon.svg
 .qodana
 build
 video/*
+out/ide-tests/*
+allure-results/*
+/src/test/testData/**/target/**/*

@@ -26,4 +26,5 @@ pitest {
     propertyManager.bindMultiValueProperty(project, targetTests, "pitest.targetTests", String::class.java)
     junit5PluginVersion = "1.2.0"
     useClasspathFile = true
+    verbose = true
 }
