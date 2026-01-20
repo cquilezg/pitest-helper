@@ -32,19 +32,18 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(platform(libs.junitBom))
+    testImplementation(libs.junitJupiterParams)
     testImplementation(libs.junitJupiterSuite)
     testImplementation(libs.hamcrest)
     testImplementation(libs.kotlinTest)
     testImplementation(libs.mockk)
-    testImplementation(libs.remoteRobot)
-    testImplementation(libs.remoteFixtures)
-    testImplementation(libs.loggingInterceptor)
-    testImplementation(libs.videoRecorderJunit5)
+    testImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     testRuntimeOnly(libs.junitJupiterEngine)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+//        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
         bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
@@ -54,7 +53,7 @@ dependencies {
 
         pluginVerifier()
         zipSigner()
-        testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Starter)
     }
 }
 
@@ -141,6 +140,9 @@ kover {
 
 tasks {
     test {
+        dependsOn("buildPlugin")
+        systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
+
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
@@ -149,15 +151,6 @@ tasks {
             val excludedtags = project.findProperty("excludeTags")
             if (excludedtags != null) {
                 excludeTags = setOf(excludedtags.toString())
-            }
-            val remoteRobotUrl = project.properties["remote-robot-url"]
-            if (remoteRobotUrl is String && remoteRobotUrl.isNotBlank()) {
-                systemProperty("remote-robot-url", remoteRobotUrl)
-                systemProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2")
-            }
-            val testPath = project.properties["test.path"]
-            if (testPath is String && testPath.isNotBlank()) {
-                systemProperty("test.path", testPath)
             }
         }
     }
@@ -168,30 +161,5 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
-    }
-}
-
-intellijPlatformTesting {
-    runIde {
-        register("runIdeForUiTests") {
-            task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        "-Didea.trust.all.projects=true",
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.mac.file.chooser.native=false"
-                    )
-                }
-                systemProperty("robot-server.host.public", "true")
-            }
-
-            plugins {
-                robotServerPlugin()
-            }
-        }
     }
 }

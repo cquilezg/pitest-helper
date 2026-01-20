@@ -8,4 +8,11 @@ open class BuildUnit(
     open val buildPath: Path,
     val sourceFolders: List<SourceFolder> = emptyList(),
     val buildUnits: List<BuildUnit> = emptyList()
-)
+) {
+    fun getAllSourceFolders(): List<SourceFolder> =
+        sourceFolders + buildUnits.flatMap { it.getAllSourceFolders() }
+
+    fun findProductionSourceFolder(): SourceFolder? =
+        sourceFolders.firstOrNull { it.codeType == CodeType.PRODUCTION }
+            ?: buildUnits.firstNotNullOfOrNull { it.findProductionSourceFolder() }
+}
