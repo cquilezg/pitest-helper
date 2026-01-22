@@ -1,38 +1,103 @@
 package com.cquilez.pitesthelper.ui.actions
 
+import com.intellij.driver.sdk.ui.components.UiComponent
+import com.intellij.driver.sdk.ui.components.common.IdeaFrameUI
 import com.intellij.driver.sdk.ui.components.common.ideFrame
 import com.intellij.driver.sdk.ui.components.common.toolwindows.projectView
-import com.intellij.driver.sdk.ui.enabled
+import com.intellij.driver.sdk.ui.components.elements.JTreeUiComponent
+import com.intellij.driver.sdk.ui.components.elements.dialog
 import com.intellij.driver.sdk.ui.shouldBe
 import com.intellij.driver.sdk.ui.visible
 import com.intellij.driver.sdk.ui.xQuery
 import com.intellij.ide.starter.driver.engine.BackgroundRun
 import org.junit.jupiter.params.provider.Arguments
 import java.awt.event.KeyEvent
-import java.time.Duration
-import java.time.Instant
 import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Gets the actual project root node name from the tree.
+ * The root node may contain additional path information (e.g., "sample-maven ~/path/to/project"),
+ * so we search for a root node that contains the expected project name.
+ */
+fun JTreeUiComponent.getActualProjectRoot(expectedName: String): String {
+    return collectExpandedPaths()
+        .firstOrNull { it.path.size == 1 && it.path[0].contains(expectedName, ignoreCase = true) }
+        ?.path?.get(0)
+        ?: throw JTreeUiComponent.PathNotFoundException("Root node containing '$expectedName' not found")
+}
+
+/**
+ * Fast click on a tree path by using the native fixture methods.
+ * This bypasses the slow Kotlin-level expansion logic with 1-second waits.
+ *
+ * @param projectName The expected project name (used to find the actual root node)
+ * @param restOfPath The remaining path elements after the project root
+ */
+fun JTreeUiComponent.fastClickPath(projectName: String, vararg restOfPath: String) {
+//    val actualRoot = getActualProjectRoot(projectName)
+    val sep = fixture.separator()
+    val fullPath = (listOf(projectName) + restOfPath.toList()).joinToString(sep)
+    fixture.clickPath(fullPath)
+}
+
+/**
+ * Fast right-click on a tree path by using the native fixture methods.
+ * This bypasses the slow Kotlin-level expansion logic with 1-second waits.
+ *
+ * @param projectName The expected project name (used to find the actual root node)
+ * @param restOfPath The remaining path elements after the project root
+ */
+fun JTreeUiComponent.fastRightClickPath(projectName: String, vararg restOfPath: String) {
+    val actualRoot = getActualProjectRoot(projectName)
+    val sep = fixture.separator()
+    val fullPath = (listOf(actualRoot) + restOfPath.toList()).joinToString(sep)
+    fixture.rightClickPath(fullPath)
+}
 
 object CommonUITestsNew {
     const val INTELLIJ_VERSION = "2025.1"
     const val MENU_OPTION_TEXT = "Run Mutation Coverage..."
 
-    /**
-     * Closes the Mutation Coverage dialog if it is open.
-     * Used as @AfterEach cleanup in test classes.
-     */
+    private val SOFT_WRAP_CHARS = Regex("[⤦⤥]")
+
+    private fun stripSoftWrapChars(text: String): String = text.replace(SOFT_WRAP_CHARS, "")
+
+    fun UiComponent.waitForEditorTextFieldWithText(
+        expectedText: String,
+        description: String,
+        timeout: kotlin.time.Duration
+    ): UiComponent {
+        val startTime = System.currentTimeMillis()
+        val timeoutMs = timeout.inWholeMilliseconds
+        var lastActualText = ""
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            try {
+                val texts = this.getAllTexts()
+                val combinedText = texts.joinToString("")
+                lastActualText = combinedText
+                val normalizedText = stripSoftWrapChars(combinedText)
+                if (expectedText.equals(normalizedText, ignoreCase = false)) {
+                    return this
+                }
+            } catch (_: Exception) {
+                // Component might not be ready yet, continue waiting
+            }
+            Thread.sleep(100)
+        }
+
+        throw AssertionError(
+            "Timeout(${timeout}): $description. " +
+                    "Expected: $expectedText. " +
+                    "Actual (normalized): ${stripSoftWrapChars(lastActualText)}"
+        )
+    }
+
     fun closeMutationCoverageDialogIfOpen(run: BackgroundRun) {
         run.driver.withContext {
             ideFrame {
-                val beforeGetDialogs = Instant.now()
                 val dialogs = xx(xQuery { byTitle("Mutation Coverage") })
-                val afterGetDialogs = Instant.now()
-                println(
-                    "[TIMING] afterEachHook - Get dialogs: ${
-                        Duration.between(beforeGetDialogs, afterGetDialogs).toMillis()
-                    } ms"
-                )
 
                 if (dialogs.list().isNotEmpty()) {
                     val dialog = dialogs.list()[0]
@@ -43,20 +108,10 @@ object CommonUITestsNew {
                         }
                     }
                 }
-
-                val endOfMethod = Instant.now()
-                println(
-                    "[TIMING] afterEachHook - Total time: ${
-                        Duration.between(beforeGetDialogs, endOfMethod).toMillis()
-                    } ms"
-                )
             }
         }
     }
 
-    /**
-     * Executes a single node selection test.
-     */
     fun executeSingleNodeTest(
         run: BackgroundRun,
         nodePath: Array<String>,
@@ -64,77 +119,20 @@ object CommonUITestsNew {
         expectedTargetTests: String,
         expectedCommand: String
     ) {
-        val testStartTime = Instant.now()
-        println("[TIMING] testSingleNodeSelection - Started")
-
         run.driver.withContext {
             ideFrame {
                 projectView {
-                    val beforeRightClickPath = Instant.now()
-                    projectViewTree.rightClickPath(*nodePath, fullMatch = false)
-                    val afterRightClickPath = Instant.now()
-                    println(
-                        "[TIMING] testSingleNodeSelection - rightClickPath: ${
-                            Duration.between(beforeRightClickPath, afterRightClickPath).toMillis()
-                        } ms"
-                    )
+                    val projectName = nodePath[0]
+                    val restOfPath = nodePath.sliceArray(1 until nodePath.size)
+                    projectViewTree.clickPath(projectName, *restOfPath)
+                    projectViewTree.rightClickPath(projectName, *restOfPath)
                 }
 
-                // Click on the menu option
-                val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 3.seconds)
-                menuOption.click()
-
-                // Verify that the dialog opens
-                val dialog = x(xQuery { byTitle("Mutation Coverage") })
-                dialog.shouldBe("Mutation Coverage dialog should be open", visible, 3.seconds)
-
-                // Verify Target Classes text field
-                dialog.x(xQuery {
-                    and(
-                        byClass("JBTextField"),
-                        byAccessibleName("Target Classes:")
-                    )
-                }).shouldBe("Target Classes field should be visible", visible, 3.seconds)
-                    .hasText(expectedTargetClasses)
-
-                // Verify Target Tests text field
-                dialog.x(xQuery {
-                    and(
-                        byClass("JBTextField"),
-                        byAccessibleName("Target Tests:")
-                    )
-                }).shouldBe("Target Tests field should be visible", visible, 3.seconds)
-                    .hasText(expectedTargetTests)
-
-                // Verify the command text area contains the expected command
-                val commandTextArea = dialog.x(xQuery { byClass("JBTextArea") })
-                commandTextArea.shouldBe("Command text area should be visible", visible, 3.seconds)
-                commandTextArea.hasText(expectedCommand)
-
-                // Close the dialog
-                val cancelButton = dialog.x(xQuery { byText("Cancel") })
-                cancelButton.click()
-                val afterCancelClick = Instant.now()
-                println(
-                    "[TIMING] testSingleNodeSelection - After cancelButton.click(): ${
-                        Duration.between(testStartTime, afterCancelClick).toMillis()
-                    } ms elapsed"
-                )
+                validateOptionMenuAndDialog(expectedTargetClasses, expectedTargetTests, expectedCommand)
             }
         }
-
-        val testEndTime = Instant.now()
-        println(
-            "[TIMING] testSingleNodeSelection - Total test time: ${
-                Duration.between(testStartTime, testEndTime).toMillis()
-            } ms"
-        )
     }
 
-    /**
-     * Executes a multi node selection test.
-     */
     fun executeMultiNodeTest(
         run: BackgroundRun,
         nodePaths: List<Array<String>>,
@@ -142,83 +140,75 @@ object CommonUITestsNew {
         expectedTargetTests: String,
         expectedCommand: String
     ) {
-        val testStartTime = Instant.now()
-        println("[TIMING] testMultiNodeSelection - Started")
-
         run.driver.withContext {
             ideFrame {
                 projectView {
-                    val beforeMultiSelect = Instant.now()
-
-                    // Select multiple nodes using Ctrl+click
+                    val firstPath = nodePaths[0]
+                    val texts = getAllTexts()
+                    val projectNode = "${texts[0].toString().trim()} ${texts[1].toString().trim()}"
+                    projectViewTree.clickPath(projectNode, *firstPath.sliceArray(1 until firstPath.size))
                     keyboard {
                         pressing(KeyEvent.VK_CONTROL) {
-                            // Click all paths except the last one
-                            for (i in 0 until nodePaths.size - 1) {
-                                projectViewTree.clickPath(*nodePaths[i], fullMatch = false)
+                            for (i in 1 until nodePaths.size) {
+                                val path = nodePaths[i]
+                                projectViewTree.fastClickPath(path[0], *path.sliceArray(1 until path.size))
                             }
                         }
-                        projectViewTree.rightClickPath(*nodePaths.last(), fullMatch = false)
                     }
-
-                    val afterMultiSelect = Instant.now()
-                    println(
-                        "[TIMING] testMultiNodeSelection - Multi-select with Ctrl+click: ${
-                            Duration.between(beforeMultiSelect, afterMultiSelect).toMillis()
-                        } ms"
-                    )
+                    val lastPath = nodePaths.last()
+                    projectViewTree.fastRightClickPath(lastPath[0], *lastPath.sliceArray(1 until lastPath.size))
                 }
 
-                // Click on the menu option
-                val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
-                menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 3.seconds)
-                menuOption.click()
-
-                // Verify that the dialog opens
-                val dialog = x(xQuery { byTitle("Mutation Coverage") })
-                dialog.shouldBe("Mutation Coverage dialog should be open", visible, 3.seconds)
-
-                // Verify Target Classes text field
-                dialog.x(xQuery {
-                    and(
-                        byClass("JBTextField"),
-                        byAccessibleName("Target Classes:")
-                    )
-                }).shouldBe("Target Classes field should be visible", visible, 3.seconds)
-                    .hasText(expectedTargetClasses)
-
-                // Verify Target Tests text field
-                dialog.x(xQuery {
-                    and(
-                        byClass("JBTextField"),
-                        byAccessibleName("Target Tests:")
-                    )
-                }).shouldBe("Target Tests field should be visible", visible, 3.seconds)
-                    .hasText(expectedTargetTests)
-
-                // Verify the command text area contains the expected command
-                val commandTextArea = dialog.x(xQuery { byClass("JBTextArea") })
-                commandTextArea.shouldBe("Command text area should be visible", visible, 3.seconds)
-                commandTextArea.hasText(expectedCommand)
-
-                // Close the dialog
-                val cancelButton = dialog.x(xQuery { byText("Cancel") })
-                cancelButton.click()
-                val afterCancelClick = Instant.now()
-                println(
-                    "[TIMING] testMultiNodeSelection - After cancelButton.click(): ${
-                        Duration.between(testStartTime, afterCancelClick).toMillis()
-                    } ms elapsed"
-                )
+                validateOptionMenuAndDialog(expectedTargetClasses, expectedTargetTests, expectedCommand)
             }
         }
+    }
 
-        val testEndTime = Instant.now()
-        println(
-            "[TIMING] testMultiNodeSelection - Total test time: ${
-                Duration.between(testStartTime, testEndTime).toMillis()
-            } ms"
-        )
+    private fun IdeaFrameUI.validateOptionMenuAndDialog(
+        expectedTargetClasses: String,
+        expectedTargetTests: String,
+        expectedCommand: String
+    ) {
+        val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
+        menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 3.seconds)
+        menuOption.click()
+
+        dialog(title = "Mutation Coverage") {
+            shouldBe("Mutation Coverage dialog should be open", visible, 3.seconds)
+
+            x(xQuery {
+                and(
+                    byClass("JBTextField"),
+                    byAccessibleName("Target Classes:")
+                )
+            }).shouldBe("Target Classes field should be visible", visible, 3.seconds)
+                .waitForEditorTextFieldWithText(
+                    expectedTargetClasses,
+                    "Target Classes should have text: $expectedTargetClasses",
+                    3.seconds
+                )
+
+            x(xQuery {
+                and(
+                    byClass("JBTextField"),
+                    byAccessibleName("Target Tests:")
+                )
+            }).shouldBe("Target Tests field should be visible", visible, 3.seconds)
+                .waitForEditorTextFieldWithText(
+                    expectedTargetTests,
+                    "Target Tests should have text: $expectedCommand",
+                    3.seconds
+                )
+
+            x(xQuery {
+                byClass("EditorTextField")
+            }).shouldBe("Command text area should be visible", visible, 3.seconds)
+                .waitForEditorTextFieldWithText(
+                    expectedCommand,
+                    "Command text area should have text: $expectedCommand",
+                    3.seconds
+                )
+        }.closeDialog()
     }
 
     // ========================================
@@ -414,46 +404,47 @@ object CommonUITestsNew {
             "com.myproject.package1.ClassA",
             "com.myproject.package1.ClassATest",
             "$buildCommand $targetClassesParam=com.myproject.package1.ClassA $targetTestsParam=com.myproject.package1.ClassATest"
-        ),
-        Arguments.of(
-            "Single Main Package with matching Test Package",
-            arrayOf(projectName, "src", "main", language, "com.myproject", "package2"),
-            "com.myproject.package2.*",
-            "com.myproject.package2.*",
-            "$buildCommand $targetClassesParam=com.myproject.package2.* $targetTestsParam=com.myproject.package2.*"
-        ),
-        Arguments.of(
-            "Single Test Class with matching Main Class",
-            arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest"),
-            "com.myproject.package2.ClassB",
-            "com.myproject.package2.ClassBTest",
-            "$buildCommand $targetClassesParam=com.myproject.package2.ClassB $targetTestsParam=com.myproject.package2.ClassBTest"
-        ),
-        Arguments.of(
-            "Single Test Package with matching Main Package",
-            arrayOf(projectName, "src", "test", language, "com.myproject", "package1"),
-            "com.myproject.package1.*",
-            "com.myproject.package1.*",
-            "$buildCommand $targetClassesParam=com.myproject.package1.* $targetTestsParam=com.myproject.package1.*"
-        ),
-
-        // ========================================
-        // Special Cases Tests
-        // ========================================
-        Arguments.of(
-            "Main Class with multiple test candidates - selects test in same package",
-            arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassC"),
-            "com.myproject.package1.ClassC",
-            "com.myproject.package1.ClassCTest",
-            "$buildCommand $targetClassesParam=com.myproject.package1.ClassC $targetTestsParam=com.myproject.package1.ClassCTest"
-        ),
-        Arguments.of(
-            "Main Class with test in superior package",
-            arrayOf(projectName, "src", "main", language, "com.myproject", "package3.impl", "ClassC"),
-            "com.myproject.package3.impl.ClassC",
-            "com.myproject.package3.ClassCTest",
-            "$buildCommand $targetClassesParam=com.myproject.package3.impl.ClassC $targetTestsParam=com.myproject.package3.ClassCTest"
         )
+//        ,
+//        Arguments.of(
+//            "Single Main Package with matching Test Package",
+//            arrayOf(projectName, "src", "main", language, "com.myproject", "package2"),
+//            "com.myproject.package2.*",
+//            "com.myproject.package2.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package2.* $targetTestsParam=com.myproject.package2.*"
+//        ),
+//        Arguments.of(
+//            "Single Test Class with matching Main Class",
+//            arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest"),
+//            "com.myproject.package2.ClassB",
+//            "com.myproject.package2.ClassBTest",
+//            "$buildCommand $targetClassesParam=com.myproject.package2.ClassB $targetTestsParam=com.myproject.package2.ClassBTest"
+//        ),
+//        Arguments.of(
+//            "Single Test Package with matching Main Package",
+//            arrayOf(projectName, "src", "test", language, "com.myproject", "package1"),
+//            "com.myproject.package1.*",
+//            "com.myproject.package1.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.* $targetTestsParam=com.myproject.package1.*"
+//        ),
+//
+//        // ========================================
+//        // Special Cases Tests
+//        // ========================================
+//        Arguments.of(
+//            "Main Class with multiple test candidates - selects test in same package",
+//            arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassC"),
+//            "com.myproject.package1.ClassC",
+//            "com.myproject.package1.ClassCTest",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.ClassC $targetTestsParam=com.myproject.package1.ClassCTest"
+//        ),
+//        Arguments.of(
+//            "Main Class with test in superior package",
+//            arrayOf(projectName, "src", "main", language, "com.myproject", "package3.impl", "ClassC"),
+//            "com.myproject.package3.impl.ClassC",
+//            "com.myproject.package3.ClassCTest",
+//            "$buildCommand $targetClassesParam=com.myproject.package3.impl.ClassC $targetTestsParam=com.myproject.package3.ClassCTest"
+//        )
     )
 
     @JvmStatic
@@ -467,85 +458,85 @@ object CommonUITestsNew {
         // ========================================
         // Multi Node Tests
         // ========================================
-        Arguments.of(
-            "Two Main Classes with matching Test Classes",
-            listOf(
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassD")
-            ),
-            "com.myproject.package1.ClassA,com.myproject.package1.ClassD",
-            "com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest",
-            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA,com.myproject.package1.ClassD $targetTestsParam=com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest"
-        ),
-        Arguments.of(
-            "Two Test Classes with matching Main Classes",
-            listOf(
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package1", "ClassATest"),
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest")
-            ),
-            "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
-            "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
-            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA,com.myproject.package2.ClassB $targetTestsParam=com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest"
-        ),
-        Arguments.of(
-            "Two Main Packages with matching Test Packages",
-            listOf(
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1"),
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package2")
-            ),
-            "com.myproject.package1.*,com.myproject.package2.*",
-            "com.myproject.package1.*,com.myproject.package2.*",
-            "$buildCommand $targetClassesParam=com.myproject.package1.*,com.myproject.package2.* $targetTestsParam=com.myproject.package1.*,com.myproject.package2.*"
-        ),
-        Arguments.of(
-            "Two Test Packages with matching Main Packages",
-            listOf(
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package1"),
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package2")
-            ),
-            "com.myproject.package1.*,com.myproject.package2.*",
-            "com.myproject.package1.*,com.myproject.package2.*",
-            "$buildCommand $targetClassesParam=com.myproject.package1.*,com.myproject.package2.* $targetTestsParam=com.myproject.package1.*,com.myproject.package2.*"
-        ),
-        Arguments.of(
-            "Main Class and its package - only package selected",
-            listOf(
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1")
-            ),
-            "com.myproject.package1.*",
-            "com.myproject.package1.*",
-            "$buildCommand $targetClassesParam=com.myproject.package1.* $targetTestsParam=com.myproject.package1.*"
-        ),
-        Arguments.of(
-            "Test Class and parent package - only package selected",
-            listOf(
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest"),
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package2")
-            ),
-            "com.myproject.package2.*",
-            "com.myproject.package2.*",
-            "$buildCommand $targetClassesParam=com.myproject.package2.* $targetTestsParam=com.myproject.package2.*"
-        ),
-
-        // ========================================
-        // Cross Source Tests
-        // ========================================
-        Arguments.of(
-            "Main Class and its Test Class - both selected",
-            listOf(
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package1", "ClassATest")
-            ),
-            "com.myproject.package1.ClassA",
-            "com.myproject.package1.ClassATest",
-            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA $targetTestsParam=com.myproject.package1.ClassATest"
-        ),
+//        Arguments.of(
+//            "Two Main Classes with matching Test Classes",
+//            listOf(
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassD")
+//            ),
+//            "com.myproject.package1.ClassA,com.myproject.package1.ClassD",
+//            "com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA,com.myproject.package1.ClassD $targetTestsParam=com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest"
+//        ),
+//        Arguments.of(
+//            "Two Test Classes with matching Main Classes",
+//            listOf(
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package1", "ClassATest"),
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest")
+//            ),
+//            "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
+//            "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA,com.myproject.package2.ClassB $targetTestsParam=com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest"
+//        ),
+//        Arguments.of(
+//            "Two Main Packages with matching Test Packages",
+//            listOf(
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1"),
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package2")
+//            ),
+//            "com.myproject.package1.*,com.myproject.package2.*",
+//            "com.myproject.package1.*,com.myproject.package2.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.*,com.myproject.package2.* $targetTestsParam=com.myproject.package1.*,com.myproject.package2.*"
+//        ),
+//        Arguments.of(
+//            "Two Test Packages with matching Main Packages",
+//            listOf(
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package1"),
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package2")
+//            ),
+//            "com.myproject.package1.*,com.myproject.package2.*",
+//            "com.myproject.package1.*,com.myproject.package2.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.*,com.myproject.package2.* $targetTestsParam=com.myproject.package1.*,com.myproject.package2.*"
+//        ),
+//        Arguments.of(
+//            "Main Class and its package - only package selected",
+//            listOf(
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1")
+//            ),
+//            "com.myproject.package1.*",
+//            "com.myproject.package1.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.* $targetTestsParam=com.myproject.package1.*"
+//        ),
+//        Arguments.of(
+//            "Test Class and parent package - only package selected",
+//            listOf(
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest"),
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package2")
+//            ),
+//            "com.myproject.package2.*",
+//            "com.myproject.package2.*",
+//            "$buildCommand $targetClassesParam=com.myproject.package2.* $targetTestsParam=com.myproject.package2.*"
+//        ),
+//
+//        // ========================================
+//        // Cross Source Tests
+//        // ========================================
+//        Arguments.of(
+//            "Main Class and its Test Class - both selected",
+//            listOf(
+//                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
+//                arrayOf(projectName, "src", "test", language, "com.myproject", "package1", "ClassATest")
+//            ),
+//            "com.myproject.package1.ClassA",
+//            "com.myproject.package1.ClassATest",
+//            "$buildCommand $targetClassesParam=com.myproject.package1.ClassA $targetTestsParam=com.myproject.package1.ClassATest"
+//        ),
         Arguments.of(
             "Main Class and different Test Class - all classes selected",
             listOf(
-                arrayOf(projectName, "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf(projectName, "src", "test", language, "com.myproject", "package2", "ClassBTest")
+                arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
+                arrayOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
             ),
             "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
             "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",

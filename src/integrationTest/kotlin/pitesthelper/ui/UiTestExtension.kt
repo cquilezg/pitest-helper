@@ -127,7 +127,7 @@ class UiTestExtension : BeforeAllCallback, BeforeEachCallback, TestExecutionExce
             testName = testName,
             TestCase(
                 IdeProductProvider.IC,
-                LocalProjectInfo(Path("src/test/testData/$projectPath"))
+                LocalProjectInfo(Path("src/integrationTest/testData/$projectPath"))
             ).withVersion(CommonUITestsNew.INTELLIJ_VERSION)
         ).apply {
             val pathToPlugin = System.getProperty("path.to.build.plugin")

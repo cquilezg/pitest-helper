@@ -5,6 +5,9 @@ import com.cquilez.pitesthelper.domain.MutationCoverageOptions
 import com.cquilez.pitesthelper.infrastructure.AppMessagesBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ex.EditorEx
+import com.intellij.ui.EditorTextField
 import com.intellij.util.IconUtil
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -15,7 +18,6 @@ import com.intellij.ui.JBColor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
@@ -32,7 +34,7 @@ class MutationCoverageDialog(
     val mutationCoverageOptions: MutationCoverageOptions,
     private val buildSystemPort: BuildSystemPort
 ) : DialogWrapper(true) {
-    private val commandTextArea = JBTextArea()
+    private val commandEditorTextField = createCommandEditorTextField()
 
     init {
         title = AppMessagesBundle.message("ui.dialog.mutationCoverage.title")
@@ -103,7 +105,7 @@ class MutationCoverageDialog(
             row(AppMessagesBundle.message("ui.dialog.mutationCoverage.runCommand")) {
                 val scaledIcon = IconUtil.scale(AllIcons.Actions.Copy, null, 1.3f)
                 val copyButton = InplaceButton(AppMessagesBundle.message("ui.dialog.mutationCoverage.button.copyToClipboard"), scaledIcon) {
-                    val selection = StringSelection(commandTextArea.text)
+                    val selection = StringSelection(commandEditorTextField.text)
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(selection, selection)
                 }.apply {
                     val buttonSize = Dimension(32, 32)
@@ -128,15 +130,12 @@ class MutationCoverageDialog(
                         add(copyButton, BorderLayout.EAST)
                     }
                     add(buttonPanel, BorderLayout.NORTH)
-                    add(com.intellij.ui.components.JBScrollPane(commandTextArea).apply {
-                        border = JBUI.Borders.customLine(JBColor.border())
-                        commandTextArea.text = buildCommand()
-                        commandTextArea.rows = 5
-                        commandTextArea.columns = 30
-                        commandTextArea.isEditable = false
-                        commandTextArea.lineWrap = true
-                        commandTextArea.margin = JBUI.insets(10)
-                    }, BorderLayout.CENTER)
+                    val command = buildCommand()
+                    commandEditorTextField.text = command
+                    // Set accessible name to raw command for UI testing (soft wrap adds visual chars)
+                    commandEditorTextField.accessibleContext.accessibleName = command
+                    commandEditorTextField.border = JBUI.Borders.customLine(JBColor.border())
+                    add(commandEditorTextField, BorderLayout.CENTER)
                 }).align(AlignX.FILL + AlignY.FILL)
             }.topGap(TopGap.SMALL).resizableRow()
         }.apply {
@@ -160,7 +159,27 @@ class MutationCoverageDialog(
     private fun buildCommand() = buildSystemPort.buildCommand(mutationCoverageOptions)
 
     private fun updateCommandTextArea() {
-        commandTextArea.text = buildCommand()
+        val command = buildCommand()
+        commandEditorTextField.text = command
+        commandEditorTextField.accessibleContext.accessibleName = command
+    }
+
+    private fun createCommandEditorTextField(): EditorTextField {
+        val document = EditorFactory.getInstance().createDocument("")
+        return object : EditorTextField(document, null, null, true, false) {
+            override fun createEditor(): EditorEx {
+                return super.createEditor().apply {
+                    settings.isUseSoftWraps = true
+                    settings.isLineNumbersShown = false
+                    settings.isFoldingOutlineShown = false
+                    settings.isAdditionalPageAtBottom = false
+                    setVerticalScrollbarVisible(true)
+                    setHorizontalScrollbarVisible(false)
+                }
+            }
+        }.apply {
+            preferredSize = Dimension(600, 100)
+        }
     }
 
     private fun normalizeInput(text: String): String {

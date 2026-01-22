@@ -3,8 +3,7 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
-    alias(libs.plugins.kotlin) // Kotlin support
+    alias(libs.plugins.kotlin) // Kotlin support (includes Java plugin)
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
@@ -29,6 +28,30 @@ repositories {
     }
 }
 
+sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
+}
+
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+// Extend classpaths to include IntelliJ Platform dependencies
+configurations["integrationTestCompileClasspath"].extendsFrom(configurations["testCompileClasspath"])
+configurations["integrationTestRuntimeClasspath"].extendsFrom(configurations["testRuntimeClasspath"])
+
+// Extend from IntelliJ Platform test framework configuration (for ide-starter-squashed)
+afterEvaluate {
+    configurations.matching { it.name.startsWith("intellijPlatform") && it.name.contains("test", ignoreCase = true) }
+        .forEach { config ->
+            configurations["integrationTestCompileClasspath"].extendsFrom(config)
+            configurations["integrationTestRuntimeClasspath"].extendsFrom(config)
+        }
+}
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(platform(libs.junitBom))
@@ -37,12 +60,14 @@ dependencies {
     testImplementation(libs.hamcrest)
     testImplementation(libs.kotlinTest)
     testImplementation(libs.mockk)
-    testImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     testRuntimeOnly(libs.junitJupiterEngine)
+
+    // Additional dependencies for integration tests (inherits testImplementation via extendsFrom)
+    integrationTestImplementation(libs.kodeinDi)
+    integrationTestImplementation(libs.kotlinxCoroutines)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-//        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
@@ -77,8 +102,6 @@ intellijPlatform {
         }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
-        // Major and minor versions are mandatory. Fix version can be omitted if it is 0. alpha.x and beta.x versions are allowed
-//        changelog.headerParserRegex = "^(\\d+)\\.(\\d+)(\\.(\\d+))?(-(SNAPSHOT|alpha\\.\\d+|beta\\.\\d+))?\$"
         // Get the latest available change notes from the changelog file
         changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
             with(changelog) {
@@ -138,9 +161,20 @@ kover {
     }
 }
 
+// JVM arguments required for IntelliJ Platform test framework (Java 17+ module access)
+val javaModuleOpenArgs = listOf(
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.util=ALL-UNNAMED",
+    "--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
+    "--add-opens=java.desktop/java.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.font=ALL-UNNAMED"
+)
+
 tasks {
     test {
-        dependsOn("buildPlugin")
+        dependsOn(buildPlugin)
         systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
 
         useJUnitPlatform {
@@ -153,6 +187,18 @@ tasks {
                 excludeTags = setOf(excludedtags.toString())
             }
         }
+    }
+
+    register<Test>("integrationTest") {
+        val integrationTestSourceSet = sourceSets.getByName("integrationTest")
+        testClassesDirs = integrationTestSourceSet.output.classesDirs
+        classpath = integrationTestSourceSet.runtimeClasspath
+        systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
+        // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
+        systemProperty("junit.platform.launcher.interceptors.enabled", "false")
+        useJUnitPlatform()
+        dependsOn(buildPlugin)
+        jvmArgs(javaModuleOpenArgs)
     }
 
     wrapper {

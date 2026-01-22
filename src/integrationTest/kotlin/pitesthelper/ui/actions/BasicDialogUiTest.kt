@@ -3,6 +3,7 @@ package com.cquilez.pitesthelper.ui.actions
 import com.cquilez.pitesthelper.ui.IDEInstance
 import com.cquilez.pitesthelper.ui.UiTestExtension
 import com.cquilez.pitesthelper.ui.actions.CommonUITestsNew.MENU_OPTION_TEXT
+import com.cquilez.pitesthelper.ui.actions.fastRightClickPath
 import com.intellij.driver.sdk.ui.components.common.ideFrame
 import com.intellij.driver.sdk.ui.components.common.toolwindows.projectView
 import com.intellij.driver.sdk.ui.enabled
@@ -35,8 +36,7 @@ class BasicDialogUiTest {
         run.driver.withContext {
             ideFrame {
                 projectView {
-                    projectViewTree.expandPath(PROJECT_NAME, fullMatch = false)
-                    projectViewTree.rightClickPath(PROJECT_NAME, fullMatch = false)
+                    projectViewTree.fastRightClickPath(PROJECT_NAME)
                 }
 
                 val menuOption = x(xQuery { byAccessibleName(MENU_OPTION_TEXT) })
@@ -90,7 +90,7 @@ class BasicDialogUiTest {
                     )
                 }).shouldBe("Run command label should be visible", visible, 3.seconds)
 
-                dialog.x(xQuery { byClass("JBTextArea") })
+                dialog.x(xQuery { byClass("EditorTextField") })
                     .shouldBe("Command text area should be visible", visible, 3.seconds)
 
                 dialog.x(xQuery {
