@@ -174,8 +174,7 @@ val javaModuleOpenArgs = listOf(
 
 tasks {
     test {
-        dependsOn(buildPlugin)
-        systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
+        dependsOn("buildPlugin")
 
         useJUnitPlatform {
             val tags = project.findProperty("tags")
@@ -187,18 +186,55 @@ tasks {
                 excludeTags = setOf(excludedtags.toString())
             }
         }
+        
+        // Set system property at execution time for configuration cache compatibility
+        doFirst {
+            // Find the plugin zip in the build directory
+            val distributionsDir = layout.buildDirectory.dir("distributions").get().asFile
+            val pluginZip = distributionsDir.listFiles()?.firstOrNull { it.name.endsWith(".zip") }
+                ?: error("Plugin zip not found in $distributionsDir")
+            systemProperty("path.to.build.plugin", pluginZip.absolutePath)
+        }
     }
 
     register<Test>("integrationTest") {
+        // Mark as not compatible with configuration cache due to dynamic file operations
+        notCompatibleWithConfigurationCache("Uses dynamic file discovery for plugin and IDE paths")
+        
         val integrationTestSourceSet = sourceSets.getByName("integrationTest")
         testClassesDirs = integrationTestSourceSet.output.classesDirs
         classpath = integrationTestSourceSet.runtimeClasspath
-        systemProperty("path.to.build.plugin", buildPlugin.get().archiveFile.get().asFile.absolutePath)
+        
         // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
         systemProperty("junit.platform.launcher.interceptors.enabled", "false")
         useJUnitPlatform()
-        dependsOn(buildPlugin)
+        dependsOn("buildPlugin")
         jvmArgs(javaModuleOpenArgs)
+        
+        // Set system properties at execution time
+        doFirst {
+            // Find the plugin zip in the build directory
+            val distributionsDir = layout.buildDirectory.dir("distributions").get().asFile
+            val pluginZip = distributionsDir.listFiles()?.firstOrNull { it.name.endsWith(".zip") }
+                ?: error("Plugin zip not found in $distributionsDir")
+            systemProperty("path.to.build.plugin", pluginZip.absolutePath)
+            
+            // Workaround for Starter framework PathManager warning (https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1997)
+            // The Driver SDK runs in the Gradle test JVM and uses IntelliJ logging APIs that expect an IDE installation.
+            // We dynamically find the downloaded IDE path at test execution time.
+            val ideTestsCache = file("out/ide-tests/cache/builds")
+            if (ideTestsCache.exists()) {
+                val ideDir = ideTestsCache.listFiles()
+                    ?.filter { it.isDirectory && it.name.startsWith("IC-") }
+                    ?.maxByOrNull { it.lastModified() }
+                    ?.listFiles()
+                    ?.firstOrNull { it.isDirectory && it.name.startsWith("idea-IC-") }
+
+                if (ideDir != null) {
+                    systemProperty("idea.home.path", ideDir.absolutePath)
+                }
+            }
+        }
     }
 
     wrapper {

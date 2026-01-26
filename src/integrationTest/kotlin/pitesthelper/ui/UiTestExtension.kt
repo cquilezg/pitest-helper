@@ -21,6 +21,9 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import java.lang.reflect.Field
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.io.path.Path
 import kotlin.test.junit5.JUnit5Asserter.fail
 import kotlin.time.Duration.Companion.minutes
@@ -108,7 +111,30 @@ class UiTestExtension : BeforeAllCallback, BeforeEachCallback, TestExecutionExce
 
     @Throws(Throwable::class)
     override fun handleTestExecutionException(context: ExtensionContext?, throwable: Throwable) {
+        if (context != null) {
+            takeScreenshotOnFailure(context)
+        }
         throw throwable
+    }
+
+    private fun takeScreenshotOnFailure(context: ExtensionContext) {
+        try {
+            val store = getStore(context)
+            val run = store.get(IDE_INSTANCE_KEY, BackgroundRun::class.java) ?: return
+
+            val testName = context.displayName.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+            val screenshotDir = Path("build/test-screenshots")
+            Files.createDirectories(screenshotDir)
+
+            val screenshotPath = screenshotDir.resolve("${testName}_$timestamp.png")
+
+            run.driver.takeScreenshot(screenshotPath.toString())
+
+            println("Screenshot saved: $screenshotPath")
+        } catch (e: Exception) {
+            println("Failed to take screenshot: ${e.message}")
+        }
     }
 
     override fun afterAll(context: ExtensionContext) {
@@ -118,7 +144,10 @@ class UiTestExtension : BeforeAllCallback, BeforeEachCallback, TestExecutionExce
         // Only close the IDE when afterAll is called for the root test class (not nested classes)
         if (context.requiredTestClass == rootTestClass) {
             val run = store.get(IDE_INSTANCE_KEY, BackgroundRun::class.java)
-            run?.closeIdeAndWait()
+            if (run != null) {
+                CommonUITestsNew.clearProjectNodeCache(run)
+                run.closeIdeAndWait()
+            }
         }
     }
 

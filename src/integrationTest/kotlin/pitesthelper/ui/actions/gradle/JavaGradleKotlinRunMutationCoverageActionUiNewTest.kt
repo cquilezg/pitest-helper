@@ -28,10 +28,10 @@ class JavaGradleKotlinRunMutationCoverageActionUiNewTest {
         private const val LANGUAGE = "java"
 
         @JvmStatic
-        fun singleNodeTestCases() = CommonUITestsNew.gradleSingleNodeTestCases(PROJECT_NAME, LANGUAGE, BUILD_COMMAND)
+        fun singleNodeTestCases() = CommonUITestsNew.gradleSingleNodeTestCases(LANGUAGE, BUILD_COMMAND)
 
         @JvmStatic
-        fun multiNodeTestCases() = CommonUITestsNew.gradleMultiNodeTestCases(PROJECT_NAME, LANGUAGE, BUILD_COMMAND)
+        fun multiNodeTestCases() = CommonUITestsNew.gradleMultiNodeTestCases(LANGUAGE, BUILD_COMMAND)
     }
 
     @Nested

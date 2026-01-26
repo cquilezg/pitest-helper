@@ -27,10 +27,10 @@ class JavaGradleMultiModuleRunMutationCoverageActionUiNewTest {
         private const val LANGUAGE = "java"
 
         @JvmStatic
-        fun singleNodeTestCases() = CommonUITestsNew.gradleMultiModuleSingleNodeTestCases(PROJECT_NAME, LANGUAGE)
+        fun singleNodeTestCases() = CommonUITestsNew.gradleMultiModuleSingleNodeTestCases(LANGUAGE)
 
         @JvmStatic
-        fun multiNodeTestCases() = CommonUITestsNew.gradleMultiModuleMultiNodeTestCases(PROJECT_NAME, LANGUAGE)
+        fun multiNodeTestCases() = CommonUITestsNew.gradleMultiModuleMultiNodeTestCases(LANGUAGE)
     }
 
     @Nested

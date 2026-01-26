@@ -29,10 +29,10 @@ class KotlinMavenRunMutationCoverageActionUiNewTest {
         private const val LANGUAGE = "kotlin"
 
         @JvmStatic
-        fun singleNodeTestCases() = CommonUITestsNew.singleNodeTestCases(PROJECT_NAME, LANGUAGE, BUILD_COMMAND)
+        fun singleNodeTestCases() = CommonUITestsNew.singleNodeTestCases(LANGUAGE, BUILD_COMMAND)
 
         @JvmStatic
-        fun multiNodeTestCases() = CommonUITestsNew.multiNodeTestCases(PROJECT_NAME, LANGUAGE, BUILD_COMMAND)
+        fun multiNodeTestCases() = CommonUITestsNew.multiNodeTestCases(LANGUAGE, BUILD_COMMAND)
     }
 
     @Nested
