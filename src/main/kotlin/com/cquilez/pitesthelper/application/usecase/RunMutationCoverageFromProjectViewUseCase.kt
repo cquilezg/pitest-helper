@@ -70,6 +70,8 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
             val mutationCoverageOptions = MutationCoverageOptions(
                 targetClasses,
                 targetTests,
+                "testCompile",
+                "verify",
                 allErrors,
                 workingUnit,
                 buildSystem,

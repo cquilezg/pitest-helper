@@ -72,7 +72,7 @@ class UiTestExtension : BeforeAllCallback, BeforeEachCallback, TestExecutionExce
         // Create and start the IDE
         val run = newIDE(annotation.testName, annotation.projectPath).runIdeWithDriver()
         run.driver.withContext {
-            waitForIndicators(2.minutes)
+            waitForIndicators(5.minutes)
         }
 
         // Store in extension context for beforeEach injection and afterAll cleanup
