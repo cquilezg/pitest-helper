@@ -56,7 +56,7 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
         allNormalCodeItems: List<CodeElement>,
         allTestCodeItems: List<CodeElement>,
         codeElements: List<CodeElement>,
-        allErrors: MutableList<String>
+        allErrors: List<String>
     ) {
         val targetClasses = CodeElement.formatList(allNormalCodeItems)
         val targetTests = CodeElement.formatList(allTestCodeItems)
@@ -70,8 +70,8 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
             val mutationCoverageOptions = MutationCoverageOptions(
                 targetClasses,
                 targetTests,
-                "testCompile",
-                "verify",
+                "",
+                "",
                 allErrors,
                 workingUnit,
                 buildSystem,
