@@ -18,39 +18,48 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
     private val userInterfacePort = project.service<UserInterfacePort>()
 
     override fun execute(command: RunMutationCoverageFromProjectViewCommand) {
-        val (codeElements, errors) = codeElementPort.getCodeElements(command.nodes)
+        val (codeElements, errors) = codeElementPort.findCodeElements(command.nodes)
 
         val (testCodeElements, productionCodeElements) = codeElements.partition { codeItem ->
             codeItem.sourceFolder.codeType == CodeType.TEST
         }
 
-        val optimizedNormalCodeItems = codeElementPort.removeNestedElements(productionCodeElements)
-        val optimizedTestCodeItems = codeElementPort.removeNestedElements(testCodeElements)
+        val optimizedNormalCodeItems = CodeElement.removeNestedElements(productionCodeElements)
+        val optimizedTestCodeItems = CodeElement.removeNestedElements(testCodeElements)
 
         val allErrors = errors.toMutableList()
 
-        val (foundTestCodeItems, normalErrors) = discoverCorrespondingElements(
+        val (foundTestCodeItems, normalErrors) = discoverCodeInOppositeSourceFolders(
             optimizedNormalCodeItems,
             CodeType.TEST
         )
         allErrors.addAll(normalErrors)
 
-        val (findedNormalCodeItems, testErrors) = discoverCorrespondingElements(
+        val (foundNormalCodeItems, testErrors) = discoverCodeInOppositeSourceFolders(
             optimizedTestCodeItems,
             CodeType.PRODUCTION
         )
         allErrors.addAll(testErrors)
 
         // Combine, deduplicate, then remove nested elements again
-        val allNormalCodeItems = codeElementPort.removeNestedElements(
-            (optimizedNormalCodeItems + findedNormalCodeItems).distinctBy { it.qualifiedName }
+        val allNormalCodeItems = CodeElement.removeNestedElements(
+            (optimizedNormalCodeItems + foundNormalCodeItems).distinctBy { it.qualifiedName }
         )
-        val allTestCodeItems = codeElementPort.removeNestedElements(
+        val allTestCodeItems = CodeElement.removeNestedElements(
             (optimizedTestCodeItems + foundTestCodeItems).distinctBy { it.qualifiedName }
         )
 
-        val targetClasses = formatCodeItems(allNormalCodeItems)
-        val targetTests = formatCodeItems(allTestCodeItems)
+        showMutationCoverageDialog(allNormalCodeItems, allTestCodeItems, codeElements, allErrors)
+    }
+
+    private fun showMutationCoverageDialog(
+        allNormalCodeItems: List<CodeElement>,
+        allTestCodeItems: List<CodeElement>,
+        codeElements: List<CodeElement>,
+        allErrors: List<String>
+    ) {
+        val targetClasses = CodeElement.formatList(allNormalCodeItems)
+        val targetTests = CodeElement.formatList(allTestCodeItems)
 
         val workingUnit = determineWorkingUnit(codeElements)
         if (workingUnit != null) {
@@ -61,6 +70,8 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
             val mutationCoverageOptions = MutationCoverageOptions(
                 targetClasses,
                 targetTests,
+                "",
+                "",
                 allErrors,
                 workingUnit,
                 buildSystem,
@@ -71,7 +82,7 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
         }
     }
 
-    private fun discoverCorrespondingElements(
+    private fun discoverCodeInOppositeSourceFolders(
         codeItems: List<CodeElement>,
         targetCodeType: CodeType
     ): Pair<List<CodeElement>, List<String>> {
@@ -80,14 +91,13 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
 
         codeItems.forEach { element ->
             val oppositeSourceFolder = findSourceFolder(element.sourceFolder, targetCodeType)
-
             if (oppositeSourceFolder == null) {
-                // No opposite source folder exists in this BuildUnit (might be legitimate)
+                val codeTypeLabel = if (targetCodeType == CodeType.TEST) "test" else "main"
+                errors.add("$codeTypeLabel source folder not found")
                 return@forEach
             }
 
-            val (correspondingElement, error) = findCorrespondingElement(element, oppositeSourceFolder)
-
+            val (correspondingElement, error) = findCodeElement(element, oppositeSourceFolder)
             if (correspondingElement != null) {
                 result.add(correspondingElement)
             } else if (error != null) {
@@ -108,27 +118,15 @@ class RunMutationCoverageFromProjectViewUseCase(val project: Project) : RunMutat
         }
     }
 
-    private fun findCorrespondingElement(
+    private fun findCodeElement(
         element: CodeElement,
-        oppositeSourceFolder: SourceFolder
+        sourceFolder: SourceFolder
     ): Pair<CodeElement?, String?> {
         return when (element) {
-            is CodePackage -> sourceFolderPort.findCorrespondingPackage(element, oppositeSourceFolder)
-            is CodeClass -> sourceFolderPort.findCorrespondingClass(element, oppositeSourceFolder)
+            is CodePackage -> sourceFolderPort.findPackage(element, sourceFolder)
+            is CodeClass -> sourceFolderPort.findClass(element, sourceFolder)
             else -> Pair(null, null)
         }
-    }
-
-    private fun formatCodeItems(codeItems: List<CodeElement>): String {
-        return codeItems
-            .map { codeItem ->
-                when (codeItem) {
-                    is CodePackage -> "${codeItem.qualifiedName}.*"
-                    else -> codeItem.qualifiedName
-                }
-            }
-            .sorted()
-            .joinToString(",")
     }
 
     private fun determineWorkingUnit(codeElements: List<CodeElement>): BuildUnit? {

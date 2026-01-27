@@ -6,6 +6,8 @@ data class CodePackage(
     override val path: Path,
     override val qualifiedName: String,
     override val sourceFolder: SourceFolder
-) : CodeElement(path, qualifiedName, sourceFolder)
+) : CodeElement(path, qualifiedName, sourceFolder) {
+    override fun toTargetString(): String = "$qualifiedName.*"
+}
 
 

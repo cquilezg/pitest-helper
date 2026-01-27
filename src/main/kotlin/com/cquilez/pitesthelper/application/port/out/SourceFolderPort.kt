@@ -6,12 +6,12 @@ import com.cquilez.pitesthelper.domain.CodePackage
 import com.cquilez.pitesthelper.domain.SourceFolder
 
 interface SourceFolderPort {
-    fun findCorrespondingPackage(
+    fun findPackage(
         pkg: CodePackage,
         oppositeSourceFolder: SourceFolder
     ): Pair<CodeElement?, String?>
 
-    fun findCorrespondingClass(
+    fun findClass(
         cls: CodeClass,
         oppositeSourceFolder: SourceFolder
     ): Pair<CodeElement?, String?>

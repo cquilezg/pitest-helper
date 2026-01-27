@@ -1,7 +1,6 @@
 package com.cquilez.pitesthelper.infrastructure.service.actionvisibility
 
 import com.cquilez.pitesthelper.application.port.out.BuildUnitPort
-import com.cquilez.pitesthelper.domain.BuildUnit
 import com.cquilez.pitesthelper.domain.SourceFolder
 import com.cquilez.pitesthelper.infrastructure.ui.NavigatablePort
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,20 +8,21 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.project.Project
 import java.nio.file.Path
 
 @Service
 class ActionFromProjectViewVisibilityService {
 
     fun isActionVisible(event: AnActionEvent): Boolean {
-        val project = event.project as Project
         val navigatables = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
-        val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
-        val buildUnitPort = project.service<BuildUnitPort>()
-        if (navigatables.isNullOrEmpty()) {
+        val project = event.project
+        if (navigatables.isNullOrEmpty() || project == null) {
             return false
         }
+
+        val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
+        val buildUnitPort = project.service<BuildUnitPort>()
+
         val paths = navigatableService.getAbsolutePaths(navigatables)
 
         if (paths.size != navigatables.size) {
@@ -36,7 +36,7 @@ class ActionFromProjectViewVisibilityService {
             return true
         }
 
-        val allSourceFolders = buildUnits.flatMap { collectAllSourceFolders(it) }
+        val allSourceFolders = buildUnits.flatMap { it.getAllSourceFolders() }
         return allPathsAreSourceFoldersOrAreInsideThem(allSourceFolders, paths)
                 || allPathsContainsSourceFoldersAndNoBuildUnits(paths, allSourceFolders, buildUnitDirs)
     }
@@ -71,8 +71,4 @@ class ActionFromProjectViewVisibilityService {
         buildUnitPort: BuildUnitPort,
         paths: List<Path>
     ) = paths.all(buildUnitPort::isPathBuildUnit)
-
-    private fun collectAllSourceFolders(buildUnit: BuildUnit): List<SourceFolder> {
-        return buildUnit.sourceFolders + buildUnit.buildUnits.flatMap { collectAllSourceFolders(it) }
-    }
 }
