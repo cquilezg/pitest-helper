@@ -1,5 +1,6 @@
 package com.cquilez.pitesthelper.infrastructure.ui.adapter
 
+import com.cquilez.pitesthelper.application.port.out.ProjectConfigPort
 import com.cquilez.pitesthelper.application.port.out.UserInterfacePort
 import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
@@ -15,6 +16,7 @@ class UserInterfaceAdapter(val project: Project) : UserInterfacePort {
 
     private val mavenCommandRunnerService = project.service<MavenCommandRunnerService>()
     private val gradleCommandRunnerService = project.service<GradleCommandRunnerService>()
+    private val projectConfigPort = project.service<ProjectConfigPort>()
 
     override fun showMutationCoverageDialog(options: MutationCoverageOptions) {
         val buildSystemPort = AbstractBuildSystemAdapter.forBuildSystem(options.buildSystem)
@@ -24,7 +26,8 @@ class UserInterfaceAdapter(val project: Project) : UserInterfacePort {
         showDialog({
             val dialog = MutationCoverageDialog(
                 options,
-                buildSystemPort
+                buildSystemPort,
+                projectConfigPort
             )
             dialog.show()
             if (dialog.isOK) {

@@ -44,6 +44,9 @@
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.ProjectConfigPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter"/>
     </extensions>
 
     <actions>

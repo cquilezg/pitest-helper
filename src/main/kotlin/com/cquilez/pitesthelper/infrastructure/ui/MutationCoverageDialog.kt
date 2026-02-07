@@ -1,8 +1,10 @@
 package com.cquilez.pitesthelper.infrastructure.ui
 
 import com.cquilez.pitesthelper.application.port.out.BuildSystemPort
+import com.cquilez.pitesthelper.application.port.out.ProjectConfigPort
 import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
+import com.cquilez.pitesthelper.domain.MutationCoverageProjectSettings
 import com.cquilez.pitesthelper.infrastructure.AppMessagesBundle
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
@@ -107,7 +109,8 @@ private const val GRADLE_POST_TASKS = "ui.dialog.mutationCoverage.postTasks"
 
 class MutationCoverageDialog(
     val mutationCoverageOptions: MutationCoverageOptions,
-    private val buildSystemPort: BuildSystemPort
+    private val buildSystemPort: BuildSystemPort,
+    private val projectConfigPort: ProjectConfigPort
 ) : DialogWrapper(true) {
     private val commandEditorTextField = createCommandEditorTextField()
 
@@ -121,11 +124,30 @@ class MutationCoverageDialog(
 
     init {
         title = AppMessagesBundle.message("ui.dialog.mutationCoverage.title")
+        loadDefaultSettings()
         init()
         centerDialog()
         pack()
         centerRelativeToParent()
         applyMinimumSize()
+    }
+
+    private fun loadDefaultSettings() {
+        val defaultSettings = projectConfigPort.getDefaultSettings()
+        mutationCoverageOptions.preActions = defaultSettings.preActions
+        mutationCoverageOptions.postActions = defaultSettings.postActions
+        showPreActions = defaultSettings.preActions.isNotBlank()
+        showPostActions = defaultSettings.postActions.isNotBlank()
+    }
+
+    override fun doOKAction() {
+        projectConfigPort.saveSettings(
+            MutationCoverageProjectSettings(
+                mutationCoverageOptions.preActions,
+                mutationCoverageOptions.postActions
+            )
+        )
+        super.doOKAction()
     }
 
     private fun applyMinimumSize() {
