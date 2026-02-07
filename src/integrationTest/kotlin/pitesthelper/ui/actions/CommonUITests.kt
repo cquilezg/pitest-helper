@@ -483,7 +483,14 @@ object CommonUITestsNew {
         // ========================================
         Arguments.of(
             "Main Class with multiple test candidates - selects test in same package",
-            arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassC"),
+            arrayOf(
+                "src",
+                "main",
+                language,
+                BASE_PACKAGE,
+                "package1",
+                if (language == "java") "ClassC" else "ClassC.kt"
+            ),
             "com.myproject.package1.ClassC",
             "com.myproject.package1.ClassCTest",
             "$buildCommand $targetClassesParam=com.myproject.package1.ClassC $targetTestsParam=com.myproject.package1.ClassCTest"

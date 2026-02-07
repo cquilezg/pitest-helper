@@ -46,8 +46,8 @@ class MutationCoverageDialogUI(data: ComponentData) : UiComponent(data) {
     val helpLink: UiComponent
         get() = x(xQuery {
             and(
-                byClass("BrowserLink"),
-                byText("How to set up PITest Helper in your project")
+                byClass("JBLabel"),
+                byVisibleText("How to set up PITest Helper in your project")
             )
         })
 
