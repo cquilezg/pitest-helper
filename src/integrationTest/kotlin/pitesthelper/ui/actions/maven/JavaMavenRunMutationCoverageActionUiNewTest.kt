@@ -24,7 +24,7 @@ class JavaMavenRunMutationCoverageActionUiNewTest {
 
     companion object {
         private const val PROJECT_NAME = "sample-maven"
-        private const val BUILD_COMMAND = "mvn test-compile pitest:mutationCoverage"
+        private const val BUILD_COMMAND = "mvn pitest:mutationCoverage"
         private const val LANGUAGE = "java"
 
         @JvmStatic

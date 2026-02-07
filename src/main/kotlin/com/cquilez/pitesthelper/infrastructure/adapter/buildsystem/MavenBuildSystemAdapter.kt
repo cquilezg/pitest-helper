@@ -11,7 +11,7 @@ class MavenBuildSystemAdapter : AbstractBuildSystemAdapter() {
         val postGoals = normalizeAndResolveGoals(mutationCoverageOptions.postActions.trim(), mutationCoverageOptions)
         val targetClasses = mutationCoverageOptions.targetClasses.trim()
         val targetTests = mutationCoverageOptions.targetTests.trim()
-        val pitestGoal = "test-compile pitest:mutationCoverage"
+        val pitestGoal = "pitest:mutationCoverage"
 
         val goals = buildList {
             if (preGoals.isNotEmpty()) add(preGoals)
@@ -29,10 +29,10 @@ class MavenBuildSystemAdapter : AbstractBuildSystemAdapter() {
 
     private fun normalizeAndResolveGoals(goals: String, options: MutationCoverageOptions): String {
         if (goals.isEmpty()) return ""
-        
+
         // Normalize whitespace: replace multiple spaces with single space
         val normalized = goals.replace(Regex("\\s+"), " ").trim()
-        
+
         // If it's a submodule, prefix each goal with :moduleName:
         val workingUnit = options.workingUnit
         if (options.buildUnits.isNotEmpty()) {
@@ -44,7 +44,7 @@ class MavenBuildSystemAdapter : AbstractBuildSystemAdapter() {
                 }
             }
         }
-        
+
         return normalized
     }
 }

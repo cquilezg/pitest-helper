@@ -25,7 +25,7 @@ class KotlinMavenRunMutationCoverageActionUiNewTest {
 
     companion object {
         private const val PROJECT_NAME = "kotlin-maven-single-module"
-        private const val BUILD_COMMAND = "mvn test-compile pitest:mutationCoverage"
+        private const val BUILD_COMMAND = "mvn pitest:mutationCoverage"
         private const val LANGUAGE = "kotlin"
 
         @JvmStatic

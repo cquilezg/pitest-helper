@@ -174,8 +174,23 @@ val javaModuleOpenArgs = listOf(
 
 tasks {
     test {
+        useJUnitPlatform()
+    }
+
+    register<Test>("integrationTest") {
+        // Mark as not compatible with configuration cache due to dynamic file operations
+        notCompatibleWithConfigurationCache("Uses dynamic file discovery for plugin and IDE paths")
+
         dependsOn("buildPlugin")
 
+        val integrationTestSourceSet = sourceSets.getByName("integrationTest")
+        testClassesDirs = integrationTestSourceSet.output.classesDirs
+        classpath = integrationTestSourceSet.runtimeClasspath
+
+        // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
+        systemProperty("junit.platform.launcher.interceptors.enabled", "false")
+        useJUnitPlatform()
+        dependsOn("buildPlugin")
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
@@ -186,29 +201,6 @@ tasks {
                 excludeTags = setOf(excludedtags.toString())
             }
         }
-        
-        // Set system property at execution time for configuration cache compatibility
-        doFirst {
-            // Find the plugin zip in the build directory
-            val distributionsDir = layout.buildDirectory.dir("distributions").get().asFile
-            val pluginZip = distributionsDir.listFiles()?.firstOrNull { it.name.endsWith(".zip") }
-                ?: error("Plugin zip not found in $distributionsDir")
-            systemProperty("path.to.build.plugin", pluginZip.absolutePath)
-        }
-    }
-
-    register<Test>("integrationTest") {
-        // Mark as not compatible with configuration cache due to dynamic file operations
-        notCompatibleWithConfigurationCache("Uses dynamic file discovery for plugin and IDE paths")
-        
-        val integrationTestSourceSet = sourceSets.getByName("integrationTest")
-        testClassesDirs = integrationTestSourceSet.output.classesDirs
-        classpath = integrationTestSourceSet.runtimeClasspath
-        
-        // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
-        systemProperty("junit.platform.launcher.interceptors.enabled", "false")
-        useJUnitPlatform()
-        dependsOn("buildPlugin")
         jvmArgs(javaModuleOpenArgs)
         
         // Set system properties at execution time
@@ -218,7 +210,7 @@ tasks {
             val pluginZip = distributionsDir.listFiles()?.firstOrNull { it.name.endsWith(".zip") }
                 ?: error("Plugin zip not found in $distributionsDir")
             systemProperty("path.to.build.plugin", pluginZip.absolutePath)
-            
+
             // Workaround for Starter framework PathManager warning (https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1997)
             // The Driver SDK runs in the Gradle test JVM and uses IntelliJ logging APIs that expect an IDE installation.
             // We dynamically find the downloaded IDE path at test execution time.

@@ -9,6 +9,7 @@ import com.intellij.psi.JavaDirectoryService
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiModifier
 import java.nio.file.Paths
 
 open class JavaPsiAdapter : PsiPort {
@@ -18,7 +19,8 @@ open class JavaPsiAdapter : PsiPort {
 
         return when (psiElement) {
             is PsiJavaFile -> {
-                psiElement.classes.firstOrNull()?.let { psiClass ->
+                (psiElement.classes.firstOrNull { it.hasModifierProperty(PsiModifier.PUBLIC) }
+                    ?: psiElement.classes.firstOrNull())?.let { psiClass ->
                     psiClass.qualifiedName?.let { qualifiedName ->
                         CodeClass(
                             path = nodePath,

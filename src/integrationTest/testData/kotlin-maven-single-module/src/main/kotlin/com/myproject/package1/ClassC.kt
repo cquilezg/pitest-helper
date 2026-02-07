@@ -1,5 +1,7 @@
 package com.myproject.package1
 
+private class MyPrivateClass()
+
 class ClassC {
     fun getNumber(string: String): Int {
         return when (string) {

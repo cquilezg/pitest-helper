@@ -10,6 +10,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiPackage
 import io.mockk.every
 import io.mockk.mockk
@@ -61,6 +62,7 @@ class JavaPsiAdapterTest {
             val psiClass = mockk<PsiClass> {
                 every { this@mockk.qualifiedName } returns qualifiedName
                 every { name } returns simpleName
+                every { hasModifierProperty(PsiModifier.PUBLIC) } returns true
             }
             val psiJavaFile = mockk<PsiJavaFile> {
                 every { this@mockk.virtualFile } returns virtualFile
@@ -89,6 +91,7 @@ class JavaPsiAdapterTest {
             val psiClass = mockk<PsiClass> {
                 every { qualifiedName } returns null
                 every { name } returns "MyClass"
+                every { hasModifierProperty(PsiModifier.PUBLIC) } returns true
             }
             val psiJavaFile = mockk<PsiJavaFile> {
                 every { this@mockk.virtualFile } returns virtualFile
@@ -100,6 +103,40 @@ class JavaPsiAdapterTest {
 
             // Assert
             assertNull(result)
+        }
+
+        @Test
+        fun `returns public class when PsiJavaFile has both public and private classes`() {
+            // Arrange: private class first, public class second - should return the public one
+            val filePath = "/project/src/main/java/com/example/Container.kt"
+            val publicQualifiedName = "com.example.MutationCoverageDialog"
+            val publicSimpleName = "MutationCoverageDialog"
+
+            val virtualFile = mockk<VirtualFile> {
+                every { path } returns filePath
+            }
+            val privateClass = mockk<PsiClass> {
+                every { qualifiedName } returns "com.example.EmptyIcon"
+                every { name } returns "EmptyIcon"
+                every { hasModifierProperty(PsiModifier.PUBLIC) } returns false
+            }
+            val publicClass = mockk<PsiClass> {
+                every { qualifiedName } returns publicQualifiedName
+                every { name } returns publicSimpleName
+                every { hasModifierProperty(PsiModifier.PUBLIC) } returns true
+            }
+            val psiJavaFile = mockk<PsiJavaFile> {
+                every { this@mockk.virtualFile } returns virtualFile
+                every { classes } returns arrayOf(privateClass, publicClass)
+            }
+
+            // Act
+            val result = javaPsiAdapter.getCodeElement(psiJavaFile, sourceFolder)
+
+            // Assert
+            assertIs<CodeClass>(result)
+            assertEquals(publicQualifiedName, result.qualifiedName)
+            assertEquals(publicSimpleName, result.simpleName)
         }
 
         @Test

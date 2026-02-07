@@ -1,5 +1,6 @@
 package com.cquilez.pitesthelper.ui.actions
 
+import com.cquilez.pitesthelper.ui.fixtures.mutationCoverageDialog
 import com.intellij.driver.model.TreePathToRow
 import com.intellij.driver.sdk.ui.components.UiComponent
 import com.intellij.driver.sdk.ui.components.common.IdeaFrameUI
@@ -7,7 +8,6 @@ import com.intellij.driver.sdk.ui.components.common.ideFrame
 import com.intellij.driver.sdk.ui.components.common.toolwindows.projectView
 import com.intellij.driver.sdk.ui.components.elements.JTreeUiComponent
 import com.intellij.driver.sdk.ui.components.elements.JTreeUiComponent.PathNotFoundException
-import com.intellij.driver.sdk.ui.components.elements.dialog
 import com.intellij.driver.sdk.ui.shouldBe
 import com.intellij.driver.sdk.ui.visible
 import com.intellij.driver.sdk.ui.xQuery
@@ -85,6 +85,8 @@ private fun List<String>.containsAllNodes(vararg treePath: String, fullMatch: Bo
 }
 
 
+private const val BASE_PACKAGE = "com.myproject"
+
 object CommonUITestsNew {
     const val INTELLIJ_VERSION = "2025.1"
     const val MENU_OPTION_TEXT = "Run Mutation Coverage..."
@@ -96,7 +98,7 @@ object CommonUITestsNew {
 
     private fun stripSoftWrapChars(text: String): String = text.replace(SOFT_WRAP_CHARS, "")
 
-    fun UiComponent.waitForEditorTextFieldWithText(
+    fun UiComponent.waitForTextFieldWithText(
         expectedText: String,
         description: String,
         timeout: kotlin.time.Duration
@@ -131,15 +133,8 @@ object CommonUITestsNew {
         run.driver.withContext {
             ideFrame {
                 val dialogs = xx(xQuery { byTitle("Mutation Coverage") })
-
                 if (dialogs.list().isNotEmpty()) {
-                    val dialog = dialogs.list()[0]
-                    if (dialog.isVisible() && dialog.isEnabled()) {
-                        val cancelButton = dialog.x(xQuery { byText("Cancel") })
-                        if (cancelButton.isVisible() && cancelButton.isEnabled()) {
-                            cancelButton.click()
-                        }
-                    }
+                    mutationCoverageDialog { cancelButton.click() }
                 }
             }
         }
@@ -242,42 +237,30 @@ object CommonUITestsNew {
         menuOption.shouldBe("'$MENU_OPTION_TEXT' menu option should be visible", visible, 1.seconds)
         menuOption.click()
 
-        dialog(title = "Mutation Coverage") {
-            shouldBe("Mutation Coverage dialog should be open", visible, 1.seconds)
-
-            x(xQuery {
-                and(
-                    byClass("JBTextField"),
-                    byAccessibleName("Target Classes:")
-                )
-            }).shouldBe("Target Classes field should be visible", visible, 1.seconds)
-                .waitForEditorTextFieldWithText(
+        mutationCoverageDialog {
+            targetClassesField
+                .shouldBe("Target Classes field should be visible", visible, 1.seconds)
+                .waitForTextFieldWithText(
                     expectedTargetClasses,
                     "Target Classes should have text: $expectedTargetClasses",
                     1.seconds
                 )
-
-            x(xQuery {
-                and(
-                    byClass("JBTextField"),
-                    byAccessibleName("Target Tests:")
-                )
-            }).shouldBe("Target Tests field should be visible", visible, 1.seconds)
-                .waitForEditorTextFieldWithText(
+            targetTestsField
+                .shouldBe("Target Tests field should be visible", visible, 1.seconds)
+                .waitForTextFieldWithText(
                     expectedTargetTests,
-                    "Target Tests should have text: $expectedCommand",
+                    "Target Tests should have text: $expectedTargetTests",
                     1.seconds
                 )
-
-            x(xQuery {
-                byClass("EditorTextField")
-            }).shouldBe("Command text area should be visible", visible, 1.seconds)
-                .waitForEditorTextFieldWithText(
+            commandTextArea
+                .shouldBe("Command text area should be visible", visible, 1.seconds)
+                .waitForTextFieldWithText(
                     expectedCommand,
                     "Command text area should have text: $expectedCommand",
                     1.seconds
                 )
-        }.closeDialog()
+            cancelButton.click()
+        }
     }
 
     // ========================================
@@ -315,28 +298,28 @@ object CommonUITestsNew {
         // ========================================
         Arguments.of(
             "Single Main Class with matching Test Class (lib module)",
-            arrayOf("lib", "src", "main", language, "com.myproject", "package1", "ClassA"),
+            arrayOf("lib", "src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
             "com.myproject.package1.ClassA",
             "com.myproject.package1.ClassATest",
             "gradle :lib:pitest -Ppitest.targetClasses=com.myproject.package1.ClassA -Ppitest.targetTests=com.myproject.package1.ClassATest"
         ),
         Arguments.of(
             "Single Main Package with matching Test Package (app module)",
-            arrayOf("app", "src", "main", language, "com.myproject", "package2"),
+            arrayOf("app", "src", "main", language, BASE_PACKAGE, "package2"),
             "com.myproject.package2.*",
             "com.myproject.package2.*",
             "gradle :app:pitest -Ppitest.targetClasses=com.myproject.package2.* -Ppitest.targetTests=com.myproject.package2.*"
         ),
         Arguments.of(
             "Single Test Class with matching Main Class (app module)",
-            arrayOf("app", "src", "test", language, "com.myproject", "package2", "ClassBTest"),
+            arrayOf("app", "src", "test", language, BASE_PACKAGE, "package2", "ClassBTest"),
             "com.myproject.package2.ClassB",
             "com.myproject.package2.ClassBTest",
             "gradle :app:pitest -Ppitest.targetClasses=com.myproject.package2.ClassB -Ppitest.targetTests=com.myproject.package2.ClassBTest"
         ),
         Arguments.of(
             "Single Test Package with matching Main Package (lib module)",
-            arrayOf("lib", "src", "test", language, "com.myproject", "package1"),
+            arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package1"),
             "com.myproject.package1.*",
             "com.myproject.package1.*",
             "gradle :lib:pitest -Ppitest.targetClasses=com.myproject.package1.* -Ppitest.targetTests=com.myproject.package1.*"
@@ -347,14 +330,14 @@ object CommonUITestsNew {
         // ========================================
         Arguments.of(
             "Main Class with multiple test candidates - selects test in same package (lib module)",
-            arrayOf("lib", "src", "main", language, "com.myproject", "package1", "ClassC"),
+            arrayOf("lib", "src", "main", language, BASE_PACKAGE, "package1", "ClassC"),
             "com.myproject.package1.ClassC",
             "com.myproject.package1.ClassCTest",
             "gradle :lib:pitest -Ppitest.targetClasses=com.myproject.package1.ClassC -Ppitest.targetTests=com.myproject.package1.ClassCTest"
         ),
         Arguments.of(
             "Main Class with test in superior package (app module)",
-            arrayOf("app", "src", "main", language, "com.myproject", "package3.impl", "ClassC"),
+            arrayOf("app", "src", "main", language, BASE_PACKAGE, "package3.impl", "ClassC"),
             "com.myproject.package3.impl.ClassC",
             "com.myproject.package3.ClassCTest",
             "gradle :app:pitest -Ppitest.targetClasses=com.myproject.package3.impl.ClassC -Ppitest.targetTests=com.myproject.package3.ClassCTest"
@@ -369,8 +352,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Main Classes with matching Test Classes (app module)",
             listOf(
-                arrayOf("app", "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("app", "src", "main", language, "com.myproject", "package1", "ClassD")
+                arrayOf("app", "src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("app", "src", "main", language, BASE_PACKAGE, "package1", "ClassD")
             ),
             "com.myproject.package1.ClassA,com.myproject.package1.ClassD",
             "com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest",
@@ -379,8 +362,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Test Classes with matching Main Classes (lib module)",
             listOf(
-                arrayOf("lib", "src", "test", language, "com.myproject", "package1", "ClassATest"),
-                arrayOf("lib", "src", "test", language, "com.myproject", "package2", "ClassBTest")
+                arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package1", "ClassATest"),
+                arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package2", "ClassBTest")
             ),
             "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
             "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
@@ -389,8 +372,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Main Packages with matching Test Packages (app module)",
             listOf(
-                arrayOf("app", "src", "main", language, "com.myproject", "package1"),
-                arrayOf("app", "src", "main", language, "com.myproject", "package2")
+                arrayOf("app", "src", "main", language, BASE_PACKAGE, "package1"),
+                arrayOf("app", "src", "main", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package1.*,com.myproject.package2.*",
             "com.myproject.package1.*,com.myproject.package2.*",
@@ -399,8 +382,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Test Packages with matching Main Packages (app module)",
             listOf(
-                arrayOf("app", "src", "test", language, "com.myproject", "package1"),
-                arrayOf("app", "src", "test", language, "com.myproject", "package2")
+                arrayOf("app", "src", "test", language, BASE_PACKAGE, "package1"),
+                arrayOf("app", "src", "test", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package1.*,com.myproject.package2.*",
             "com.myproject.package1.*,com.myproject.package2.*",
@@ -409,8 +392,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and its package - only package selected (lib module)",
             listOf(
-                arrayOf("lib", "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("lib", "src", "main", language, "com.myproject", "package1")
+                arrayOf("lib", "src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("lib", "src", "main", language, BASE_PACKAGE, "package1")
             ),
             "com.myproject.package1.*",
             "com.myproject.package1.*",
@@ -419,8 +402,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Test Class and parent package - only package selected (lib module)",
             listOf(
-                arrayOf("lib", "src", "test", language, "com.myproject", "package2", "ClassBTest"),
-                arrayOf("lib", "src", "test", language, "com.myproject", "package2")
+                arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package2", "ClassBTest"),
+                arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package2.*",
             "com.myproject.package2.*",
@@ -433,8 +416,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and its Test Class - both selected (app module)",
             listOf(
-                arrayOf("app", "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("app", "src", "test", language, "com.myproject", "package1", "ClassATest")
+                arrayOf("app", "src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("app", "src", "test", language, BASE_PACKAGE, "package1", "ClassATest")
             ),
             "com.myproject.package1.ClassA",
             "com.myproject.package1.ClassATest",
@@ -443,8 +426,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and different Test Class - all classes selected (lib module)",
             listOf(
-                arrayOf("lib", "src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("lib", "src", "test", language, "com.myproject", "package2", "ClassBTest")
+                arrayOf("lib", "src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("lib", "src", "test", language, BASE_PACKAGE, "package2", "ClassBTest")
             ),
             "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
             "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
@@ -468,28 +451,28 @@ object CommonUITestsNew {
         // ========================================
         Arguments.of(
             "Single Main Class with matching Test Class",
-            arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
+            arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
             "com.myproject.package1.ClassA",
             "com.myproject.package1.ClassATest",
             "$buildCommand $targetClassesParam=com.myproject.package1.ClassA $targetTestsParam=com.myproject.package1.ClassATest"
         ),
         Arguments.of(
             "Single Main Package with matching Test Package",
-            arrayOf("src", "main", language, "com.myproject", "package2"),
+            arrayOf("src", "main", language, BASE_PACKAGE, "package2"),
             "com.myproject.package2.*",
             "com.myproject.package2.*",
             "$buildCommand $targetClassesParam=com.myproject.package2.* $targetTestsParam=com.myproject.package2.*"
         ),
         Arguments.of(
             "Single Test Class with matching Main Class",
-            arrayOf("src", "test", language, "com.myproject", "package2", "ClassBTest"),
+            arrayOf("src", "test", language, BASE_PACKAGE, "package2", "ClassBTest"),
             "com.myproject.package2.ClassB",
             "com.myproject.package2.ClassBTest",
             "$buildCommand $targetClassesParam=com.myproject.package2.ClassB $targetTestsParam=com.myproject.package2.ClassBTest"
         ),
         Arguments.of(
             "Single Test Package with matching Main Package",
-            arrayOf("src", "test", language, "com.myproject", "package1"),
+            arrayOf("src", "test", language, BASE_PACKAGE, "package1"),
             "com.myproject.package1.*",
             "com.myproject.package1.*",
             "$buildCommand $targetClassesParam=com.myproject.package1.* $targetTestsParam=com.myproject.package1.*"
@@ -500,14 +483,14 @@ object CommonUITestsNew {
         // ========================================
         Arguments.of(
             "Main Class with multiple test candidates - selects test in same package",
-            arrayOf("src", "main", language, "com.myproject", "package1", "ClassC"),
+            arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassC"),
             "com.myproject.package1.ClassC",
             "com.myproject.package1.ClassCTest",
             "$buildCommand $targetClassesParam=com.myproject.package1.ClassC $targetTestsParam=com.myproject.package1.ClassCTest"
         ),
         Arguments.of(
             "Main Class with test in superior package",
-            arrayOf("src", "main", language, "com.myproject", "package3.impl", "ClassC"),
+            arrayOf("src", "main", language, BASE_PACKAGE, "package3.impl", "ClassC"),
             "com.myproject.package3.impl.ClassC",
             "com.myproject.package3.ClassCTest",
             "$buildCommand $targetClassesParam=com.myproject.package3.impl.ClassC $targetTestsParam=com.myproject.package3.ClassCTest"
@@ -527,8 +510,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Main Classes with matching Test Classes",
             listOf(
-                arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("src", "main", language, "com.myproject", "package1", "ClassD")
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassD")
             ),
             "com.myproject.package1.ClassA,com.myproject.package1.ClassD",
             "com.myproject.package1.ClassATest,com.myproject.package1.ClassDTest",
@@ -537,8 +520,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Test Classes with matching Main Classes",
             listOf(
-                arrayOf("src", "test", language, "com.myproject", "package1", "ClassATest"),
-                arrayOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
+                arrayOf("src", "test", language, BASE_PACKAGE, "package1", "ClassATest"),
+                arrayOf("src", "test", language, BASE_PACKAGE, "package2", "ClassBTest")
             ),
             "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
             "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
@@ -547,8 +530,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Main Packages with matching Test Packages",
             listOf(
-                arrayOf("src", "main", language, "com.myproject", "package1"),
-                arrayOf("src", "main", language, "com.myproject", "package2")
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1"),
+                arrayOf("src", "main", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package1.*,com.myproject.package2.*",
             "com.myproject.package1.*,com.myproject.package2.*",
@@ -557,8 +540,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Two Test Packages with matching Main Packages",
             listOf(
-                arrayOf("src", "test", language, "com.myproject", "package1"),
-                arrayOf("src", "test", language, "com.myproject", "package2")
+                arrayOf("src", "test", language, BASE_PACKAGE, "package1"),
+                arrayOf("src", "test", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package1.*,com.myproject.package2.*",
             "com.myproject.package1.*,com.myproject.package2.*",
@@ -567,8 +550,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and its package - only package selected",
             listOf(
-                arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("src", "main", language, "com.myproject", "package1")
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1")
             ),
             "com.myproject.package1.*",
             "com.myproject.package1.*",
@@ -577,8 +560,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Test Class and parent package - only package selected",
             listOf(
-                arrayOf("src", "test", language, "com.myproject", "package2", "ClassBTest"),
-                arrayOf("src", "test", language, "com.myproject", "package2")
+                arrayOf("src", "test", language, BASE_PACKAGE, "package2", "ClassBTest"),
+                arrayOf("src", "test", language, BASE_PACKAGE, "package2")
             ),
             "com.myproject.package2.*",
             "com.myproject.package2.*",
@@ -591,8 +574,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and its Test Class - both selected",
             listOf(
-                arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("src", "test", language, "com.myproject", "package1", "ClassATest")
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("src", "test", language, BASE_PACKAGE, "package1", "ClassATest")
             ),
             "com.myproject.package1.ClassA",
             "com.myproject.package1.ClassATest",
@@ -601,8 +584,8 @@ object CommonUITestsNew {
         Arguments.of(
             "Main Class and different Test Class - all classes selected",
             listOf(
-                arrayOf("src", "main", language, "com.myproject", "package1", "ClassA"),
-                arrayOf("src", "test", language, "com.myproject", "package2", "ClassBTest")
+                arrayOf("src", "main", language, BASE_PACKAGE, "package1", "ClassA"),
+                arrayOf("src", "test", language, BASE_PACKAGE, "package2", "ClassBTest")
             ),
             "com.myproject.package1.ClassA,com.myproject.package2.ClassB",
             "com.myproject.package1.ClassATest,com.myproject.package2.ClassBTest",
