@@ -4,15 +4,26 @@
 
 ## [Unreleased]
 
+### Added
+
+- Pre/post actions for Maven and Gradle
+
+### Changed
+
+- Migrated robot tests to Starter integration tests
+- Updated plugin compatibility to 2024.1+
+
 ## [2026.1.0] - 2026-01-18
 
 ### Added
 
+- Pre/post actions for Maven and Gradle
 - Copy command icon in mutation coverage dialog
 - Support jvm.config files for Maven projects
 
 ### Changed
 
+- Migrated robot tests to Starter integration tests
 - Updated plugin icon
 - Replaced dialog errors with errors section in mutation coverage dialog
 - Refactored project codebase to hexagonal architecture
