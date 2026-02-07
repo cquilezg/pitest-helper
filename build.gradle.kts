@@ -137,9 +137,7 @@ intellijPlatform {
     pluginVerification {
         ides {
             create("IC", "2025.2.6")
-            create("IC", "2024.3.7")
-            create("IC", "2023.3.8")
-            create("IC", "2022.3.3")
+            create("IC", "2024.1")
         }
     }
 }
