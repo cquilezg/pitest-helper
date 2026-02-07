@@ -8,6 +8,6 @@ import org.jetbrains.plugins.gradle.action.GradleExecuteTaskAction
 class GradleCommandRunnerAdapter(private val project: Project) {
 
     fun runGradleCommand(command: String) {
-        GradleExecuteTaskAction.runGradle(project, null, project.basePath!!, command)
+        project.basePath?.let { GradleExecuteTaskAction.runGradle(project, null, it, command) }
     }
 }

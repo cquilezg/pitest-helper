@@ -5,6 +5,7 @@ import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
 import com.cquilez.pitesthelper.infrastructure.AppMessagesBundle
 import com.intellij.icons.AllIcons
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
@@ -24,27 +25,14 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.StartupUiUtil.isDarkTheme
 import com.intellij.util.ui.UIUtil
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.RenderingHints
-import java.awt.Toolkit
+import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.geom.RoundRectangle2D
-import javax.swing.Action
-import javax.swing.BoxLayout
-import javax.swing.Icon
-import javax.swing.JComponent
-import javax.swing.JPanel
-import javax.swing.JSeparator
-import javax.swing.SwingConstants
-import javax.swing.SwingUtilities
-import javax.swing.UIManager
+import javax.swing.*
 import javax.swing.border.AbstractBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -61,8 +49,10 @@ private class EmptyIcon(private val width: Int, private val height: Int) : Icon 
 private class RoundedBorder(
     private val radius: Int = JBUI.scale(5),
     private val color: Color = UIManager.getColor("TextField.borderColor")
-        ?: (if (UIUtil.isUnderDarcula()) Color(100, 100, 100) else Color(150, 150, 150)),
-    private val thickness: Int = 1
+        ?: (if (isDarkTheme) Color(100, 100, 100) else Color(150, 150, 150)),
+    private val thickness: Int = 1,
+    private val horizontalPadding: Int = JBUI.scale(6),
+    private val verticalPadding: Int = JBUI.scale(6)
 ) : AbstractBorder() {
     override fun paintBorder(c: java.awt.Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
         val g2 = g as Graphics2D
@@ -81,10 +71,27 @@ private class RoundedBorder(
         g2.draw(shape)
     }
 
-    override fun getBorderInsets(c: java.awt.Component): java.awt.Insets {
-        val padding = JBUI.scale(6)
-        return JBUI.insets(padding, padding, padding, padding)
+    override fun getBorderInsets(c: Component): Insets {
+        return JBUI.insets(verticalPadding, horizontalPadding, verticalPadding, horizontalPadding)
     }
+}
+
+private class ScrollablePanel(private val content: JComponent) : JPanel(BorderLayout()), Scrollable {
+    init {
+        isOpaque = false
+        add(content, BorderLayout.CENTER)
+    }
+
+    override fun getMinimumSize(): Dimension = content.minimumSize
+    override fun getPreferredSize(): Dimension = content.preferredSize
+    override fun getPreferredScrollableViewportSize(): Dimension = content.preferredSize
+    override fun getScrollableTracksViewportWidth(): Boolean = true
+    override fun getScrollableTracksViewportHeight(): Boolean = false
+    override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int =
+        JBUI.scale(10)
+
+    override fun getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int =
+        visibleRect.height
 }
 
 private data class ModifyOption(
@@ -93,17 +100,24 @@ private data class ModifyOption(
     val onToggle: (Boolean) -> Unit
 )
 
+private const val MAVEN_PRE_GOALS = "ui.dialog.mutationCoverage.preGoals"
+private const val MAVEN_POST_GOALS = "ui.dialog.mutationCoverage.postGoals"
+private const val GRADLE_PRE_TASKS = "ui.dialog.mutationCoverage.preTasks"
+private const val GRADLE_POST_TASKS = "ui.dialog.mutationCoverage.postTasks"
+
 class MutationCoverageDialog(
     val mutationCoverageOptions: MutationCoverageOptions,
     private val buildSystemPort: BuildSystemPort
 ) : DialogWrapper(true) {
     private val commandEditorTextField = createCommandEditorTextField()
 
-    private var showPreGoals = mutationCoverageOptions.preActions.isNotBlank()
-    private var showPostGoals = mutationCoverageOptions.postActions.isNotBlank()
+    private var showPreActions = mutationCoverageOptions.preActions.isNotBlank()
+    private var showPostActions = mutationCoverageOptions.postActions.isNotBlank()
 
-    private var mainPanel: DialogPanel? = null
-    private var scrollPane: JBScrollPane? = null
+    private lateinit var mainPanel: DialogPanel
+    private lateinit var scrollPane: JBScrollPane
+    private lateinit var centerWrapperPanel: JPanel
+    private lateinit var headerPanel: JPanel
 
     init {
         title = AppMessagesBundle.message("ui.dialog.mutationCoverage.title")
@@ -115,9 +129,7 @@ class MutationCoverageDialog(
     }
 
     private fun applyMinimumSize() {
-        val minWidth = JBUI.scale(500)
-        val minHeight = JBUI.scale(400)
-        val minDimension = Dimension(minWidth, minHeight)
+        val minDimension = Dimension(JBUI.scale(450), JBUI.scale(350))
         window?.minimumSize = minDimension
         rootPane?.minimumSize = minDimension
     }
@@ -130,31 +142,47 @@ class MutationCoverageDialog(
     }
 
     override fun createCenterPanel(): JComponent {
-        mainPanel = createMainPanel()
-        scrollPane = JBScrollPane(mainPanel).apply {
+        headerPanel = createHeaderPanel()
+        mainPanel = createFormPanel()
+        scrollPane = JBScrollPane(ScrollablePanel(mainPanel)).apply {
             border = JBUI.Borders.empty()
             viewportBorder = JBUI.Borders.empty()
+            verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
         }
-        return scrollPane!!
+        centerWrapperPanel = JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(headerPanel, BorderLayout.NORTH)
+            add(scrollPane, BorderLayout.CENTER)
+        }
+        return centerWrapperPanel
     }
 
-    private fun createMainPanel(): DialogPanel {
+    private fun createHeaderPanel(): JPanel {
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(createBrowserLink(), BorderLayout.WEST)
+            add(
+                DropDownLink(AppMessagesBundle.message("ui.dialog.mutationCoverage.modifyOptions")) { createModifyOptionsPopup() },
+                BorderLayout.EAST
+            )
+            add(JSeparator(SwingConstants.HORIZONTAL).apply {
+                preferredSize = Dimension(0, JBUI.scale(2))
+                minimumSize = Dimension(0, JBUI.scale(2))
+                border = JBUI.Borders.emptyTop(JBUI.scale(8))
+            }, BorderLayout.SOUTH)
+        }
+    }
+
+    private fun createFormPanel(): DialogPanel {
         return panel {
             row {
-                browserLink(
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.setupLink"),
-                    "https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#set-up-your-project"
-                ).resizableColumn()
-                    .align(AlignX.LEFT)
-                cell(DropDownLink<String>(AppMessagesBundle.message("ui.dialog.mutationCoverage.modifyOptions")) { createModifyOptionsPopup() })
-                    .align(AlignX.RIGHT)
+                cell(JPanel().apply {
+                    preferredSize = Dimension(0, JBUI.scale(12))
+                    minimumSize = Dimension(0, JBUI.scale(12))
+                    isOpaque = false
+                }).align(AlignX.FILL)
             }
-
-            row {
-                cell(JSeparator(SwingConstants.HORIZONTAL))
-                    .align(AlignX.FILL)
-            }
-
             if (mutationCoverageOptions.errors.isNotEmpty()) {
                 row {
                     val errorBackground = JBColor(Color(255, 205, 210), Color(92, 43, 43))
@@ -163,7 +191,7 @@ class MutationCoverageDialog(
                             val g2 = g as Graphics2D
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
                             g2.color = errorBackground
-                            val radius = JBUI.scale(5)
+                            val radius = JBUI.scale(10)
                             g2.fillRoundRect(0, 0, width, height, radius, radius)
                             super.paintComponent(g)
                         }
@@ -177,9 +205,15 @@ class MutationCoverageDialog(
                                 foreground = JBColor(Color(183, 28, 28), Color(255, 138, 128))
                             })
                             mutationCoverageOptions.errors.forEach { error ->
-                                add(JBLabel(AppMessagesBundle.message("ui.dialog.mutationCoverage.errors.item", error)).apply {
-                                    foreground = JBColor(Color(183, 28, 28), Color(255, 138, 128))
-                                })
+                                add(
+                                    JBLabel(
+                                        AppMessagesBundle.message(
+                                            "ui.dialog.mutationCoverage.errors.item",
+                                            error
+                                        )
+                                    ).apply {
+                                        foreground = JBColor(Color(183, 28, 28), Color(255, 138, 128))
+                                    })
                             }
                         }
                         add(errorsPanel, BorderLayout.CENTER)
@@ -187,9 +221,9 @@ class MutationCoverageDialog(
                 }
             }
 
-            if (showPreGoals) {
+            if (showPreActions) {
                 val preLabel = if (buildSystemPort.getBuildSystem() == BuildSystem.MAVEN)
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.preGoals")
+                    AppMessagesBundle.message(MAVEN_PRE_GOALS)
                 else
                     AppMessagesBundle.message("ui.dialog.mutationCoverage.preTasks")
                 row(preLabel) {
@@ -205,7 +239,7 @@ class MutationCoverageDialog(
                 }
             }
 
-            if (showPostGoals) {
+            if (showPostActions) {
                 val postLabel = if (buildSystemPort.getBuildSystem() == BuildSystem.MAVEN)
                     AppMessagesBundle.message("ui.dialog.mutationCoverage.postGoals")
                 else
@@ -247,7 +281,10 @@ class MutationCoverageDialog(
             }
             row(AppMessagesBundle.message("ui.dialog.mutationCoverage.runCommand")) {
                 val scaledIcon = IconUtil.scale(AllIcons.Actions.Copy, null, 1.3f)
-                val copyButton = InplaceButton(AppMessagesBundle.message("ui.dialog.mutationCoverage.button.copyToClipboard"), scaledIcon) {
+                val copyButton = InplaceButton(
+                    AppMessagesBundle.message("ui.dialog.mutationCoverage.button.copyToClipboard"),
+                    scaledIcon
+                ) {
                     val selection = StringSelection(commandEditorTextField.text)
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(selection, selection)
                 }.apply {
@@ -260,12 +297,14 @@ class MutationCoverageDialog(
                             isOpaque = true
                             background = hoverBackground
                         }
+
                         override fun mouseExited(e: MouseEvent?) {
                             isOpaque = false
                         }
                     })
                 }
                 cell(JPanel(BorderLayout()).apply {
+                    minimumSize = Dimension(0, JBUI.scale(80))
                     isOpaque = false
                     val buttonPanel = JPanel(BorderLayout()).apply {
                         isOpaque = false
@@ -278,6 +317,7 @@ class MutationCoverageDialog(
                     // Set accessible name to raw command for UI testing (soft wrap adds visual chars)
                     commandEditorTextField.accessibleContext.accessibleName = command
                     commandEditorTextField.border = JBUI.Borders.empty()
+                    updateCommandTextAreaHeight(command)
 
                     // Wrapper panel with rounded border and padding
                     val textAreaWrapper = object : JPanel(BorderLayout()) {
@@ -291,7 +331,8 @@ class MutationCoverageDialog(
                         }
                     }.apply {
                         isOpaque = false
-                        border = RoundedBorder()
+                        border = RoundedBorder(horizontalPadding = JBUI.scale(10))
+                        minimumSize = Dimension(500, JBUI.scale(500))
                         add(commandEditorTextField, BorderLayout.CENTER)
                     }
 
@@ -299,7 +340,7 @@ class MutationCoverageDialog(
                 }).align(AlignX.FILL + AlignY.FILL)
             }.topGap(TopGap.SMALL).resizableRow()
         }.apply {
-            minimumSize = Dimension(600, 200)
+            minimumSize = Dimension(0, JBUI.scale(360))
         }
     }
 
@@ -322,6 +363,16 @@ class MutationCoverageDialog(
         val command = buildCommand()
         commandEditorTextField.text = command
         commandEditorTextField.accessibleContext.accessibleName = command
+        updateCommandTextAreaHeight(command)
+    }
+
+    private fun updateCommandTextAreaHeight(command: String) {
+        val lineCount = maxOf(1, command.count { it == '\n' } + 1)
+        val lineHeight = (commandEditorTextField.editor?.lineHeight ?: JBUI.scale(20)).coerceAtLeast(JBUI.scale(16))
+        val preferredHeight = (lineCount * lineHeight).coerceIn(JBUI.scale(80), JBUI.scale(400))
+        commandEditorTextField.preferredSize =
+            Dimension(commandEditorTextField.preferredSize.width.coerceAtLeast(JBUI.scale(20)), preferredHeight)
+        commandEditorTextField.revalidate()
     }
 
     private fun createCommandEditorTextField(): EditorTextField {
@@ -340,7 +391,8 @@ class MutationCoverageDialog(
                 }
             }
         }.apply {
-            preferredSize = Dimension(600, 100)
+            preferredSize = Dimension(600, JBUI.scale(100))
+            minimumSize = Dimension(JBUI.scale(200), JBUI.scale(80))
             border = JBUI.Borders.empty()
         }
     }
@@ -365,16 +417,36 @@ class MutationCoverageDialog(
     }
 
     private fun refreshDialog() {
-        mainPanel = createMainPanel()
-        scrollPane?.setViewportView(mainPanel)
-        scrollPane?.revalidate()
-        scrollPane?.repaint()
+        headerPanel = createHeaderPanel()
+        mainPanel = createFormPanel()
+        centerWrapperPanel.removeAll()
+        centerWrapperPanel.add(headerPanel, BorderLayout.NORTH)
+        centerWrapperPanel.add(scrollPane, BorderLayout.CENTER)
+        scrollPane.setViewportView(ScrollablePanel(mainPanel))
+        centerWrapperPanel.revalidate()
+        centerWrapperPanel.repaint()
         applyMinimumSize()
+    }
+
+    private fun createBrowserLink(): JComponent {
+        val linkText = AppMessagesBundle.message("ui.dialog.mutationCoverage.setupLink")
+        val url = "https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#set-up-your-project"
+        return JBLabel("<html><a href=''>$linkText</a></html>").apply {
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    BrowserUtil.browse(url)
+                }
+            })
+        }
     }
 
     private fun createModifyOptionsPopup(): JBPopup {
         val options = createModifyOptionsList()
-        val step = object : BaseListPopupStep<ModifyOption>(AppMessagesBundle.message("ui.dialog.mutationCoverage.modifyOptions"), options) {
+        val step = object : BaseListPopupStep<ModifyOption>(
+            AppMessagesBundle.message("ui.dialog.mutationCoverage.modifyOptions"),
+            options
+        ) {
             override fun isSelectable(value: ModifyOption?): Boolean = true
 
             override fun onChosen(selectedValue: ModifyOption?, finalChoice: Boolean): PopupStep<*>? {
@@ -406,15 +478,14 @@ class MutationCoverageDialog(
 
     private fun createModifyOptionsList(): List<ModifyOption> {
         val buildSystem = buildSystemPort.getBuildSystem()
+        val buildSystemPreActionsKey = if (buildSystem == BuildSystem.MAVEN) MAVEN_PRE_GOALS else GRADLE_PRE_TASKS
+        val buildSystemPostActionsKey = if (buildSystem == BuildSystem.MAVEN) MAVEN_POST_GOALS else GRADLE_POST_TASKS
         return listOf(
             ModifyOption(
-                if (buildSystem == BuildSystem.MAVEN)
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.preGoals").removeSuffix(":")
-                else
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.preTasks").removeSuffix(":"),
-                { showPreGoals },
+                AppMessagesBundle.message(buildSystemPreActionsKey).removeSuffix(":"),
+                { showPreActions },
                 { newState ->
-                    showPreGoals = newState
+                    showPreActions = newState
                     if (!newState) {
                         mutationCoverageOptions.preActions = ""
                         updateCommandTextArea()
@@ -422,13 +493,10 @@ class MutationCoverageDialog(
                 }
             ),
             ModifyOption(
-                if (buildSystem == BuildSystem.MAVEN)
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.postGoals").removeSuffix(":")
-                else
-                    AppMessagesBundle.message("ui.dialog.mutationCoverage.postTasks").removeSuffix(":"),
-                { showPostGoals },
+                AppMessagesBundle.message(buildSystemPostActionsKey).removeSuffix(":"),
+                { showPostActions },
                 { newState ->
-                    showPostGoals = newState
+                    showPostActions = newState
                     if (!newState) {
                         mutationCoverageOptions.postActions = ""
                         updateCommandTextArea()
