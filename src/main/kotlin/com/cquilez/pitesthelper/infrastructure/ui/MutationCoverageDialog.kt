@@ -19,6 +19,7 @@ import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.EditorTextField
+import com.intellij.ui.Gray
 import com.intellij.ui.InplaceButton
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.DropDownLink
@@ -27,7 +28,6 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.StartupUiUtil.isDarkTheme
 import com.intellij.util.ui.UIUtil
 import java.awt.*
 import java.awt.datatransfer.StringSelection
@@ -51,7 +51,7 @@ private class EmptyIcon(private val width: Int, private val height: Int) : Icon 
 private class RoundedBorder(
     private val radius: Int = JBUI.scale(5),
     private val color: Color = UIManager.getColor("TextField.borderColor")
-        ?: (if (isDarkTheme) Color(100, 100, 100) else Color(150, 150, 150)),
+        ?: JBColor(Gray._150, Gray._100),
     private val thickness: Int = 1,
     private val horizontalPadding: Int = JBUI.scale(6),
     private val verticalPadding: Int = JBUI.scale(6)
@@ -88,7 +88,10 @@ private class ScrollablePanel(private val content: JComponent) : JPanel(BorderLa
     override fun getPreferredSize(): Dimension = content.preferredSize
     override fun getPreferredScrollableViewportSize(): Dimension = content.preferredSize
     override fun getScrollableTracksViewportWidth(): Boolean = true
-    override fun getScrollableTracksViewportHeight(): Boolean = false
+    override fun getScrollableTracksViewportHeight(): Boolean {
+        val viewport = parent as? JViewport ?: return false
+        return preferredSize.height <= viewport.height
+    }
     override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int =
         JBUI.scale(10)
 
@@ -354,7 +357,7 @@ class MutationCoverageDialog(
                     }.apply {
                         isOpaque = false
                         border = RoundedBorder(horizontalPadding = JBUI.scale(10))
-                        minimumSize = Dimension(500, JBUI.scale(500))
+                        minimumSize = Dimension(0, JBUI.scale(80))
                         add(commandEditorTextField, BorderLayout.CENTER)
                     }
 
@@ -392,8 +395,9 @@ class MutationCoverageDialog(
         val lineCount = maxOf(1, command.count { it == '\n' } + 1)
         val lineHeight = (commandEditorTextField.editor?.lineHeight ?: JBUI.scale(20)).coerceAtLeast(JBUI.scale(16))
         val preferredHeight = (lineCount * lineHeight).coerceIn(JBUI.scale(80), JBUI.scale(400))
-        commandEditorTextField.preferredSize =
-            Dimension(commandEditorTextField.preferredSize.width.coerceAtLeast(JBUI.scale(20)), preferredHeight)
+        val currentWidth = (commandEditorTextField.parent?.width?.takeIf { it > 0 } ?: commandEditorTextField.preferredSize.width)
+            .coerceAtLeast(JBUI.scale(20))
+        commandEditorTextField.preferredSize = Dimension(currentWidth, preferredHeight)
         commandEditorTextField.revalidate()
     }
 
@@ -453,12 +457,24 @@ class MutationCoverageDialog(
     private fun createBrowserLink(): JComponent {
         val linkText = AppMessagesBundle.message("ui.dialog.mutationCoverage.setupLink")
         val url = "https://github.com/cquilezg/pitest-helper?tab=readme-ov-file#set-up-your-project"
-        return JBLabel("<html><a href=''>$linkText</a></html>").apply {
+        val linkLabel = JBLabel("<html><a href=''>$linkText</a></html>").apply {
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     BrowserUtil.browse(url)
                 }
+            })
+        }
+        return JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+            isOpaque = false
+            add(linkLabel)
+            add(JBLabel(AllIcons.Ide.External_link_arrow).apply {
+                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                addMouseListener(object : MouseAdapter() {
+                    override fun mouseClicked(e: MouseEvent) {
+                        BrowserUtil.browse(url)
+                    }
+                })
             })
         }
     }

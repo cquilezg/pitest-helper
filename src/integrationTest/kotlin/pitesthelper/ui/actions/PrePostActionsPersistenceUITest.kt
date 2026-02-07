@@ -20,14 +20,15 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(UiTestExtension::class)
-class PreActionsPersistenceUITest : AbstractRunMutationCoverageUITest(PROJECT_NAME) {
+class PrePostActionsPersistenceUITest : AbstractRunMutationCoverageUITest(PROJECT_NAME) {
 
-    @IDEInstance(testName = "preActionsPersistenceUiTest", projectPath = PROJECT_NAME)
+    @IDEInstance(testName = "prePostActionsPersistenceUiTest", projectPath = PROJECT_NAME)
     private lateinit var run: BackgroundRun
 
     companion object {
         private const val PROJECT_NAME = "sample-maven"
         private const val PRE_ACTIONS_TEXT = "clean compile"
+        private const val POST_ACTIONS_TEXT = "verify"
         private val CLASS_A_NODE = arrayOf("src", "main", "java", "com.myproject", "package1", "ClassA")
     }
 
@@ -35,7 +36,7 @@ class PreActionsPersistenceUITest : AbstractRunMutationCoverageUITest(PROJECT_NA
     fun afterEachHook() = CommonUITestsNew.closeMutationCoverageDialogIfOpen(run)
 
     @Test
-    fun preActionsTextIsPersistedAfterRunAndShownWhenReopeningDialog() {
+    fun preGoalsTextIsPersistedAfterRunAndShownWhenReopeningDialog() {
         run.driver.withContext {
             ideFrame {
                 rightClickPath(projectView(), *CLASS_A_NODE, fullMatch = false)
@@ -50,7 +51,7 @@ class PreActionsPersistenceUITest : AbstractRunMutationCoverageUITest(PROJECT_NA
 
                     preGoalsField.shouldBe("Pre Goals field should be visible", visible, 1.seconds)
                     preGoalsField.text = PRE_ACTIONS_TEXT
-                    commandTextArea.should("Command text area should not contain pre goals after clearing. Actual: ${commandTextArea.text}", 1.seconds) {
+                    commandTextArea.should("Command text area should contain pre goals. Actual: ${commandTextArea.text}", 1.seconds) {
                         text == "mvn $PRE_ACTIONS_TEXT pitest:mutationCoverage -DtargetClasses=com.myproject.package1.ClassA -DtargetTests=com.myproject.package1.ClassATest"
                     }
 
@@ -78,6 +79,59 @@ class PreActionsPersistenceUITest : AbstractRunMutationCoverageUITest(PROJECT_NA
                 mutationCoverageDialog {
                     preGoalsField.shouldBe(
                         "Pre Goals field should not be visible when reopening after clearing",
+                        notPresent,
+                        1.seconds
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun postGoalsTextIsPersistedAfterRunAndShownWhenReopeningDialog() {
+        run.driver.withContext {
+            ideFrame {
+                rightClickPath(projectView(), *CLASS_A_NODE, fullMatch = false)
+                clickRunMutationCoverageMenuOption()
+
+                mutationCoverageDialog {
+                    modifyOptions
+                        .shouldBe("Modify Options link should be visible", visible, 1.seconds)
+                        .click()
+
+                    keyboard { key(KeyEvent.VK_DOWN) }
+                    keyboard { key(KeyEvent.VK_ENTER) }
+
+                    postGoalsField.shouldBe("Post Goals field should be visible", visible, 1.seconds)
+                    postGoalsField.text = POST_ACTIONS_TEXT
+                    commandTextArea.should("Command text area should contain post goals. Actual: ${commandTextArea.text}", 1.seconds) {
+                        text == "mvn pitest:mutationCoverage $POST_ACTIONS_TEXT -DtargetClasses=com.myproject.package1.ClassA -DtargetTests=com.myproject.package1.ClassATest"
+                    }
+
+                    runButton.click()
+                }
+
+                rightClickPath(projectView(), *CLASS_A_NODE, fullMatch = false)
+                clickRunMutationCoverageMenuOption()
+
+                mutationCoverageDialog {
+                    assertEquals(postGoalsField.text, POST_ACTIONS_TEXT)
+                    postGoalsField.should("Post Goals were saved", 1.seconds) {
+                        text == POST_ACTIONS_TEXT
+                    }
+                    postGoalsField.text = ""
+                    commandTextArea.should("Command text area should not contain post goals after clearing. Actual: ${commandTextArea.text}", 1.seconds) {
+                        text == "mvn pitest:mutationCoverage -DtargetClasses=com.myproject.package1.ClassA -DtargetTests=com.myproject.package1.ClassATest"
+                    }
+                    runButton.click()
+                }
+
+                rightClickPath(projectView(), *CLASS_A_NODE, fullMatch = false)
+                clickRunMutationCoverageMenuOption()
+
+                mutationCoverageDialog {
+                    postGoalsField.shouldBe(
+                        "Post Goals field should not be visible when reopening after clearing",
                         notPresent,
                         1.seconds
                     )

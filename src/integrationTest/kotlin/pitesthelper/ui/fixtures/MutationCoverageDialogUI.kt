@@ -26,6 +26,14 @@ class MutationCoverageDialogUI(data: ComponentData) : UiComponent(data) {
             )
         })
 
+    val postGoalsField: JTextFieldUI
+        get() = textField(xQuery {
+            and(
+                byClass("JBTextField"),
+                byAccessibleName("Post Goals:")
+            )
+        })
+
     val commandTextArea: EditorTextFieldUI
         get() = editorTextField { byClass("EditorTextField") }
 
