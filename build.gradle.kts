@@ -189,8 +189,6 @@ tasks {
 
         // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
         systemProperty("junit.platform.launcher.interceptors.enabled", "false")
-        useJUnitPlatform()
-        dependsOn("buildPlugin")
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
