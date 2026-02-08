@@ -3,8 +3,7 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
-    alias(libs.plugins.kotlin) // Kotlin support
+    alias(libs.plugins.kotlin) // Kotlin support (includes Java plugin)
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
@@ -29,22 +28,47 @@ repositories {
     }
 }
 
+sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
+}
+
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+// Extend classpaths to include IntelliJ Platform dependencies
+configurations["integrationTestCompileClasspath"].extendsFrom(configurations["testCompileClasspath"])
+configurations["integrationTestRuntimeClasspath"].extendsFrom(configurations["testRuntimeClasspath"])
+
+// Extend from IntelliJ Platform test framework configuration (for ide-starter-squashed)
+afterEvaluate {
+    configurations.matching { it.name.startsWith("intellijPlatform") && it.name.contains("test", ignoreCase = true) }
+        .forEach { config ->
+            configurations["integrationTestCompileClasspath"].extendsFrom(config)
+            configurations["integrationTestRuntimeClasspath"].extendsFrom(config)
+        }
+}
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(platform(libs.junitBom))
+    testImplementation(libs.junitJupiterParams)
     testImplementation(libs.junitJupiterSuite)
     testImplementation(libs.hamcrest)
     testImplementation(libs.kotlinTest)
     testImplementation(libs.mockk)
-    testImplementation(libs.remoteRobot)
-    testImplementation(libs.remoteFixtures)
-    testImplementation(libs.loggingInterceptor)
-    testImplementation(libs.videoRecorderJunit5)
     testRuntimeOnly(libs.junitJupiterEngine)
+
+    // Additional dependencies for integration tests (inherits testImplementation via extendsFrom)
+    integrationTestImplementation(libs.kodeinDi)
+    integrationTestImplementation(libs.kotlinxCoroutines)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
         bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
@@ -54,7 +78,7 @@ dependencies {
 
         pluginVerifier()
         zipSigner()
-        testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Starter)
     }
 }
 
@@ -78,8 +102,6 @@ intellijPlatform {
         }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
-        // Major and minor versions are mandatory. Fix version can be omitted if it is 0. alpha.x and beta.x versions are allowed
-//        changelog.headerParserRegex = "^(\\d+)\\.(\\d+)(\\.(\\d+))?(-(SNAPSHOT|alpha\\.\\d+|beta\\.\\d+))?\$"
         // Get the latest available change notes from the changelog file
         changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
             with(changelog) {
@@ -115,9 +137,7 @@ intellijPlatform {
     pluginVerification {
         ides {
             create("IC", "2025.2.6")
-            create("IC", "2024.3.7")
-            create("IC", "2023.3.8")
-            create("IC", "2022.3.3")
+            create("IC", "2024.1")
         }
     }
 }
@@ -139,8 +159,34 @@ kover {
     }
 }
 
+// JVM arguments required for IntelliJ Platform test framework (Java 17+ module access)
+val javaModuleOpenArgs = listOf(
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.util=ALL-UNNAMED",
+    "--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
+    "--add-opens=java.desktop/java.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.font=ALL-UNNAMED"
+)
+
 tasks {
     test {
+        useJUnitPlatform()
+    }
+
+    register<Test>("integrationTest") {
+        // Mark as not compatible with configuration cache due to dynamic file operations
+        notCompatibleWithConfigurationCache("Uses dynamic file discovery for plugin and IDE paths")
+
+        dependsOn("buildPlugin")
+
+        val integrationTestSourceSet = sourceSets.getByName("integrationTest")
+        testClassesDirs = integrationTestSourceSet.output.classesDirs
+        classpath = integrationTestSourceSet.runtimeClasspath
+
+        // Disable IntelliJ's JUnit 5 test environment initializer (not needed for Starter-based tests)
+        systemProperty("junit.platform.launcher.interceptors.enabled", "false")
         useJUnitPlatform {
             val tags = project.findProperty("tags")
             if (tags != null) {
@@ -150,14 +196,31 @@ tasks {
             if (excludedtags != null) {
                 excludeTags = setOf(excludedtags.toString())
             }
-            val remoteRobotUrl = project.properties["remote-robot-url"]
-            if (remoteRobotUrl is String && remoteRobotUrl.isNotBlank()) {
-                systemProperty("remote-robot-url", remoteRobotUrl)
-                systemProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2")
-            }
-            val testPath = project.properties["test.path"]
-            if (testPath is String && testPath.isNotBlank()) {
-                systemProperty("test.path", testPath)
+        }
+        jvmArgs(javaModuleOpenArgs)
+        
+        // Set system properties at execution time
+        doFirst {
+            // Find the plugin zip in the build directory
+            val distributionsDir = layout.buildDirectory.dir("distributions").get().asFile
+            val pluginZip = distributionsDir.listFiles()?.firstOrNull { it.name.endsWith(".zip") }
+                ?: error("Plugin zip not found in $distributionsDir")
+            systemProperty("path.to.build.plugin", pluginZip.absolutePath)
+
+            // Workaround for Starter framework PathManager warning (https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1997)
+            // The Driver SDK runs in the Gradle test JVM and uses IntelliJ logging APIs that expect an IDE installation.
+            // We dynamically find the downloaded IDE path at test execution time.
+            val ideTestsCache = file("out/ide-tests/cache/builds")
+            if (ideTestsCache.exists()) {
+                val ideDir = ideTestsCache.listFiles()
+                    ?.filter { it.isDirectory && it.name.startsWith("IC-") }
+                    ?.maxByOrNull { it.lastModified() }
+                    ?.listFiles()
+                    ?.firstOrNull { it.isDirectory && it.name.startsWith("idea-IC-") }
+
+                if (ideDir != null) {
+                    systemProperty("idea.home.path", ideDir.absolutePath)
+                }
             }
         }
     }
@@ -168,30 +231,5 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
-    }
-}
-
-intellijPlatformTesting {
-    runIde {
-        register("runIdeForUiTests") {
-            task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        "-Didea.trust.all.projects=true",
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.mac.file.chooser.native=false"
-                    )
-                }
-                systemProperty("robot-server.host.public", "true")
-            }
-
-            plugins {
-                robotServerPlugin()
-            }
-        }
     }
 }

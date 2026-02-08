@@ -4,7 +4,6 @@ import com.cquilez.pitesthelper.domain.CodeElement
 import java.nio.file.Path
 
 interface CodeElementPort {
-    fun getCodeElements(nodes: List<Path>): Pair<List<CodeElement>, List<String>>
-    fun removeNestedElements(codeElements: List<CodeElement>): List<CodeElement>
+    fun findCodeElements(nodes: List<Path>): Pair<List<CodeElement>, List<String>>
 }
 

@@ -26,7 +26,7 @@ class CodeElementAdapter(project: Project) : CodeElementPort {
     private val buildUnitPort = project.service<BuildUnitPort>()
     private val sourceFolderService = project.service<SourceFolderService>()
 
-    override fun getCodeElements(nodes: List<Path>): Pair<List<CodeElement>, List<String>> {
+    override fun findCodeElements(nodes: List<Path>): Pair<List<CodeElement>, List<String>> {
         val result = mutableListOf<CodeElement>()
         val errorMessages = mutableListOf<String>()
 
@@ -83,27 +83,13 @@ class CodeElementAdapter(project: Project) : CodeElementPort {
             return
         }
 
-        val productionSourceFolder = buildUnit.sourceFolders
-            .firstOrNull { it.codeType == CodeType.PRODUCTION }
-            ?: findProductionSourceFolderInChildBuildUnits(buildUnit)
-
+        val productionSourceFolder = buildUnit.findProductionSourceFolder()
         if (productionSourceFolder == null) {
             errorMessages.add("Node $nodePath: No production source folder found")
             return
         }
 
         findBasePackage(productionSourceFolder, errorMessages, nodePath, result)
-    }
-
-    private fun findProductionSourceFolderInChildBuildUnits(buildUnit: BuildUnit): SourceFolder? {
-        for (childBuildUnit in buildUnit.buildUnits) {
-            val productionFolder = childBuildUnit.sourceFolders
-                .firstOrNull { it.codeType == CodeType.PRODUCTION }
-            if (productionFolder != null) {
-                return productionFolder
-            }
-        }
-        return null
     }
 
     private fun handleSourceFolderPath(
@@ -193,24 +179,5 @@ class CodeElementAdapter(project: Project) : CodeElementPort {
         }
         val relativePath = VfsUtil.getRelativePath(lastNode, rootFile)
         return relativePath?.replace("/", ".") ?: ""
-    }
-
-    override fun removeNestedElements(codeElements: List<CodeElement>): List<CodeElement> {
-        val packages = codeElements.filterIsInstance<CodePackage>()
-        val classes = codeElements.filterIsInstance<CodeClass>()
-
-        val optimizedPackages = packages.filter { pkg ->
-            packages.none { other ->
-                other != pkg && pkg.qualifiedName.startsWith("${other.qualifiedName}.")
-            }
-        }
-
-        val optimizedClasses = classes.filter { cls ->
-            optimizedPackages.none { pkg ->
-                cls.qualifiedName.startsWith("${pkg.qualifiedName}.")
-            }
-        }
-
-        return optimizedPackages + optimizedClasses
     }
 }

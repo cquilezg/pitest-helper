@@ -4,13 +4,12 @@ junitBom = "5.11.3"
 hamcrest = "3.0"
 kotlinTest = "2.0.21"
 mockk = "1.13.13"
-remoteRobot = "0.11.23"
-loggingInterceptor = "4.12.0"
-videoRecorderJunit5 = "2.0"
+kodein = "7.20.2"
+kotlinxCoroutines = "1.10.1"
 
 # plugins
 changelog = "2.4.0"
-intelliJPlatform = "2.10.5"
+intelliJPlatform = "2.11.0"
 kotlin = "2.3.0"
 kover = "0.9.1"
 qodana = "2024.1.9"
@@ -18,14 +17,13 @@ qodana = "2024.1.9"
 [libraries]
 junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junitBom" }
 junitJupiterEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine"}
+junitJupiterParams = { group = "org.junit.jupiter", name = "junit-jupiter-params"}
 junitJupiterSuite = { group = "org.junit.platform", name = "junit-platform-suite"}
 hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }
 kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
-remoteRobot = { group = "com.intellij.remoterobot", name = "remote-robot", version.ref = "remoteRobot" }
-remoteFixtures = { group = "com.intellij.remoterobot", name = "remote-fixtures", version.ref = "remoteRobot" }
-loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
-videoRecorderJunit5 = { group = "com.automation-remarks", name = "video-recorder-junit5", version.ref = "videoRecorderJunit5" }
+kodeinDi = { group = "org.kodein.di", name = "kodein-di-jvm", version.ref = "kodein" }
+kotlinxCoroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core-jvm", version.ref = "kotlinxCoroutines" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }

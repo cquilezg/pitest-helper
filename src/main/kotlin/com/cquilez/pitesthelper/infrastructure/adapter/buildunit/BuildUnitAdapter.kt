@@ -20,9 +20,8 @@ class BuildUnitAdapter(val project: Project) : BuildUnitPort {
         cacheService.sourceFolderCache.clear()
 
         val buildSystem = detectBuildSystem() ?: return emptyList()
-        val service = AbstractBuildUnitServiceAdapter.forBuildSystem(buildSystem) ?: return emptyList()
-
-        val buildUnits = service.scanBuildUnits(project)
+        val buildUnitExtensionPoint = AbstractBuildUnitExtensionPoint.forBuildSystem(buildSystem) ?: return emptyList()
+        val buildUnits = buildUnitExtensionPoint.scanBuildUnits(project)
 
         buildUnits.forEach { buildUnit ->
             cacheBuildUnitRecursively(buildUnit)
@@ -30,6 +29,8 @@ class BuildUnitAdapter(val project: Project) : BuildUnitPort {
 
         return buildUnits
     }
+
+    override fun getAllBuildUnits(): List<BuildUnit> = cacheService.buildUnitCache.values.toList()
 
     private fun cacheBuildUnitRecursively(buildUnit: BuildUnit) {
         cacheService.buildUnitCache[buildUnit.buildPath] = buildUnit
@@ -40,21 +41,6 @@ class BuildUnitAdapter(val project: Project) : BuildUnitPort {
             cacheBuildUnitRecursively(childBuildUnit)
         }
     }
-
-    private fun detectBuildSystem(): BuildSystem? {
-        val modules = ModuleManager.getInstance(project).modules
-        for (module in modules) {
-            val contentRoots = ModuleRootManager.getInstance(module).contentRoots
-            for (contentRoot in contentRoots) {
-                contentRoot.findChild("pom.xml")?.let { if (it.exists()) return BuildSystem.MAVEN }
-                contentRoot.findChild("build.gradle.kts")?.let { if (it.exists()) return BuildSystem.GRADLE }
-                contentRoot.findChild("build.gradle")?.let { if (it.exists()) return BuildSystem.GRADLE }
-            }
-        }
-        return null
-    }
-
-    override fun getAllBuildUnits(): List<BuildUnit> = cacheService.buildUnitCache.values.toList()
 
     override fun isPathBuildUnit(path: Path): Boolean {
         return cacheService.getBuildUnitByDirectory(path) != null
@@ -81,5 +67,18 @@ class BuildUnitAdapter(val project: Project) : BuildUnitPort {
                 buildUnitDir.startsWith(parentDir) && buildUnitDir != parentDir
             }
             .maxByOrNull { it.buildPath.parent.nameCount }
+    }
+
+    private fun detectBuildSystem(): BuildSystem? {
+        val modules = ModuleManager.getInstance(project).modules
+        for (module in modules) {
+            val contentRoots = ModuleRootManager.getInstance(module).contentRoots
+            for (contentRoot in contentRoots) {
+                contentRoot.findChild("pom.xml")?.let { if (it.exists()) return BuildSystem.MAVEN }
+                contentRoot.findChild("build.gradle.kts")?.let { if (it.exists()) return BuildSystem.GRADLE }
+                contentRoot.findChild("build.gradle")?.let { if (it.exists()) return BuildSystem.GRADLE }
+            }
+        }
+        return null
     }
 }

@@ -4,15 +4,21 @@
 
 ## [Unreleased]
 
+## [2026.2.0] - 2026-02-08
+
+- Add pre and post actions by @cquilezg in https://github.com/cquilezg/pitest-helper/pull/122
+
 ## [2026.1.0] - 2026-01-18
 
 ### Added
 
+- Pre/post actions for Maven and Gradle
 - Copy command icon in mutation coverage dialog
 - Support jvm.config files for Maven projects
 
 ### Changed
 
+- Migrated robot tests to Starter integration tests
 - Updated plugin icon
 - Replaced dialog errors with errors section in mutation coverage dialog
 - Refactored project codebase to hexagonal architecture
@@ -75,7 +81,8 @@
 - PITest mutation coverage goal from project tool window by selecting classes and/or packages
 - Java support
 
-[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2026.1.0...HEAD
+[Unreleased]: https://github.com/cquilezg/pitest-helper/compare/v2026.2.0...HEAD
+[2026.2.0]: https://github.com/cquilezg/pitest-helper/compare/v2026.1.0...v2026.2.0
 [2026.1.0]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.1...v2026.1.0
 [2025.1.1]: https://github.com/cquilezg/pitest-helper/compare/v2025.1.0...v2025.1.1
 [2025.1.0]: https://github.com/cquilezg/pitest-helper/compare/v2024.2.1...v2025.1.0

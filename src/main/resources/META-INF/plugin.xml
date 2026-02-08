@@ -44,6 +44,9 @@
         <projectService
                 serviceInterface="com.cquilez.pitesthelper.application.port.out.UserInterfacePort"
                 serviceImplementation="com.cquilez.pitesthelper.infrastructure.ui.adapter.UserInterfaceAdapter"/>
+        <projectService
+                serviceInterface="com.cquilez.pitesthelper.application.port.out.ProjectConfigPort"
+                serviceImplementation="com.cquilez.pitesthelper.infrastructure.persistence.ProjectConfigPersistenceAdapter"/>
     </extensions>
 
     <actions>
@@ -62,17 +65,15 @@
                 interface="com.cquilez.pitesthelper.application.port.out.BuildSystemPort"
                 dynamic="true"/>
         <extensionPoint
-                name="buildUnitServicePort"
-                interface="com.cquilez.pitesthelper.application.port.out.BuildUnitServicePort"
+                name="buildUnitExtensionPoint"
+                interface="com.cquilez.pitesthelper.infrastructure.extension.BuildUnitExtensionPoint"
                 dynamic="true"/>
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.cquilez.pitesthelper">
-        <buildSystemPort
-                implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.GradleBuildSystemAdapter"/>
-        <buildUnitServicePort
-                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.MavenBuildUnitService"/>
-        <buildUnitServicePort
-                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.GradleBuildUnitService"/>
+        <buildUnitExtensionPoint
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.MavenBuildUnitExtensionPoint"/>
+        <buildUnitExtensionPoint
+                implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.GradleBuildUnitExtensionPoint"/>
     </extensions>
 </idea-plugin>

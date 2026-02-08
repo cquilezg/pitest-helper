@@ -1,27 +1,25 @@
 package com.cquilez.pitesthelper.infrastructure.adapter.buildsystem
 
 import com.cquilez.pitesthelper.domain.BuildSystem
-import com.cquilez.pitesthelper.domain.MutationCoverageOptions
+import com.cquilez.pitesthelper.domain.BuildUnit
+import com.intellij.openapi.project.Project
+import org.jetbrains.plugins.gradle.action.GradleExecuteTaskAction
 
 class GradleBuildSystemAdapter : AbstractBuildSystemAdapter() {
+
     override fun getBuildSystem(): BuildSystem = BuildSystem.GRADLE
 
-    override fun buildCommand(mutationCoverageOptions: MutationCoverageOptions): String {
-        val pitestGoal = resolvePitestGoal(mutationCoverageOptions)
-        val pitestArgs = "-Ppitest.targetClasses=${mutationCoverageOptions.targetClasses} -Ppitest.targetTests=${mutationCoverageOptions.targetTests}"
-        return "gradle $pitestGoal $pitestArgs"
-    }
-
-    private fun resolvePitestGoal(options: MutationCoverageOptions): String {
-        val workingUnit = options.workingUnit
-
-        val firstBuildUnit = options.buildUnits[0]
-        if (workingUnit != firstBuildUnit && firstBuildUnit.buildUnits.size > 1) {
-            val moduleName = workingUnit.name
-            return ":${moduleName}:pitest"
-        }
-
-        return "pitest"
+    override fun executeCommand(
+        project: Project,
+        buildUnit: BuildUnit,
+        goalsOrTasks: List<String>,
+        properties: List<String>
+    ) {
+        val command = buildList {
+            addAll(goalsOrTasks)
+            addAll(properties)
+        }.joinToString(" ")
+        project.basePath?.let { GradleExecuteTaskAction.runGradle(project, null, it, command) }
     }
 }
 
