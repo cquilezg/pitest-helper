@@ -1,11 +1,12 @@
 package com.cquilez.pitesthelper.infrastructure.ui.adapter
 
+import com.cquilez.pitesthelper.application.port.out.ProjectConfigPort
 import com.cquilez.pitesthelper.application.port.out.UserInterfacePort
 import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
-import com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.AbstractBuildSystemAdapter
-import com.cquilez.pitesthelper.infrastructure.service.buildsystem.GradleCommandRunnerService
-import com.cquilez.pitesthelper.infrastructure.service.buildsystem.MavenCommandRunnerService
+import com.cquilez.pitesthelper.infrastructure.service.buildsystem.BuildSystemService
+import com.cquilez.pitesthelper.infrastructure.service.buildsystem.GradleBuildSystemService
+import com.cquilez.pitesthelper.infrastructure.service.buildsystem.MavenBuildSystemService
 import com.cquilez.pitesthelper.infrastructure.ui.MutationCoverageDialog
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -13,24 +14,27 @@ import com.intellij.openapi.project.Project
 
 class UserInterfaceAdapter(val project: Project) : UserInterfacePort {
 
-    private val mavenCommandRunnerService = project.service<MavenCommandRunnerService>()
-    private val gradleCommandRunnerService = project.service<GradleCommandRunnerService>()
+    private val mavenBuildSystemService = project.service<MavenBuildSystemService>()
+    private val gradleBuildSystemService = project.service<GradleBuildSystemService>()
+    private val projectConfigPort = project.service<ProjectConfigPort>()
 
     override fun showMutationCoverageDialog(options: MutationCoverageOptions) {
-        val buildSystemPort = AbstractBuildSystemAdapter.forBuildSystem(options.buildSystem)
-            ?: AbstractBuildSystemAdapter.forBuildSystem(BuildSystem.MAVEN)
-            ?: return
+        val commandBuilder: BuildSystemService = when (options.buildSystem) {
+            BuildSystem.GRADLE -> gradleBuildSystemService
+            else -> mavenBuildSystemService
+        }
 
         showDialog({
             val dialog = MutationCoverageDialog(
                 options,
-                buildSystemPort
+                commandBuilder,
+                projectConfigPort
             )
             dialog.show()
             if (dialog.isOK) {
                 when (options.buildSystem) {
-                    BuildSystem.GRADLE -> gradleCommandRunnerService.runMutationCoverage(options)
-                    else -> mavenCommandRunnerService.runMutationCoverage(options)
+                    BuildSystem.GRADLE -> gradleBuildSystemService.runMutationCoverage(options)
+                    else -> mavenBuildSystemService.runMutationCoverage(options)
                 }
             }
         }, orElseAction = {})

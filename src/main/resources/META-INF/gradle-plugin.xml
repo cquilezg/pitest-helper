@@ -1,3 +1,6 @@
 <idea-plugin>
-
+    <extensions defaultExtensionNs="com.cquilez.pitesthelper">
+        <buildSystemPort
+            implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.GradleBuildSystemAdapter"/>
+    </extensions>
 </idea-plugin>

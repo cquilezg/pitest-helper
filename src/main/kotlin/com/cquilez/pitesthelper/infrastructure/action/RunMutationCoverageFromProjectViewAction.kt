@@ -23,13 +23,15 @@ class RunMutationCoverageFromProjectViewAction : DumbAwareAction() {
 
     override fun actionPerformed(@NotNull event: AnActionEvent) {
         val project = event.project as Project
-        val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
         val navigatables = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY)
+            ?: return
+        if (navigatables.isEmpty()) return
 
+        val navigatableService = ApplicationManager.getApplication().service<NavigatablePort>()
         val useCase = project.service<RunMutationCoverageFromProjectViewPort>()
         useCase.execute(
             RunMutationCoverageFromProjectViewCommand(
-                navigatableService.getAbsolutePaths(navigatables!!)
+                navigatableService.getAbsolutePaths(navigatables)
             ),
         )
     }

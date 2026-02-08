@@ -20,16 +20,16 @@ class SourceFolderAdapter(private val project: Project) : SourceFolderPort {
     private val javaPsiFacade = JavaPsiFacade.getInstance(project)
     private val localFileSystem = LocalFileSystem.getInstance()
 
-    override fun findCorrespondingPackage(
+    override fun findPackage(
         pkg: CodePackage,
         oppositeSourceFolder: SourceFolder
     ): Pair<CodeElement?, String?> {
         val psiPackage = javaPsiFacade.findPackage(pkg.qualifiedName)
-            ?: return createPackageError(oppositeSourceFolder, pkg)
+            ?: return createPackageNotFoundError(oppositeSourceFolder, pkg)
 
         val packageDirectory = psiPackage.directories
             .firstOrNull { it.virtualFile.toNioPath().startsWith(oppositeSourceFolder.path) }
-            ?: return createPackageError(oppositeSourceFolder, pkg)
+            ?: return createPackageNotFoundError(oppositeSourceFolder, pkg)
 
         val correspondingPackage = CodePackage(
             path = packageDirectory.virtualFile.toNioPath(),
@@ -39,12 +39,7 @@ class SourceFolderAdapter(private val project: Project) : SourceFolderPort {
         return Pair(correspondingPackage, null)
     }
 
-    private fun createPackageError(oppositeSourceFolder: SourceFolder, pkg: CodePackage): Pair<CodeElement?, String> {
-        val codeTypeLabel = if (oppositeSourceFolder.codeType == CodeType.TEST) "test" else "production"
-        return Pair(null, "Package ${pkg.qualifiedName} not found in $codeTypeLabel source folder")
-    }
-
-    override fun findCorrespondingClass(
+    override fun findClass(
         cls: CodeClass,
         oppositeSourceFolder: SourceFolder
     ): Pair<CodeElement?, String?> {
@@ -109,6 +104,11 @@ class SourceFolderAdapter(private val project: Project) : SourceFolderPort {
         } else {
             createClassError(oppositeSourceFolder, targetQualifiedName)
         }
+    }
+
+    private fun createPackageNotFoundError(oppositeSourceFolder: SourceFolder, pkg: CodePackage): Pair<CodeElement?, String> {
+        val codeTypeLabel = if (oppositeSourceFolder.codeType == CodeType.TEST) "test" else "production"
+        return Pair(null, "Package ${pkg.qualifiedName} not found in $codeTypeLabel source folder")
     }
 
     private fun findClassInSamePackage(psiClasses: Array<PsiClass>, packageName: String): PsiClass? {
