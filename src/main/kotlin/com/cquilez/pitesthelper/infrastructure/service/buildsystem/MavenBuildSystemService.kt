@@ -33,19 +33,27 @@ class MavenBuildSystemService(private val project: Project) : BuildSystemService
     fun runMutationCoverage(options: MutationCoverageOptions) {
         val preGoals = normalizeAndResolveActions(options.preActions.trim(), options)
         val postGoals = normalizeAndResolveActions(options.postActions.trim(), options)
+        val preTokens = preGoals.split(" ").filter { it.isNotEmpty() }
+        val postTokens = postGoals.split(" ").filter { it.isNotEmpty() }
+        val preMavenProps = preTokens.filter { it.startsWith("-D") }
+        val preGoalsOnly = preTokens.filter { !it.startsWith("-D") }
+        val postMavenProps = postTokens.filter { it.startsWith("-D") }
+        val postGoalsOnly = postTokens.filter { !it.startsWith("-D") }
         val goals = buildList {
-            preGoals.split(" ").filter { it.isNotEmpty() }.forEach { add(it) }
+            addAll(preGoalsOnly)
             add("pitest:mutationCoverage")
-            postGoals.split(" ").filter { it.isNotEmpty() }.forEach { add(it) }
+            addAll(postGoalsOnly)
         }
         val targetClasses = options.targetClasses.trim()
         val targetTests = options.targetTests.trim()
-        val mavenPropertiesArg = listOfNotNull(
-            if (targetClasses.isNotEmpty()) "-DtargetClasses=$targetClasses" else null,
-            if (targetTests.isNotEmpty()) "-DtargetTests=$targetTests" else null
-        ).joinToString(" ")
+        val mavenProperties = buildList {
+            addAll(preMavenProps)
+            if (targetClasses.isNotEmpty()) add("-DtargetClasses=$targetClasses")
+            if (targetTests.isNotEmpty()) add("-DtargetTests=$targetTests")
+            addAll(postMavenProps)
+        }
         AbstractBuildSystemAdapter.forBuildSystem(BuildSystem.MAVEN)?.executeCommand(
-            project, options.workingUnit, goals, mavenPropertiesArg
+            project, options.workingUnit, goals, mavenProperties
         )
     }
 }

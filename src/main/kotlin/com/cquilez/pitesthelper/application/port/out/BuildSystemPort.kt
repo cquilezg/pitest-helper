@@ -6,5 +6,5 @@ import com.intellij.openapi.project.Project
 
 interface BuildSystemPort {
     fun getBuildSystem(): BuildSystem
-    fun executeCommand(project: Project, buildUnit: BuildUnit, goalsOrTasks: List<String>, propertiesArg: String)
+    fun executeCommand(project: Project, buildUnit: BuildUnit, goalsOrTasks: List<String>, properties: List<String>)
 }

@@ -24,7 +24,7 @@ class MavenBuildSystemAdapter : AbstractBuildSystemAdapter() {
         project: Project,
         buildUnit: BuildUnit,
         goalsOrTasks: List<String>,
-        propertiesArg: String
+        properties: List<String>
     ) {
         val workingDirectory = buildUnit.buildPath.parent
         val module = ModuleManager.getInstance(project).modules.find { module ->
@@ -45,17 +45,18 @@ class MavenBuildSystemAdapter : AbstractBuildSystemAdapter() {
             )
             val mavenRunner = MavenRunner(project)
             val mavenRunnerSettings = MavenRunnerSettings()
-            mavenRunnerSettings.mavenProperties = parseMavenProperties(propertiesArg)
+            mavenRunnerSettings.mavenProperties = parseMavenProperties(properties)
             mavenRunnerSettings.setVmOptions(getCombinedJvmConfig(project, pomFile).trim())
             mavenRunner.run(parameters, mavenRunnerSettings) { }
         }
     }
 
-    private fun parseMavenProperties(mavenPropertiesArg: String): Map<String, String> {
-        if (mavenPropertiesArg.isBlank()) return emptyMap()
-        return mavenPropertiesArg.split(" ")
+    private fun parseMavenProperties(mavenProperties: List<String>): Map<String, String> {
+        if (mavenProperties.isEmpty()) return emptyMap()
+        return mavenProperties
             .map { it.trim() }
-            .filter { it.startsWith("-D") }.associate { token ->
+            .filter { it.startsWith("-D") }
+            .associate { token ->
                 val keyValue = token.removePrefix("-D")
                 val eq = keyValue.indexOf('=')
                 if (eq < 0) keyValue to "" else keyValue.substring(0, eq) to keyValue.substring(eq + 1)

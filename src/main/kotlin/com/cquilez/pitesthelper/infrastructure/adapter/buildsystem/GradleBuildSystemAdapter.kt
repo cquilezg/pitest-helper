@@ -13,11 +13,11 @@ class GradleBuildSystemAdapter : AbstractBuildSystemAdapter() {
         project: Project,
         buildUnit: BuildUnit,
         goalsOrTasks: List<String>,
-        propertiesArg: String
+        properties: List<String>
     ) {
         val command = buildList {
             addAll(goalsOrTasks)
-            if (propertiesArg.isNotBlank()) add(propertiesArg)
+            addAll(properties)
         }.joinToString(" ")
         project.basePath?.let { GradleExecuteTaskAction.runGradle(project, null, it, command) }
     }

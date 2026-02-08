@@ -41,13 +41,13 @@ class GradleBuildSystemService(private val project: Project) : BuildSystemServic
         }
         val targetClasses = options.targetClasses.trim()
         val targetTests = options.targetTests.trim()
-        val propertiesArg = listOfNotNull(
+        val mavenProperties = listOfNotNull(
             if (targetClasses.isNotEmpty()) "-Ppitest.targetClasses=$targetClasses" else null,
             if (targetTests.isNotEmpty()) "-Ppitest.targetTests=$targetTests" else null
-        ).joinToString(" ")
+        )
 
         AbstractBuildSystemAdapter.forBuildSystem(BuildSystem.GRADLE)?.executeCommand(
-            project, options.workingUnit, tasks, propertiesArg
+            project, options.workingUnit, tasks, mavenProperties
         )
     }
 
