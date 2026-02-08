@@ -1,7 +1,7 @@
 package com.cquilez.pitesthelper.infrastructure.ui
 
-import com.cquilez.pitesthelper.application.port.out.BuildSystemPort
 import com.cquilez.pitesthelper.application.port.out.ProjectConfigPort
+import com.cquilez.pitesthelper.infrastructure.service.buildsystem.BuildSystemService
 import com.cquilez.pitesthelper.domain.BuildSystem
 import com.cquilez.pitesthelper.domain.MutationCoverageOptions
 import com.cquilez.pitesthelper.domain.MutationCoverageProjectSettings
@@ -40,7 +40,7 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
 private class EmptyIcon(private val width: Int, private val height: Int) : Icon {
-    override fun paintIcon(c: java.awt.Component?, g: Graphics?, x: Int, y: Int) {
+    override fun paintIcon(c: Component?, g: Graphics?, x: Int, y: Int) {
         // Empty - draws nothing
     }
 
@@ -56,12 +56,12 @@ private class RoundedBorder(
     private val horizontalPadding: Int = JBUI.scale(6),
     private val verticalPadding: Int = JBUI.scale(6)
 ) : AbstractBorder() {
-    override fun paintBorder(c: java.awt.Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+    override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
         g2.color = color
-        g2.stroke = java.awt.BasicStroke(thickness.toFloat())
+        g2.stroke = BasicStroke(thickness.toFloat())
         val shape = RoundRectangle2D.Float(
             x.toFloat() + thickness / 2f,
             y.toFloat() + thickness / 2f,
@@ -112,7 +112,7 @@ private const val GRADLE_POST_TASKS = "ui.dialog.mutationCoverage.postTasks"
 
 class MutationCoverageDialog(
     val mutationCoverageOptions: MutationCoverageOptions,
-    private val buildSystemPort: BuildSystemPort,
+    private val commandBuilderService: BuildSystemService,
     private val projectConfigPort: ProjectConfigPort
 ) : DialogWrapper(true) {
     private val commandEditorTextField = createCommandEditorTextField()
@@ -247,7 +247,7 @@ class MutationCoverageDialog(
             }
 
             if (showPreActions) {
-                val preLabel = if (buildSystemPort.getBuildSystem() == BuildSystem.MAVEN)
+                val preLabel = if (mutationCoverageOptions.buildSystem == BuildSystem.MAVEN)
                     AppMessagesBundle.message(MAVEN_PRE_GOALS)
                 else
                     AppMessagesBundle.message("ui.dialog.mutationCoverage.preTasks")
@@ -265,7 +265,7 @@ class MutationCoverageDialog(
             }
 
             if (showPostActions) {
-                val postLabel = if (buildSystemPort.getBuildSystem() == BuildSystem.MAVEN)
+                val postLabel = if (mutationCoverageOptions.buildSystem == BuildSystem.MAVEN)
                     AppMessagesBundle.message("ui.dialog.mutationCoverage.postGoals")
                 else
                     AppMessagesBundle.message("ui.dialog.mutationCoverage.postTasks")
@@ -382,7 +382,7 @@ class MutationCoverageDialog(
         return actions
     }
 
-    private fun buildCommand() = buildSystemPort.buildCommand(mutationCoverageOptions)
+    private fun buildCommand() = commandBuilderService.buildCommand(mutationCoverageOptions)
 
     private fun updateCommandTextArea() {
         val command = buildCommand()
@@ -515,7 +515,7 @@ class MutationCoverageDialog(
     }
 
     private fun createModifyOptionsList(): List<ModifyOption> {
-        val buildSystem = buildSystemPort.getBuildSystem()
+        val buildSystem = mutationCoverageOptions.buildSystem
         val buildSystemPreActionsKey = if (buildSystem == BuildSystem.MAVEN) MAVEN_PRE_GOALS else GRADLE_PRE_TASKS
         val buildSystemPostActionsKey = if (buildSystem == BuildSystem.MAVEN) MAVEN_POST_GOALS else GRADLE_POST_TASKS
         return listOf(

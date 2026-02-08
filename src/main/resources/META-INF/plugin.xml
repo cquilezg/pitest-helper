@@ -71,8 +71,6 @@
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.cquilez.pitesthelper">
-        <buildSystemPort
-                implementation="com.cquilez.pitesthelper.infrastructure.adapter.buildsystem.GradleBuildSystemAdapter"/>
         <buildUnitExtensionPoint
                 implementation="com.cquilez.pitesthelper.infrastructure.service.buildunit.MavenBuildUnitExtensionPoint"/>
         <buildUnitExtensionPoint
