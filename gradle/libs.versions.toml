@@ -2,7 +2,7 @@
 # libraries
 junitBom = "5.11.3"
 hamcrest = "3.0"
-kotlinTest = "2.0.21"
+kotlinTest = "2.2.21"
 mockk = "1.13.13"
 kodein = "7.20.2"
 kotlinxCoroutines = "1.10.1"
