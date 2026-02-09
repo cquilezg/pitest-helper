@@ -12,7 +12,7 @@ changelog = "2.4.0"
 intelliJPlatform = "2.11.0"
 kotlin = "2.3.0"
 kover = "0.9.1"
-qodana = "2024.1.9"
+qodana = "2025.3.1"
 
 [libraries]
 junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junitBom" }
