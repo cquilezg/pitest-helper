@@ -4,7 +4,7 @@ junitBom = "5.11.3"
 hamcrest = "3.0"
 kotlinTest = "2.2.21"
 mockk = "1.13.13"
-kodein = "7.20.2"
+kodein = "7.31.0"
 kotlinxCoroutines = "1.10.1"
 
 # plugins
