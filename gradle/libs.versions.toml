@@ -10,7 +10,7 @@ kotlinxCoroutines = "1.10.1"
 # plugins
 changelog = "2.4.0"
 intelliJPlatform = "2.11.0"
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 kover = "0.9.1"
 qodana = "2024.1.9"
 
